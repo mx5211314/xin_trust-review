@@ -30,13 +30,14 @@
     <!-- 双列瀑布流 -->
     <view class="waterfall" v-if="list.length">
       <view class="col">
-        <view v-for="item in leftList" :key="item.contentId" class="wcard" @tap="goDetail(item)">
+        <view v-for="item in leftList" :key="item.contentId" class="wcard" hover-class="card-hover" @tap="goDetail(item)">
           <view class="cover-wrap" :style="{ height: coverH(item) + 'rpx' }">
             <image
               v-if="item.coverUrl || (item.images && item.images.length)"
               class="cover"
               :src="item.coverUrl || item.images[0]"
               mode="aspectFill"
+              lazy-load
             />
             <view v-else class="cover cover-empty">
               <text class="cover-empty-text">视频</text>
@@ -66,13 +67,14 @@
         </view>
       </view>
       <view class="col">
-        <view v-for="item in rightList" :key="item.contentId" class="wcard" @tap="goDetail(item)">
+        <view v-for="item in rightList" :key="item.contentId" class="wcard" hover-class="card-hover" @tap="goDetail(item)">
           <view class="cover-wrap" :style="{ height: coverH(item) + 'rpx' }">
             <image
               v-if="item.coverUrl || (item.images && item.images.length)"
               class="cover"
               :src="item.coverUrl || item.images[0]"
               mode="aspectFill"
+              lazy-load
             />
             <view v-else class="cover cover-empty">
               <text class="cover-empty-text">视频</text>
@@ -118,6 +120,9 @@
     <view v-if="!loading && !list.length" class="empty">
       <text v-if="tab === 'follow'" class="muted">关注点评人后，这里展示 TA 们的最新笔记</text>
       <text v-else class="muted">这里还没有点评，等第一位点评人吧</text>
+    </view>
+    <view v-if="loading && list.length" class="load-more">
+      <text class="load-more-text">加载中…</text>
     </view>
     <view v-if="list.length && !hasMore" class="empty">
       <text class="muted">— 到底啦 —</text>
@@ -472,6 +477,21 @@ export default {
 .empty {
   text-align: center;
   padding: 100rpx 0;
+}
+.load-more {
+  text-align: center;
+  padding: 26rpx 0 46rpx;
+}
+.load-more-text {
+  font-size: 24rpx;
+  color: #b9c0c9;
+}
+.card-hover {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+.wcard {
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 .img-badge {
   position: absolute;

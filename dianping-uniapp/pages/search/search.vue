@@ -18,8 +18,17 @@
       <text class="cancel" @tap="goBack">取消</text>
     </view>
 
-    <!-- 未搜索：猜你想搜 -->
+    <!-- 未搜索：历史记录 + 猜你想搜 -->
     <view v-if="!searched">
+      <view v-if="history.length" class="sec-head">
+        <text class="sec-title">历史记录</text>
+        <text class="sec-clear" @tap="clearHistory">清空</text>
+      </view>
+      <view v-if="history.length" class="hot-wrap">
+        <view v-for="(w, i) in history" :key="'h' + i" class="hot-item" @tap="tapHot(w)">
+          <text class="hot-text">{{ w }}</text>
+        </view>
+      </view>
       <text class="sec-title">猜你想搜</text>
       <view class="hot-wrap">
         <view v-for="(w, i) in hotWords" :key="i" class="hot-item" @tap="tapHot(w)">
@@ -92,6 +101,7 @@ export default {
       lastKw: '',
       searched: false,
       hotWords: ['唐山烧烤', '人均30', '咖啡店', '周末遛娃', '拍照圣地', '老店'],
+      history: [],
       list: [],
       page: 1,
       pageSize: 10,
@@ -109,6 +119,9 @@ export default {
     }
   },
   onLoad(query) {
+    try {
+      this.history = uni.getStorageSync('dp_search_history') || []
+    } catch (e) { /* ignore */ }
     if (query && query.keyword) {
       this.keyword = decodeURIComponent(query.keyword)
       this.$nextTick(() => this.doSearch())
@@ -133,9 +146,24 @@ export default {
     goBack() {
       uni.navigateBack()
     },
+    saveHistory(kw) {
+      const list = this.history.filter(x => x !== kw)
+      list.unshift(kw)
+      this.history = list.slice(0, 10)
+      try {
+        uni.setStorageSync('dp_search_history', this.history)
+      } catch (e) { /* ignore */ }
+    },
+    clearHistory() {
+      this.history = []
+      try {
+        uni.removeStorageSync('dp_search_history')
+      } catch (e) { /* ignore */ }
+    },
     doSearch() {
       const kw = this.keyword.trim()
       if (!kw) return
+      this.saveHistory(kw)
       this.lastKw = kw
       this.searched = true
       this.page = 1
@@ -212,6 +240,19 @@ export default {
   margin-left: 20rpx;
   font-size: 28rpx;
   color: #ff2442;
+}
+.sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx 24rpx 0;
+}
+.sec-head .sec-title {
+  padding: 0;
+}
+.sec-clear {
+  font-size: 24rpx;
+  color: #999999;
 }
 .sec-title {
   display: block;

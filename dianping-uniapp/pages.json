@@ -39,6 +39,10 @@
     {
       "path": "pages/notify/notify",
       "style": { "navigationBarTitleText": "消息" }
+    },
+    {
+      "path": "pages/following/following",
+      "style": { "navigationBarTitleText": "我关注的" }
     }
   ],
   "subPackages": [

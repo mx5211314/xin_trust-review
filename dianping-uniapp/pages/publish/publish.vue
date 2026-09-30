@@ -38,20 +38,26 @@
         </view>
       </view>
 
-      <input
-        v-model="title"
-        class="input"
-        maxlength="30"
-        placeholder="填写标题会有更多赞哦～"
-        placeholder-class="ph"
-      />
-      <textarea
-        v-model="text"
-        class="textarea"
-        maxlength="2000"
-        placeholder="分享你的真实体验，帮助大家避坑～"
-        placeholder-class="ph"
-      />
+      <view class="count-wrap">
+        <input
+          v-model="title"
+          class="input count-input"
+          maxlength="30"
+          placeholder="填写标题会有更多赞哦～"
+          placeholder-class="ph"
+        />
+        <text class="count-text">{{ title.length }}/30</text>
+      </view>
+      <view class="count-wrap">
+        <textarea
+          v-model="text"
+          class="textarea count-input"
+          maxlength="2000"
+          placeholder="分享你的真实体验，帮助大家避坑～"
+          placeholder-class="ph"
+        />
+        <text class="count-text count-textarea">{{ text.length }}/2000</text>
+      </view>
 
       <!-- 图文：九宫格选图（编辑模式隐藏，图片暂不支持修改） -->
       <view v-if="type === 'image' && !editId" class="grid">
@@ -443,6 +449,23 @@ export default {
 }
 .ph {
   color: #b9c0c9;
+}
+.count-wrap {
+  position: relative;
+}
+.count-input {
+  padding-right: 90rpx;
+}
+.count-text {
+  position: absolute;
+  right: 4rpx;
+  top: 30rpx;
+  font-size: 22rpx;
+  color: #c2c8d0;
+}
+.count-textarea {
+  top: auto;
+  bottom: 20rpx;
 }
 .grid {
   display: flex;

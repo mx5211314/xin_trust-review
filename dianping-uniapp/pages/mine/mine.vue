@@ -102,6 +102,10 @@
 
     <!-- 菜单（原功能保留） -->
     <view class="menu">
+      <view class="menu-item" @tap="goFollowing">
+        <text class="menu-text">我关注的</text>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" v-if="user && user.role === 'USER'" @tap="goGuide">
         <text class="menu-text">如何成为点评人</text>
         <text class="menu-arrow">›</text>
@@ -292,6 +296,9 @@ export default {
     },
     goNotify() {
       uni.navigateTo({ url: '/pages/notify/notify' })
+    },
+    goFollowing() {
+      uni.navigateTo({ url: '/pages/following/following' })
     },
     goAdminAudit() {
       uni.navigateTo({ url: '/pagesAdmin/audit/audit' })

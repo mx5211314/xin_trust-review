@@ -11,6 +11,9 @@
         <view class="nav-btn" @tap="goBack">
           <text class="nav-btn-text">‹</text>
         </view>
+        <view class="nav-btn nav-more" @tap="showMore">
+          <text class="nav-btn-text more-dots">···</text>
+        </view>
       </view>
       <swiper
         v-if="content.images && content.images.length"
@@ -435,6 +438,23 @@ export default {
     goBack() {
       uni.navigateBack()
     },
+    showMore() {
+      uni.showActionSheet({
+        itemList: ['复制链接', '分享给好友', '举报'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            uni.setClipboardData({
+              data: `本地点评 /pages/detail/detail?id=${this.id}`,
+              success: () => uni.showToast({ title: '链接已复制', icon: 'none' })
+            })
+          } else if (res.tapIndex === 1) {
+            uni.showToast({ title: '请点右下角分享按钮', icon: 'none' })
+          } else {
+            uni.showToast({ title: '已收到举报，我们会尽快核实', icon: 'none' })
+          }
+        }
+      })
+    },
     goAuthor() {
       if (this.content.author) {
         uni.navigateTo({
@@ -509,6 +529,14 @@ export default {
   font-size: 40rpx;
   line-height: 40rpx;
   margin-top: -6rpx;
+}
+.nav-more {
+  margin-left: auto;
+}
+.more-dots {
+  font-size: 32rpx;
+  letter-spacing: 2rpx;
+  margin-top: -12rpx;
 }
 .banner {
   width: 100%;
@@ -740,6 +768,12 @@ export default {
 }
 .act-icon.liked {
   color: #ff2442;
+  animation: dpop 0.3s ease;
+}
+@keyframes dpop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
 }
 .act-icon.star {
   color: #ff8a3d;
