@@ -25,42 +25,8 @@
 
     <!-- 点评人 / 管理员：发布表单 -->
     <view v-else class="form">
-      <view class="notice">
-        <text class="notice-text">{{ editId ? '修改后需重新审核，图片暂不支持修改' : '点评人身份 · 审核通过后公开展示' }}</text>
-      </view>
-
-      <view class="type-row">
-        <view class="type-tab" :class="{ active: type === 'image' }" @tap="type = 'image'">
-          <text class="type-text" :class="{ active: type === 'image' }">图文</text>
-        </view>
-        <view class="type-tab" :class="{ active: type === 'video' }" @tap="type = 'video'">
-          <text class="type-text" :class="{ active: type === 'video' }">视频</text>
-        </view>
-      </view>
-
-      <view class="count-wrap">
-        <input
-          v-model="title"
-          class="input count-input"
-          maxlength="30"
-          placeholder="填写标题会有更多赞哦～"
-          placeholder-class="ph"
-        />
-        <text class="count-text">{{ title.length }}/30</text>
-      </view>
-      <view class="count-wrap">
-        <textarea
-          v-model="text"
-          class="textarea count-input"
-          maxlength="2000"
-          placeholder="分享你的真实体验，帮助大家避坑～"
-          placeholder-class="ph"
-        />
-        <text class="count-text count-textarea">{{ text.length }}/2000</text>
-      </view>
-
-      <!-- 图文：九宫格选图（编辑模式隐藏，图片暂不支持修改） -->
-      <view v-if="type === 'image' && !editId" class="grid">
+      <!-- 1. 图片区在最上（小红书式） -->
+      <view v-if="type === 'image' && !editId" class="grid grid-top">
         <view v-for="(img, i) in localImages" :key="i" class="grid-item">
           <image class="grid-img" :src="img.path" mode="aspectFill" />
           <view class="grid-del" @tap="removeImage(i)">
@@ -71,12 +37,11 @@
           </view>
         </view>
         <view v-if="localImages.length < 9" class="grid-item add" @tap="chooseImages">
-          <text class="add-text">＋</text>
+          <text class="add-plus">＋</text>
+          <text class="add-count">{{ localImages.length }}/9</text>
         </view>
       </view>
-
-      <!-- 视频：选一个 -->
-      <view v-else class="grid">
+      <view v-else-if="type === 'video' && !editId" class="grid grid-top">
         <view v-if="localVideo" class="grid-item video-item">
           <text class="video-name">{{ localVideo.name }}</text>
           <view class="grid-del" @tap="removeVideo">
@@ -87,14 +52,58 @@
           </view>
         </view>
         <view v-else class="grid-item add" @tap="chooseVideo">
-          <text class="add-text">选视频</text>
+          <text class="add-plus">＋</text>
+          <text class="add-count">视频</text>
         </view>
       </view>
 
-      <view class="line-row">
-        <text class="line-topic"># 选择话题</text>
+      <!-- 2. 编辑模式：极简提示 -->
+      <view v-if="editId" class="edit-tip">
+        <text class="edit-tip-text">修改后需重新审核 · 图片暂不支持修改</text>
       </view>
-      <view class="topic-chips">
+
+      <!-- 3. 标题（大字无边框） -->
+      <view class="count-wrap">
+        <input
+          v-model="title"
+          class="input title-input"
+          maxlength="30"
+          placeholder="填写标题会有更多赞哦～"
+          placeholder-class="ph"
+        />
+        <text class="count-text">{{ title.length }}/30</text>
+      </view>
+      <view class="divider"></view>
+
+      <!-- 4. 正文（无边框） -->
+      <view class="count-wrap">
+        <textarea
+          v-model="text"
+          class="textarea textarea-clean"
+          maxlength="2000"
+          placeholder="分享你的真实体验，帮助大家避坑～"
+          placeholder-class="ph"
+        />
+        <text class="count-text count-textarea">{{ text.length }}/2000</text>
+      </view>
+      <view class="divider"></view>
+
+      <!-- 5. 类型切换（轻量小标签） -->
+      <view class="type-row">
+        <text class="type-tab" :class="{ active: type === 'image' }" @tap="type = 'image'">图文</text>
+        <text class="type-sep">|</text>
+        <text class="type-tab" :class="{ active: type === 'video' }" @tap="type = 'video'">视频</text>
+      </view>
+      <view class="divider"></view>
+
+      <!-- 6. 话题（默认折叠成一行，点击展开） -->
+      <view class="line-row" @tap="topicOpen = !topicOpen">
+        <text class="line-topic" :class="{ picked: tags.length }">
+          # {{ tags.length ? tags.join('  # ') : '添加话题' }}
+        </text>
+        <text class="arrow">{{ topicOpen ? '▴' : '▾' }}</text>
+      </view>
+      <view v-if="topicOpen" class="topic-chips">
         <view
           v-for="t in allTags"
           :key="t"
@@ -105,6 +114,9 @@
           <text class="tchip-text" :class="{ on: tags.includes(t) }"># {{ t }}</text>
         </view>
       </view>
+      <view class="divider"></view>
+
+      <!-- 7. 地点 -->
       <picker :range="regionNames" @change="onRegionChange">
         <view class="line-row">
           <text class="line-topic" :class="{ picked: regionIndex >= 0 }">
@@ -119,8 +131,7 @@
         placeholder="店铺名（选填）"
         placeholder-class="ph"
       />
-
-      <view style="height: 40rpx"></view>
+      <view style="height: 60rpx"></view>
     </view>
   </view>
 </template>
@@ -144,6 +155,7 @@ export default {
       regionNames: REGIONS.map(r => r.name),
       allTags: ['唐山美食', '探店', '咖啡', '遛娃', '拍照', '老店'],
       tags: [],
+      topicOpen: false,
       poiName: '',
       submitting: false,
       editId: '',
@@ -399,53 +411,57 @@ export default {
   height: 88rpx;
   line-height: 88rpx;
 }
-.notice {
-  background: #e6f4ef;
+.edit-tip {
+  background: #fff7e8;
   border-radius: 12rpx;
-  padding: 14rpx 24rpx;
-  margin-bottom: 24rpx;
+  padding: 14rpx 22rpx;
+  margin-bottom: 10rpx;
 }
-.notice-text {
+.edit-tip-text {
   font-size: 22rpx;
-  color: #0e7c66;
+  color: #b8860b;
+}
+.divider {
+  height: 1rpx;
+  background: #f1f3f5;
+  margin: 6rpx 0;
+}
+
+.input {
+  background: #ffffff;
+  padding: 26rpx 4rpx;
+  font-size: 30rpx;
+  border-radius: 0;
+  margin-bottom: 0;
+}
+.title-input {
+  font-size: 36rpx;
+  font-weight: 500;
 }
 .type-row {
   display: flex;
-  margin-bottom: 24rpx;
+  align-items: center;
+  padding: 22rpx 4rpx;
 }
 .type-tab {
-  padding: 12rpx 40rpx;
-  border-radius: 999rpx;
-  background: #f6f7f9;
-  margin-right: 20rpx;
+  font-size: 28rpx;
+  color: #999999;
 }
 .type-tab.active {
-  background: #ff2442;
-}
-.type-text {
-  font-size: 26rpx;
-  color: #6b7280;
-}
-.type-text.active {
-  color: #ffffff;
+  color: #ff2442;
   font-weight: 500;
 }
-.input {
-  background: #ffffff;
-  border-radius: 16rpx;
-  padding: 24rpx 4rpx;
-  font-size: 30rpx;
-  border-bottom: 1rpx solid #f1f3f5;
-  border-radius: 0;
-  margin-bottom: 0;
+.type-sep {
+  font-size: 24rpx;
+  color: #e5e7eb;
+  margin: 0 20rpx;
 }
 .textarea {
   background: #ffffff;
   padding: 24rpx 4rpx;
   font-size: 30rpx;
   width: auto;
-  height: 220rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  height: 260rpx;
 }
 .ph {
   color: #b9c0c9;
@@ -470,7 +486,10 @@ export default {
 .grid {
   display: flex;
   flex-wrap: wrap;
-  padding: 24rpx 0;
+  padding: 24rpx 0 10rpx;
+}
+.grid-top {
+  padding-top: 6rpx;
 }
 .grid-item {
   width: 200rpx;
@@ -518,14 +537,22 @@ export default {
   font-size: 22rpx;
 }
 .add {
-  border: 2rpx dashed #d8dbe0;
+  border: 2rpx dashed #e5e7eb;
+  background: #fafbfc;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-.add-text {
-  color: #b9c0c9;
-  font-size: 40rpx;
+.add-plus {
+  color: #c2c8d0;
+  font-size: 48rpx;
+  line-height: 1;
+}
+.add-count {
+  font-size: 20rpx;
+  color: #c2c8d0;
+  margin-top: 8rpx;
 }
 .video-item {
   display: flex;
@@ -544,12 +571,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 26rpx 4rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  padding: 28rpx 4rpx;
 }
 .line-topic {
   font-size: 28rpx;
-  color: #4a90d9;
+  color: #999999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 560rpx;
 }
 .line-topic.picked {
   color: #ff2442;
@@ -558,8 +588,9 @@ export default {
   color: #b9c0c9;
 }
 .poi-input {
-  border-bottom: none;
   padding-left: 4rpx;
+  padding-top: 0;
+  padding-bottom: 24rpx;
 }
 .topic-chips {
   display: flex;
