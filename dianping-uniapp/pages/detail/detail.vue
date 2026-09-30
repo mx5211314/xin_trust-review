@@ -46,6 +46,14 @@
         </view>
         <text class="nickname">{{ content.author ? content.author.nickname : '匿名' }}</text>
         <text v-if="isReviewerAuthor" class="tag tag-reviewer">点评人</text>
+        <view
+          v-if="!isMyContent"
+          class="follow-mini"
+          :class="{ on: authorFollowing }"
+          @tap.stop="toggleFollowAuthor"
+        >
+          <text class="follow-mini-text">{{ authorFollowing ? '已关注' : '+ 关注' }}</text>
+        </view>
       </view>
       <text class="text">{{ content.text }}</text>
 
@@ -118,30 +126,41 @@
       </view>
     </view>
 
-    <!-- 悬浮操作栏（评论输入实装，支持回复） -->
+    <!-- 悬浮操作栏（小红书式：输入前显示三图标，输入后变"发送"） -->
     <view class="footer">
-      <view v-if="replyTarget" class="replying">
-        <text class="replying-text">回复 @{{ replyTarget.nickname }}</text>
-        <text class="replying-cancel" @tap="replyTarget = null">✕</text>
+      <view class="input-wrap">
+        <input
+          v-model="commentText"
+          class="comment-input"
+          :placeholder="replyTarget ? '回复 @' + replyTarget.nickname : '说点什么...'"
+          placeholder-class="ph"
+          :focus="inputFocus"
+          confirm-type="send"
+          @confirm="sendComment"
+        />
+        <view v-if="replyTarget" class="input-clear" @tap="cancelReply">
+          <text class="input-clear-text">✕</text>
+        </view>
       </view>
-      <input
-        v-model="commentText"
-        class="comment-input"
-        :placeholder="replyTarget ? '回复 @' + replyTarget.nickname + '...' : '说点什么...'"
-        placeholder-class="ph"
-        confirm-type="send"
-        @confirm="sendComment"
-      />
-      <view class="send-btn" :class="{ on: commentText.trim() }" @tap="sendComment">
+
+      <!-- 有输入内容：显示发送 -->
+      <view v-if="commentText.trim()" class="send-btn" @tap="sendComment">
         <text class="send-text">发送</text>
       </view>
-      <view class="act" @tap="doLike">
-        <text class="act-icon" :class="{ liked: content.liked }">{{ content.liked ? '♥' : '♡' }}</text>
-        <text class="act-num">{{ content.likeCount }}</text>
-      </view>
-      <view class="act" @tap="doFav">
-        <text class="act-icon star" :class="{ faved: favorited }">{{ favorited ? '★' : '☆' }}</text>
-        <text class="act-num">{{ favoriteCount }}</text>
+      <!-- 无输入：显示 赞/藏/评论 三图标 -->
+      <view v-else class="acts">
+        <view class="act" @tap="doLike">
+          <text class="act-icon" :class="{ liked: content.liked }">{{ content.liked ? '♥' : '♡' }}</text>
+          <text class="act-num">{{ fmtNum(content.likeCount) }}</text>
+        </view>
+        <view class="act" @tap="doFav">
+          <text class="act-icon star" :class="{ faved: favorited }">{{ favorited ? '★' : '☆' }}</text>
+          <text class="act-num">{{ fmtNum(favoriteCount) }}</text>
+        </view>
+        <view class="act">
+          <text class="act-icon cmt">💬</text>
+          <text class="act-num">{{ fmtNum(commentTotal) }}</text>
+        </view>
       </view>
     </view>
   </view>
@@ -162,6 +181,8 @@ export default {
       commentTotal: 0,
       commentText: '',
       replyTarget: null,
+      inputFocus: false,
+      authorFollowing: false,
       favorited: false,
       favoriteCount: 0
     }
@@ -179,6 +200,11 @@ export default {
     },
     isReviewerAuthor() {
       return this.content && this.content.author
+    },
+    isMyContent() {
+      const me = getUser()
+      return !!(me && this.content && this.content.author
+        && String(me.userId) === String(this.content.author.userId))
     },
     shortName() {
       const a = this.content && this.content.author
@@ -207,6 +233,7 @@ export default {
             request({ url: `/content/${this.id}/view`, method: 'POST', silent: true }).catch(() => {})
           }
           this.loadComments()
+          this.loadAuthorFollow()
         }
       } catch (e) {
         uni.showToast({ title: '内容不存在', icon: 'none' })
@@ -275,7 +302,7 @@ export default {
         })
         this.commentText = ''
         this.replyTarget = null
-        this.commentTotal += 1
+        this.inputFocus = false
         this.loadComments()
         uni.showToast({ title: '评论成功', icon: 'none' })
       } catch (e) { /* toast 已提示 */ }
@@ -285,6 +312,44 @@ export default {
       this.replyTarget = {
         commentId: root.commentId,
         nickname: sub && sub.user ? sub.user.nickname : (root.user ? root.user.nickname : '匿名')
+      }
+      // 聚焦输入框（先复位再置位，保证重复点击也能唤起键盘）
+      this.inputFocus = false
+      this.$nextTick(() => { this.inputFocus = true })
+    },
+    cancelReply() {
+      this.replyTarget = null
+      this.inputFocus = false
+    },
+    /** 数字友好显示：1000 -> 1.0k */
+    fmtNum(n) {
+      const v = Number(n || 0)
+      return v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(v)
+    },
+    async loadAuthorFollow() {
+      const a = this.content && this.content.author
+      if (!a || this.isMyContent) return
+      try {
+        const data = await request({ url: `/user/${a.userId}?page=1&pageSize=1` })
+        this.authorFollowing = !!(data.profile && data.profile.following)
+      } catch (e) { /* ignore */ }
+    },
+    async toggleFollowAuthor() {
+      const a = this.content && this.content.author
+      if (!a) return
+      if (this.authorFollowing) {
+        try {
+          await request({ url: `/user/${a.userId}/follow`, method: 'DELETE', silent: true })
+          this.authorFollowing = false
+        } catch (e) { /* ignore */ }
+      } else {
+        try {
+          await request({ url: `/user/${a.userId}/follow`, method: 'POST', silent: true })
+          this.authorFollowing = true
+          uni.showToast({ title: '已关注 TA', icon: 'none' })
+        } catch (e) {
+          if (e.code === 2003) this.authorFollowing = true
+        }
       }
     },
     async doFav() {
@@ -549,11 +614,8 @@ export default {
 }
 .comment-input {
   flex: 1;
-  background: #f6f7f9;
-  border-radius: 32rpx;
-  padding: 14rpx 28rpx;
   font-size: 26rpx;
-  margin-right: 16rpx;
+  height: 64rpx;
 }
 .ph {
   color: #b9c0c9;
@@ -604,23 +666,6 @@ export default {
 }
 .reply-tag {
   color: #4a90d9;
-}
-.replying {
-  display: flex;
-  align-items: center;
-  background: #fff1e6;
-  border-radius: 12rpx;
-  padding: 8rpx 18rpx;
-  margin-right: 14rpx;
-}
-.replying-text {
-  font-size: 22rpx;
-  color: #ff8a3d;
-}
-.replying-cancel {
-  color: #999999;
-  font-size: 22rpx;
-  margin-left: 12rpx;
 }
 .creply {
   font-size: 22rpx;
@@ -678,5 +723,53 @@ export default {
   font-size: 26rpx;
   color: #333333;
   line-height: 1.5;
+}
+.input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #f6f7f9;
+  border-radius: 32rpx;
+  padding: 0 20rpx;
+  margin-right: 20rpx;
+  height: 64rpx;
+}
+.input-clear {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: #d8dbe0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.input-clear-text {
+  color: #ffffff;
+  font-size: 20rpx;
+  line-height: 36rpx;
+}
+.acts {
+  display: flex;
+  align-items: center;
+}
+.act-icon.cmt {
+  font-size: 34rpx;
+}
+.follow-mini {
+  margin-left: auto;
+  border: 1.5rpx solid #ff2442;
+  border-radius: 999rpx;
+  padding: 8rpx 26rpx;
+}
+.follow-mini.on {
+  border-color: #d8dbe0;
+}
+.follow-mini-text {
+  font-size: 24rpx;
+  color: #ff2442;
+}
+.follow-mini.on .follow-mini-text {
+  color: #999999;
 }
 </style>
