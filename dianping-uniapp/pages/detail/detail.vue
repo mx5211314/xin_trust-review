@@ -15,15 +15,25 @@
       <swiper
         v-if="content.images && content.images.length"
         class="banner"
-        indicator-dots
+        :indicator-dots="content.images.length > 1"
         indicator-color="rgba(255,255,255,0.4)"
         indicator-active-color="#FFFFFF"
         circular
+        @change="onSwiperChange"
       >
         <swiper-item v-for="(img, i) in content.images" :key="i">
-          <image class="banner-img" :src="img" mode="aspectFill" @tap="preview(i)" />
+          <image
+            class="banner-img"
+            :src="img"
+            mode="aspectFill"
+            @tap="preview(i)"
+            @longpress="saveImage(i)"
+          />
         </swiper-item>
       </swiper>
+      <view v-if="content.images && content.images.length > 1" class="page-badge">
+        <text class="page-badge-text">{{ currentImage + 1 }}/{{ content.images.length }}</text>
+      </view>
       <video
         v-else-if="content.videoUrl"
         class="banner"
@@ -59,7 +69,12 @@
 
       <!-- 话题标签 -->
       <view class="topic-row" v-if="content.tags && content.tags.length">
-        <text v-for="(t, i) in content.tags" :key="i" class="topic">#{{ t }}</text>
+        <text
+          v-for="(t, i) in content.tags"
+          :key="i"
+          class="topic"
+          @tap="goTopic(t)"
+        >#{{ t }}</text>
       </view>
 
       <!-- 地点 -->
@@ -124,6 +139,9 @@
       <view v-if="!comments.length" class="empty">
         <text class="muted">还没有评论，来抢沙发～</text>
       </view>
+      <view v-if="comments.length && loadedRoots < rootTotal" class="more-comments" @tap="loadMoreComments">
+        <text class="more-comments-text">查看更多评论（{{ rootTotal - loadedRoots }}）</text>
+      </view>
     </view>
 
     <!-- 悬浮操作栏（小红书式：输入前显示三图标，输入后变"发送"） -->
@@ -179,6 +197,10 @@ export default {
       statusBarHeight: 20,
       comments: [],
       commentTotal: 0,
+      rootTotal: 0,
+      loadedRoots: 0,
+      commentPage: 1,
+      currentImage: 0,
       commentText: '',
       replyTarget: null,
       inputFocus: false,
@@ -241,13 +263,50 @@ export default {
       }
     },
     async loadComments() {
+      this.commentPage = 1
       try {
         const data = await request({
-          url: `/content/${this.id}/comments?page=1&pageSize=50`
+          url: `/content/${this.id}/comments?page=1&pageSize=10`
         })
         this.comments = (data.list || []).map(c => ({ ...c, liked: false }))
-        this.commentTotal = data.total || this.comments.length
+        this.commentTotal = data.total || 0
+        this.rootTotal = data.rootTotal || this.comments.length
+        this.loadedRoots = this.comments.length
       } catch (e) { /* ignore */ }
+    },
+    async loadMoreComments() {
+      this.commentPage += 1
+      try {
+        const data = await request({
+          url: `/content/${this.id}/comments?page=${this.commentPage}&pageSize=10`
+        })
+        this.comments = this.comments.concat((data.list || []).map(c => ({ ...c, liked: false })))
+        this.loadedRoots = this.comments.length
+      } catch (e) { /* ignore */ }
+    },
+    onSwiperChange(e) {
+      this.currentImage = e.detail.current
+    },
+    saveImage(index) {
+      uni.showActionSheet({
+        itemList: ['保存到相册'],
+        success: () => {
+          uni.downloadFile({
+            url: this.content.images[index],
+            success: (res) => {
+              uni.saveImageToPhotosAlbum({
+                filePath: res.tempFilePath,
+                success: () => uni.showToast({ title: '已保存到相册', icon: 'success' }),
+                fail: () => uni.showToast({ title: '保存失败，请检查相册权限', icon: 'none' })
+              })
+            },
+            fail: () => uni.showToast({ title: '图片下载失败', icon: 'none' })
+          })
+        }
+      })
+    },
+    goTopic(tag) {
+      uni.navigateTo({ url: '/pages/search/search?keyword=' + encodeURIComponent(tag) })
     },
     async likeComment(c) {
       if (c.liked) {
@@ -771,5 +830,25 @@ export default {
 }
 .follow-mini.on .follow-mini-text {
   color: #999999;
+}
+.page-badge {
+  position: absolute;
+  right: 24rpx;
+  top: 100rpx;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 20rpx;
+  padding: 4rpx 18rpx;
+}
+.page-badge-text {
+  color: #ffffff;
+  font-size: 22rpx;
+}
+.more-comments {
+  text-align: center;
+  padding: 26rpx 0;
+}
+.more-comments-text {
+  font-size: 26rpx;
+  color: #ff2442;
 }
 </style>

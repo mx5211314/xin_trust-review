@@ -144,6 +144,7 @@ public class ContentService {
                 new LambdaQueryWrapper<Comment>()
                         .eq(Comment::getContentId, contentId)
                         .eq(Comment::getParentId, 0L)
+                        .orderByDesc(Comment::getLikeCount)
                         .orderByAsc(Comment::getId));
         List<Comment> roots = p.getRecords();
         List<Long> rootIds = roots.stream().map(Comment::getId).toList();
@@ -388,6 +389,36 @@ public class ContentService {
                                 .or().like(Content::getTags, keyword))
                         .orderByDesc(Content::getCreateTime));
         return pageResult(me, p);
+    }
+
+    /** 编辑自己的笔记：文字信息可改，修改后重新走机审（状态回 PENDING） */
+    public void updateContent(Long id, Long me, ContentCreateReq req) {
+        Content c = contentMapper.selectById(id);
+        if (c == null) {
+            throw new BizException(ResultCode.NOT_FOUND);
+        }
+        if (!c.getUserId().equals(me)) {
+            throw new BizException(ResultCode.FORBIDDEN, "只能编辑自己的笔记");
+        }
+        c.setTitle(req.title().trim());
+        c.setText(req.text().trim());
+        c.setRegionCode(req.regionCode());
+        c.setPoiName(nullToEmpty(req.poiName()));
+        c.setTags(toJson(req.tags() == null ? List.of() : req.tags()));
+        // 图片可整组替换（传了才更新）
+        if (req.images() != null && !req.images().isEmpty()) {
+            c.setImages(toJson(req.images()));
+        }
+        // 修改后重新审核
+        c.setStatus("PENDING");
+        c.setRejectReason("");
+        contentMapper.updateById(c);
+        boolean pass = auditService.machinePass(c);
+        if (pass) {
+            c.setStatus("APPROVED");
+            c.setAuditTime(java.time.LocalDateTime.now());
+            contentMapper.updateById(c);
+        }
     }
 
     /** 删除自己的笔记（管理员可删任意）：逻辑删除 */

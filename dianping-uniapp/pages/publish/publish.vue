@@ -3,7 +3,7 @@
     <!-- 自定义导航：取消 | 发笔记 | 发布 -->
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <text class="nav-cancel" @tap="goBack">取消</text>
-      <text class="nav-title">发笔记</text>
+      <text class="nav-title">{{ editId ? '编辑笔记' : '发笔记' }}</text>
       <view class="nav-publish" :class="{ dim: submitting }" @tap="submit">
         <text class="nav-publish-text">{{ submitting ? '…' : '发布' }}</text>
       </view>
@@ -26,7 +26,7 @@
     <!-- 点评人 / 管理员：发布表单 -->
     <view v-else class="form">
       <view class="notice">
-        <text class="notice-text">点评人身份 · 审核通过后公开展示</text>
+        <text class="notice-text">{{ editId ? '修改后需重新审核，图片暂不支持修改' : '点评人身份 · 审核通过后公开展示' }}</text>
       </view>
 
       <view class="type-row">
@@ -53,8 +53,8 @@
         placeholder-class="ph"
       />
 
-      <!-- 图文：九宫格选图 -->
-      <view v-if="type === 'image'" class="grid">
+      <!-- 图文：九宫格选图（编辑模式隐藏，图片暂不支持修改） -->
+      <view v-if="type === 'image' && !editId" class="grid">
         <view v-for="(img, i) in localImages" :key="i" class="grid-item">
           <image class="grid-img" :src="img.path" mode="aspectFill" />
           <view class="grid-del" @tap="removeImage(i)">
@@ -140,13 +140,18 @@ export default {
       tags: [],
       poiName: '',
       submitting: false,
+      editId: '',
       statusBarHeight: 20
     }
   },
-  onLoad() {
+  onLoad(query) {
     try {
       this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 20
     } catch (e) { /* 默认值兜底 */ }
+    if (query && query.id) {
+      this.editId = query.id
+      this.loadForEdit()
+    }
   },
   onShow() {
     const u = getUser()
@@ -218,8 +223,8 @@ export default {
       if (!this.title.trim()) return '标题不能为空'
       if (!this.text.trim()) return '正文不能为空'
       if (this.regionIndex < 0) return '请选择地区'
-      if (this.type === 'image' && this.localImages.length === 0) return '至少选一张图片'
-      if (this.type === 'video' && !this.localVideo) return '请选择视频'
+      if (!this.editId && this.type === 'image' && this.localImages.length === 0) return '至少选一张图片'
+      if (!this.editId && this.type === 'video' && !this.localVideo) return '请选择视频'
       return ''
     },
     async submit() {
@@ -245,21 +250,22 @@ export default {
           this.localVideo.uploading = false
           duration = this.localVideo.duration
         }
-        await request({
-          url: '/content',
-          method: 'POST',
-          data: {
-            title: this.title.trim(),
-            text: this.text.trim(),
-            images: images.length ? images : undefined,
-            videoKey: videoKey || undefined,
-            duration: duration || undefined,
-            regionCode: REGIONS[this.regionIndex].code,
-            tags: this.tags.length ? this.tags : undefined,
-            poiName: this.poiName.trim() || undefined
-          }
-        })
-        uni.showToast({ title: '已提交，审核通过后公开', icon: 'success' })
+        const payload = {
+          title: this.title.trim(),
+          text: this.text.trim(),
+          images: images.length ? images : undefined,
+          videoKey: videoKey || undefined,
+          duration: duration || undefined,
+          regionCode: REGIONS[this.regionIndex].code,
+          tags: this.tags.length ? this.tags : undefined,
+          poiName: this.poiName.trim() || undefined
+        }
+        if (this.editId) {
+          await request({ url: `/content/${this.editId}`, method: 'PUT', data: payload })
+        } else {
+          await request({ url: '/content', method: 'POST', data: payload })
+        }
+        uni.showToast({ title: this.editId ? '已保存，审核通过后公开' : '已提交，审核通过后公开', icon: 'success' })
         setTimeout(() => {
           this.reset()
           uni.switchTab({ url: '/pages/feed/feed' })

@@ -70,11 +70,10 @@
         <text class="mini-title">{{ item.title }}</text>
         <text class="muted">{{ item.likeCount }} 赞 · {{ item.createTime }}</text>
       </view>
-      <text
-        v-if="tab === 'note'"
-        class="mini-del"
-        @tap.stop="delNote(item)"
-      >删除</text>
+      <view v-if="tab === 'note'" class="mini-ops">
+        <text class="mini-edit" @tap.stop="editNote(item)">编辑</text>
+        <text class="mini-del" @tap.stop="delNote(item)">删除</text>
+      </view>
     </view>
 
     <!-- 编辑资料弹层 -->
@@ -270,6 +269,9 @@ export default {
         this.editShow = false
         this.fetch()
       } catch (e) { /* toast 已提示 */ }
+    },
+    editNote(item) {
+      uni.navigateTo({ url: '/pages/publish/publish?id=' + item.contentId })
     },
     delNote(item) {
       uni.showModal({
@@ -505,8 +507,18 @@ export default {
   text-align: center;
   padding: 80rpx 0;
 }
-.mini-del {
+.mini-ops {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   flex-shrink: 0;
+}
+.mini-edit {
+  font-size: 22rpx;
+  color: #4a90d9;
+  padding: 6rpx 12rpx;
+}
+.mini-del {
   font-size: 22rpx;
   color: #ff2442;
   padding: 6rpx 12rpx;

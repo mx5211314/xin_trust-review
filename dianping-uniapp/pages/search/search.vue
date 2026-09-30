@@ -108,6 +108,12 @@ export default {
       return this.list.filter((_, i) => i % 2 === 1)
     }
   },
+  onLoad(query) {
+    if (query && query.keyword) {
+      this.keyword = decodeURIComponent(query.keyword)
+      this.$nextTick(() => this.doSearch())
+    }
+  },
   onReachBottom() {
     if (this.searched && this.hasMore && !this.loading) {
       this.page += 1

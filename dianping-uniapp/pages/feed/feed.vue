@@ -44,6 +44,9 @@
             <view v-if="item.videoUrl" class="video-badge">
               <text class="video-badge-text">视频</text>
             </view>
+            <view v-else-if="item.images && item.images.length > 1" class="img-badge">
+              <text class="img-badge-text">⧉ {{ item.images.length }}</text>
+            </view>
           </view>
           <view class="wbody">
             <text class="wtitle">{{ item.title }}</text>
@@ -76,6 +79,9 @@
             </view>
             <view v-if="item.videoUrl" class="video-badge">
               <text class="video-badge-text">视频</text>
+            </view>
+            <view v-else-if="item.images && item.images.length > 1" class="img-badge">
+              <text class="img-badge-text">⧉ {{ item.images.length }}</text>
             </view>
           </view>
           <view class="wbody">
@@ -466,5 +472,25 @@ export default {
 .empty {
   text-align: center;
   padding: 100rpx 0;
+}
+.img-badge {
+  position: absolute;
+  right: 12rpx;
+  top: 12rpx;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 8rpx;
+  padding: 4rpx 12rpx;
+}
+.img-badge-text {
+  color: #ffffff;
+  font-size: 18rpx;
+}
+.wlike-icon.liked {
+  animation: pop 0.3s ease;
+}
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
 }
 </style>
