@@ -77,6 +77,12 @@
         "selectedIconPath": "static/tabbar/plus-on.png"
       },
       {
+        "pagePath": "pages/notify/notify",
+        "text": "消息",
+        "iconPath": "static/tabbar/msg.png",
+        "selectedIconPath": "static/tabbar/msg-on.png"
+      },
+      {
         "pagePath": "pages/mine/mine",
         "text": "我的",
         "iconPath": "static/tabbar/my.png",

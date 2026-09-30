@@ -80,6 +80,10 @@ export default {
     this.page = 1
     this.fetch()
     this.loadConversations()
+    // 清除消息 tab 徽标（进入即视为查看）
+    setTimeout(() => {
+      uni.removeTabBarBadge({ index: 2 })
+    }, 1500)
   },
   onReachBottom() {
     if (this.hasMore && !this.loading) {

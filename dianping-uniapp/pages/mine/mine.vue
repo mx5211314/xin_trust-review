@@ -122,13 +122,6 @@
 
     <!-- 菜单 -->
     <view class="menu">
-      <view class="menu-item" @tap="goNotify">
-        <view class="menu-left">
-          <text class="menu-text">我的消息</text>
-          <view v-if="unread > 0" class="badge"><text class="badge-text">{{ unread > 99 ? '99+' : unread }}</text></view>
-        </view>
-        <text class="menu-arrow">›</text>
-      </view>
       <view class="menu-item" v-if="user && user.role === 'USER'" @tap="goGuide">
         <text class="menu-text">如何成为点评人</text>
         <text class="menu-arrow">›</text>
@@ -237,12 +230,6 @@ export default {
         this.user = Object.assign({}, getUser(), me)
         const stats = await request({ url: '/user/stats' })
         this.stats = Object.assign(this.stats, stats)
-        Promise.all([
-          request({ url: '/user/notify/unread' }).catch(() => ({ unread: 0 })),
-          request({ url: '/chat/unread' }).catch(() => ({ unread: 0 }))
-        ]).then(([a, b]) => {
-          this.unread = Number(a.unread || 0) + Number(b.unread || 0)
-        })
         let data
         if (this.tab === 'note') {
           data = await request({

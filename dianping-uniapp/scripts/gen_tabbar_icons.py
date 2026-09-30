@@ -48,11 +48,22 @@ def user(color):
     return img
 
 
+def msg(color):
+    """消息气泡：圆角矩形 + 左下小尾巴"""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle([8, 12, 73, 60], radius=14, fill=color)
+    d.polygon([(20, 56), (20, 72), (38, 58)], fill=color)
+    return img
+
+
 specs = {
     "home.png": home(GRAY),
     "home-on.png": home(DARK),
     "plus.png": plus(GRAY),
     "plus-on.png": plus(WHITE, RED),
+    "msg.png": msg(GRAY),
+    "msg-on.png": msg(DARK),
     "my.png": user(GRAY),
     "my-on.png": user(DARK),
 }

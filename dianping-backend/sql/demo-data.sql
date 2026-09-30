@@ -217,10 +217,10 @@ UPDATE content SET images='["demo/dp8.jpg","demo/dp10.jpg"]' WHERE id=2008;
 INSERT IGNORE INTO content (id, user_id, title, `text`, images, video_key, cover_key, duration, region_code, poi_name, status, reject_reason, like_count, view_count, tags) VALUES
 (2009, 1001, '炭火烤肉现场，滋滋冒油',
  '现场实拍！肉下去的那一刻太治愈了。\n老板说每天现切现腌，不隔夜。',
- '[]', 'https://vjs.zencdn.net/v/oceans.mp4', 'demo/dp9.jpg', 46, '130200', '炭火自助烤肉（万达店）', 'APPROVED', '', 42, 128, '["唐山美食","探店"]'),
+ '[]', 'https://vjs.zencdn.net/v/oceans.mp4', 'upload/demo/dp9.jpg', 46, '130200', '炭火自助烤肉（万达店）', 'APPROVED', '', 42, 128, '["唐山美食","探店"]'),
 (2010, 1005, '唐山南湖夜景实拍，随手出片',
  '晚上遛弯顺手拍的，灯光秀确实漂亮。\n周末人多，建议提前占机位。',
- '[]', 'https://media.w3.org/2010/05/sintel/trailer.mp4', 'demo/dp10.jpg', 52, '130200', '南湖景区', 'APPROVED', '', 38, 96, '["拍照","游玩"]'),
+ '[]', 'https://media.w3.org/2010/05/sintel/trailer.mp4', 'upload/demo/dp10.jpg', 52, '130200', '南湖景区', 'APPROVED', '', 38, 96, '["拍照","游玩"]'),
 (2011, 1003, '带娃逛唐山宴实拍vlog',
  '娃看到糖画走不动道，哈哈哈。\n周末亲子好去处，室内不晒。',
- '[]', 'https://res.wx.qq.com/wxdoc/dist/assets/video/friend.mp4', 'demo/dp5.jpg', 30, '130200', '唐山宴', 'APPROVED', '', 27, 74, '["遛娃","游玩"]');
+ '[]', 'https://res.wx.qq.com/wxdoc/dist/assets/video/friend.mp4', 'upload/demo/dp5.jpg', 30, '130200', '唐山宴', 'APPROVED', '', 27, 74, '["遛娃","游玩"]');

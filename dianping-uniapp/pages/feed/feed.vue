@@ -7,10 +7,6 @@
         <text class="seg-item" :class="{ on: tab === 'find' }" @tap="switchTab('find')">发现</text>
         <text class="seg-item" :class="{ on: tab === 'city' }" @tap="switchTab('city')">同城</text>
       </view>
-      <view class="sicon msg-entry" @tap="goNotify">
-        <image class="msg-icon" src="/static/icons/bubble.png" />
-        <view v-if="unread > 0" class="msg-dot"></view>
-      </view>
       <view class="sicon search-icon" @tap="goSearch">
         <view class="sicon-ring"></view>
         <view class="sicon-handle"></view>
@@ -214,15 +210,19 @@ export default {
     goSearch() {
       uni.navigateTo({ url: '/pages/search/search' })
     },
-    goNotify() {
-      uni.navigateTo({ url: '/pages/notify/notify' })
-    },
     loadUnread() {
       Promise.all([
         request({ url: '/user/notify/unread' }).catch(() => ({ unread: 0 })),
         request({ url: '/chat/unread' }).catch(() => ({ unread: 0 }))
       ]).then(([a, b]) => {
-        this.unread = Number(a.unread || 0) + Number(b.unread || 0)
+        const total = Number(a.unread || 0) + Number(b.unread || 0)
+        this.unread = total
+        // tabBar "消息"tab 徽标（index=2）
+        if (total > 0) {
+          uni.setTabBarBadge({ index: 2, text: total > 99 ? '99+' : String(total) })
+        } else {
+          uni.removeTabBarBadge({ index: 2 })
+        }
       })
     },
     goDetail(item) {
