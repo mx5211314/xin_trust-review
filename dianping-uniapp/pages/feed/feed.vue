@@ -246,12 +246,14 @@ export default {
           await request({ url: `/content/${item.contentId}/like`, method: 'DELETE', silent: true })
           item.liked = false
           item.likeCount = Math.max(0, item.likeCount - 1)
+          uni.showToast({ title: '已取消点赞', icon: 'none', duration: 800 })
         } catch (e) { /* ignore */ }
       } else {
         try {
           await request({ url: `/content/${item.contentId}/like`, method: 'POST', silent: true })
           item.liked = true
           item.likeCount += 1
+          uni.showToast({ title: '已点赞 ♥', icon: 'none', duration: 800 })
         } catch (e) {
           if (e.code === 2003) item.liked = true
         }

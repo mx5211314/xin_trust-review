@@ -194,9 +194,12 @@ export default {
         this.user = Object.assign({}, getUser(), me)
         const stats = await request({ url: '/user/stats' })
         this.stats = stats
-        request({ url: '/user/notify/unread' }).then(d => {
-          this.unread = Number(d.unread || 0)
-        }).catch(() => {})
+        Promise.all([
+          request({ url: '/user/notify/unread' }).catch(() => ({ unread: 0 })),
+          request({ url: '/chat/unread' }).catch(() => ({ unread: 0 }))
+        ]).then(([a, b]) => {
+          this.unread = Number(a.unread || 0) + Number(b.unread || 0)
+        })
         if (this.tab === 'note') {
           const data = await request({
             url: `/user/${this.user.userId}?page=${this.page}&pageSize=${this.pageSize}`

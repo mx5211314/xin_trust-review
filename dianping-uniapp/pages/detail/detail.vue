@@ -324,6 +324,7 @@ export default {
           await request({ url: `/content/comments/${c.commentId}/like`, method: 'POST', silent: true })
           c.liked = true
           c.likeCount = (c.likeCount || 0) + 1
+          uni.showToast({ title: '已点赞', icon: 'none', duration: 800 })
         } catch (e) {
           if (e.code === 2003) c.liked = true
         }
@@ -421,12 +422,14 @@ export default {
           await request({ url: `/content/${this.id}/favorite`, method: 'DELETE', silent: true })
           this.favorited = false
           this.favoriteCount = Math.max(0, this.favoriteCount - 1)
+          uni.showToast({ title: '已取消收藏', icon: 'none', duration: 900 })
         } catch (e) { /* ignore */ }
       } else {
         try {
           await request({ url: `/content/${this.id}/favorite`, method: 'POST', silent: true })
           this.favorited = true
           this.favoriteCount += 1
+          uni.showToast({ title: '已收藏 ★', icon: 'none', duration: 900 })
         } catch (e) {
           if (e.code === 2003) this.favorited = true
         }
@@ -469,12 +472,14 @@ export default {
           await request({ url: `/content/${c.contentId}/like`, method: 'DELETE', silent: true })
           c.liked = false
           c.likeCount = Math.max(0, c.likeCount - 1)
+          uni.showToast({ title: '已取消点赞', icon: 'none', duration: 900 })
         } catch (e) { /* ignore */ }
       } else {
         try {
           await request({ url: `/content/${c.contentId}/like`, method: 'POST', silent: true })
           c.liked = true
           c.likeCount += 1
+          uni.showToast({ title: '已点赞 ♥', icon: 'none', duration: 900 })
         } catch (e) {
           if (e.code === 2003) c.liked = true
         }

@@ -43,6 +43,10 @@
     {
       "path": "pages/following/following",
       "style": { "navigationBarTitleText": "我关注的" }
+    },
+    {
+      "path": "pages/chat/chat",
+      "style": { "navigationBarTitleText": "私信" }
     }
   ],
   "subPackages": [

@@ -11,12 +11,14 @@
         <text v-if="isBanned" class="tag tag-banned">已封禁</text>
       </view>
       <text class="muted bio">{{ profile && profile.role ? regionText : '' }}</text>
-      <button
-        v-if="!isMine"
-        class="follow-btn"
-        :class="{ on: isFollowing }"
-        @tap="toggleFollow"
-      >{{ isFollowing ? '已关注' : '+ 关注' }}</button>
+      <view v-if="!isMine" class="btn-row">
+        <button
+          class="follow-btn"
+          :class="{ on: isFollowing }"
+          @tap="toggleFollow"
+        >{{ isFollowing ? '已关注' : '+ 关注' }}</button>
+        <button class="chat-btn" @tap="goChat">私信</button>
+      </view>
     </view>
 
     <!-- 数据栏 -->
@@ -183,6 +185,12 @@ export default {
         }
       }
     },
+    goChat() {
+      const name = this.profile ? this.profile.nickname : ''
+      uni.navigateTo({
+        url: `/pages/chat/chat?userId=${this.userId}&nickname=${encodeURIComponent(name || '')}`
+      })
+    },
     goDetail(item) {
       uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
     }
@@ -227,8 +235,23 @@ export default {
 .bio {
   margin-top: 10rpx;
 }
-.follow-btn {
+.btn-row {
+  display: flex;
+  align-items: center;
   margin-top: 24rpx;
+}
+.chat-btn {
+  margin-left: 20rpx;
+  background: #f6f7f9;
+  color: #1f2430;
+  font-size: 28rpx;
+  border-radius: 40rpx;
+  padding: 0 60rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+}
+.follow-btn {
+  margin-top: 0;
   background: #ff2442;
   color: #ffffff;
   font-size: 28rpx;

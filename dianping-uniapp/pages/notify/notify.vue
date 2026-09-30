@@ -1,11 +1,40 @@
 <template>
   <view class="page">
     <view class="topbar">
-      <text class="title">消息</text>
-      <text class="readall" @tap="readAll">全部已读</text>
+      <view class="tabs">
+        <text class="tab" :class="{ on: tab === 'notify' }" @tap="switchTab('notify')">通知</text>
+        <text class="tab" :class="{ on: tab === 'chat' }" @tap="switchTab('chat')">私信</text>
+      </view>
+      <text v-if="tab === 'notify'" class="readall" @tap="readAll">全部已读</text>
     </view>
 
-    <view v-for="n in list" :key="n.notifyId" class="item" :class="{ unread: !n.isRead }" @tap="tapItem(n)">
+    <!-- 私信：会话列表 -->
+    <view v-if="tab === 'chat'">
+      <view v-for="c in conversations" :key="c.peerId" class="item" @tap="goChat(c)">
+        <view class="icon chat-avatar">
+          <text class="icon-text">{{ (c.nickname || '客').slice(0, 1) }}</text>
+        </view>
+        <view class="body">
+          <view class="line1">
+            <text class="actor">{{ c.nickname }}</text>
+          </view>
+          <text class="ntext">{{ c.lastMine ? '我: ' : '' }}{{ c.lastText }}</text>
+        </view>
+        <view class="chat-right">
+          <text class="ntime-right">{{ c.lastTime }}</text>
+          <view v-if="c.unread > 0" class="chat-badge">
+            <text class="chat-badge-text">{{ c.unread }}</text>
+          </view>
+        </view>
+      </view>
+      <view v-if="!loadingChat && !conversations.length" class="empty">
+        <text class="muted">还没有私信</text>
+        <text class="muted small">在用户主页点"私信"可以给对方发消息</text>
+      </view>
+    </view>
+
+
+    <view v-if="tab === 'notify'" v-for="n in list" :key="n.notifyId" class="item" :class="{ unread: !n.isRead }" @tap="tapItem(n)">
       <view class="icon" :class="'icon-' + n.type">
         <text class="icon-text">{{ iconOf(n.type) }}</text>
       </view>
@@ -20,8 +49,8 @@
       <view v-if="!n.isRead" class="dot"></view>
     </view>
 
-    <view v-if="!list.length" class="empty">
-      <text class="muted">还没有消息</text>
+    <view v-if="tab === 'notify' && !list.length" class="empty">
+      <text class="muted">还没有通知</text>
     </view>
   </view>
 </template>
@@ -37,7 +66,10 @@ export default {
       page: 1,
       pageSize: 20,
       hasMore: true,
-      loading: false
+      loading: false,
+      tab: 'notify',
+      conversations: [],
+      loadingChat: false
     }
   },
   onShow() {
@@ -47,6 +79,7 @@ export default {
     }
     this.page = 1
     this.fetch()
+    this.loadConversations()
   },
   onReachBottom() {
     if (this.hasMore && !this.loading) {
@@ -55,12 +88,35 @@ export default {
     }
   },
   methods: {
+    switchTab(t) {
+      this.tab = t
+      if (t === 'chat') {
+        this.loadConversations()
+      }
+    },
+    async loadConversations() {
+      this.loadingChat = true
+      try {
+        const data = await request({ url: '/chat/conversations?limit=30' })
+        this.conversations = data.list || []
+      } catch (e) {
+        this.conversations = []
+      } finally {
+        this.loadingChat = false
+      }
+    },
+    goChat(c) {
+      uni.navigateTo({
+        url: `/pages/chat/chat?userId=${c.peerId}&nickname=${encodeURIComponent(c.nickname || '')}`
+      })
+    },
     iconOf(type) {
-      const map = { LIKE: '♥', COMMENT: '💬', REPLY: '💬', FOLLOW: '＋', FAV: '★', AUDIT_PASS: '✓', AUDIT_REJECT: '✕' }
+      const map = { LIKE: '♥', COMMENT: '💬', REPLY: '💬', FOLLOW: '＋', FAV: '★', MESSAGE: '✉', AUDIT_PASS: '✓', AUDIT_REJECT: '✕' }
       return map[type] || '🔔'
     },
     actionOf(n) {
       const map = {
+        MESSAGE: '给你发了私信',
         LIKE: '赞了你的笔记',
         COMMENT: '评论了你的笔记',
         REPLY: '回复了你的评论',
@@ -121,6 +177,58 @@ export default {
 .readall {
   font-size: 24rpx;
   color: #ff2442;
+}
+.tabs {
+  display: flex;
+}
+.tab {
+  font-size: 32rpx;
+  color: #999999;
+  margin-right: 40rpx;
+  position: relative;
+}
+.tab.on {
+  color: #1f2430;
+  font-weight: 500;
+}
+.tab.on::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -12rpx;
+  width: 36rpx;
+  height: 5rpx;
+  border-radius: 3rpx;
+  background: #ff2442;
+}
+.chat-avatar {
+  background: #ffe8ea;
+}
+.chat-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.ntime-right {
+  font-size: 20rpx;
+  color: #c2c8d0;
+}
+.chat-badge {
+  margin-top: 8rpx;
+  background: #ff2442;
+  border-radius: 999rpx;
+  padding: 2rpx 14rpx;
+}
+.chat-badge-text {
+  color: #ffffff;
+  font-size: 20rpx;
+}
+.small {
+  font-size: 22rpx;
+  color: #c2c8d0;
+  margin-top: 10rpx;
 }
 .item {
   display: flex;

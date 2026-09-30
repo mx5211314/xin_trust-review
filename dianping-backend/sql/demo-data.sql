@@ -183,3 +183,22 @@ INSERT IGNORE INTO notify (id, user_id, type, actor_id, content_id, comment_id, 
 (8003, 1001, 'FAV',     1004, 2001, 0,    '', 1),
 (8004, 1001, 'FOLLOW',  1006, 0,    0,    '', 0),
 (8005, 1006, 'AUDIT_PASS', 0, 2001, 0,    '唐山这家老味烧烤，本地人从小吃到大', 1);
+
+-- 11. 私信消息表
+CREATE TABLE IF NOT EXISTS `message` (
+    `id`           BIGINT       NOT NULL,
+    `from_user_id` BIGINT       NOT NULL,
+    `to_user_id`   BIGINT       NOT NULL,
+    `text`         VARCHAR(500) NOT NULL,
+    `is_read`      TINYINT      NOT NULL DEFAULT 0,
+    `create_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_pair` (`from_user_id`, `to_user_id`),
+    KEY `idx_to_read` (`to_user_id`, `is_read`)
+) COMMENT '私信';
+
+-- 演示私信：小美问老王烧烤地址
+INSERT IGNORE INTO message (id, from_user_id, to_user_id, text, is_read) VALUES
+(9001, 1006, 1001, '老王，你推荐那家烧烤店具体在哪条街呀？', 1),
+(9002, 1001, 1006, '建设南路和新华道交叉口往南200米，路东，红色招牌', 1),
+(9003, 1006, 1001, '收到！周末就去，谢谢老王🙏', 0);
