@@ -1,0 +1,61 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    # 密码等敏感信息走环境变量，未设置时回退到本地开发默认值
+    url: ${DB_URL:jdbc:mysql://localhost:3305/dianping?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USER:root}
+    password: "${DB_PASSWORD:123456}"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # password:      # 有密码再打开
+  servlet:
+    multipart:
+      max-file-size: 110MB
+      max-request-size: 110MB
+
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: assign_id      # 雪花ID
+      logic-delete-field: deleted
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 开发期打印SQL，上线删
+
+dianping:
+  jwt:
+    # HS256 要求至少 32 字节；线上务必通过环境变量 JWT_SECRET 覆盖
+    secret: ${JWT_SECRET:dianping-dev-secret-key-change-me-in-prod-0123456789}
+    expire-days: 7
+  audit:
+    # true = 机审直接通过（本地开发用）；false = 停在 PENDING，等后台人工审
+    mock-auto-pass: true
+  oss:
+    # local  = 开发期本地磁盘存储（图片/视频存电脑硬盘，/upload/** 直接访问，零成本）
+    # aliyun = 正式阿里云 OSS 直传（去控制台创建 Bucket、拿到 AK 后把 mode 改回 aliyun）
+    mode: local
+    # 本地存储根目录（local 模式用）
+    local-dir: ${OSS_LOCAL_DIR:D:/dianping-upload}
+    # 本地模式对外访问前缀：浏览器调试 localhost 即可；真机调试建议改成电脑局域网 IP
+    local-public-url: ${OSS_LOCAL_PUBLIC:http://localhost:18080}
+    # ---- 以下为 aliyun 模式配置，切换 mode 后生效；AK 走环境变量，不进代码 ----
+    access-key-id: ${OSS_ACCESS_KEY_ID:your-ak}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:your-sk}
+    endpoint: ${OSS_ENDPOINT:https://oss-cn-hangzhou.aliyuncs.com}
+    bucket: ${OSS_BUCKET:your-bucket}
+    # 对外访问域名（配了 CDN 就填 CDN 域名），用于拼接图片/视频 URL
+    public-host: ${OSS_PUBLIC_HOST:https://your-bucket.oss-cn-hangzhou.aliyuncs.com}
+    # 直传大小限制（字节）：图片 10MB，视频 100MB
+    image-max-size: 10485760
+    video-max-size: 104857600
+    # 凭证有效期（分钟）
+    policy-expire-minutes: 30
+
+logging:
+  level:
+    com.dianping: debug

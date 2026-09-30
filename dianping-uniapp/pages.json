@@ -1,0 +1,81 @@
+{
+  "pages": [
+    {
+      "path": "pages/feed/feed",
+      "style": {
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true,
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    {
+      "path": "pages/publish/publish",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/mine/mine",
+      "style": { "navigationBarTitleText": "我的" }
+    },
+    {
+      "path": "pages/login/login",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/detail/detail",
+      "style": { "navigationStyle": "custom", "backgroundColor": "#111111" }
+    },
+    {
+      "path": "pages/user/user",
+      "style": { "navigationBarTitleText": "用户主页" }
+    },
+    {
+      "path": "pages/search/search",
+      "style": { "navigationBarTitleText": "搜索" }
+    },
+    {
+      "path": "pages/guide/guide",
+      "style": { "navigationBarTitleText": "如何成为点评人" }
+    }
+  ],
+  "subPackages": [
+    {
+      "root": "pagesAdmin",
+      "pages": [
+        { "path": "audit/audit", "style": { "navigationBarTitleText": "内容管理" } },
+        { "path": "users/users", "style": { "navigationBarTitleText": "用户管理" } }
+      ]
+    }
+  ],
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#1F2430",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/feed/feed",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-on.png"
+      },
+      {
+        "pagePath": "pages/publish/publish",
+        "text": "发布",
+        "iconPath": "static/tabbar/plus.png",
+        "selectedIconPath": "static/tabbar/plus-on.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "static/tabbar/my.png",
+        "selectedIconPath": "static/tabbar/my-on.png"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "本地点评",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F7F8FA"
+  }
+}

@@ -1,0 +1,33 @@
+# ---- Java / Maven ----
+dianping-backend/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---- 日志 ----
+*.log
+dianping-backend/app.log
+dianping-backend/build.log
+dianping-backend/build2.log
+
+# ---- 前端 ----
+dianping-uniapp/node_modules/
+dianping-uniapp/unpackage/
+dianping-uniapp/.hbuilderx/
+
+# ---- 工作目录私有文件（不进仓库）----
+.workbuddy/
+
+# ---- 本地上传的文件（local 存储模式）----
+dianping-upload/
+upload/
+
+# ---- IDE ----
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# ---- 系统垃圾 ----
+Thumbs.db
+desktop.ini

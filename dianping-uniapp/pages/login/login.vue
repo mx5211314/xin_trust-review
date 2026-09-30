@@ -1,0 +1,240 @@
+<template>
+  <view class="page">
+    <view class="deco deco-1"></view>
+    <view class="deco deco-2"></view>
+
+    <!-- 好评脸 logo：红圆 + 微笑 + 星形右眼 -->
+    <view class="logo-wrap">
+      <view class="logo">
+        <view class="eye eye-l"></view>
+        <text class="star">★</text>
+        <view class="mouth"></view>
+      </view>
+      <text class="app-name">本地点评</text>
+      <text class="slogan">每一条点评，都来自可信的人</text>
+    </view>
+
+    <view class="form">
+      <input
+        v-model="phone"
+        class="input"
+        type="number"
+        maxlength="11"
+        placeholder="手机号"
+        placeholder-class="ph"
+      />
+      <view class="code-row">
+        <input
+          v-model="code"
+          class="input code-input"
+          type="number"
+          maxlength="6"
+          placeholder="验证码"
+          placeholder-class="ph"
+        />
+        <view class="code-btn" @tap="getSms">
+          <text class="code-btn-text">{{ smsText }}</text>
+        </view>
+      </view>
+      <button class="btn-primary login-btn" :class="{ disabled: !canSubmit }" @tap="doLogin">
+        登 录
+      </button>
+      <text class="tip">新用户验证通过后自动注册</text>
+      <text class="tip">普通用户可浏览 · 点评人可发布</text>
+    </view>
+  </view>
+</template>
+
+<script>
+import { request } from '@/utils/request'
+import { setLogin } from '@/utils/auth'
+
+export default {
+  data() {
+    return {
+      phone: '',
+      code: '',
+      smsText: '获取验证码',
+      counting: false,
+      submitting: false
+    }
+  },
+  computed: {
+    canSubmit() {
+      return /^1\d{10}$/.test(this.phone) && this.code.length >= 4
+    }
+  },
+  methods: {
+    getSms() {
+      if (this.counting) return
+      if (!/^1\d{10}$/.test(this.phone)) {
+        return uni.showToast({ title: '手机号格式不对', icon: 'none' })
+      }
+      // TODO 接后端短信接口后，验证码写入 Redis 并校验
+      this.counting = true
+      let left = 60
+      this.smsText = left + 's'
+      const timer = setInterval(() => {
+        left--
+        if (left <= 0) {
+          clearInterval(timer)
+          this.counting = false
+          this.smsText = '获取验证码'
+        } else {
+          this.smsText = left + 's'
+        }
+      }, 1000)
+      uni.showToast({ title: '开发环境验证码：8888', icon: 'none' })
+    },
+    async doLogin() {
+      if (!this.canSubmit || this.submitting) return
+      this.submitting = true
+      try {
+        const data = await request({
+          url: '/auth/login',
+          method: 'POST',
+          data: { phone: this.phone, code: this.code }
+        })
+        setLogin(data.token, { userId: data.userId, role: data.role })
+        uni.showToast({ title: data.isNew ? '注册成功' : '登录成功', icon: 'success' })
+        setTimeout(() => uni.reLaunch({ url: '/pages/feed/feed' }), 600)
+      } catch (e) {
+        // toast 已在 request 里统一处理
+      } finally {
+        this.submitting = false
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.page {
+  min-height: 100vh;
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+.deco {
+  position: absolute;
+  border-radius: 50%;
+}
+.deco-1 {
+  width: 220rpx;
+  height: 220rpx;
+  background: #ffe8ea;
+  top: -60rpx;
+  right: -60rpx;
+}
+.deco-2 {
+  width: 130rpx;
+  height: 130rpx;
+  background: #fff1e6;
+  top: 220rpx;
+  left: -50rpx;
+}
+.logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 170rpx;
+  position: relative;
+}
+/* 好评脸：红圆 + 两眼（右眼是星）+ 微笑弧 */
+.logo {
+  width: 170rpx;
+  height: 170rpx;
+  border-radius: 50%;
+  background: #ff2442;
+  position: relative;
+}
+.eye {
+  position: absolute;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  top: 56rpx;
+}
+.eye-l {
+  left: 44rpx;
+}
+.star {
+  position: absolute;
+  right: 34rpx;
+  top: 44rpx;
+  color: #ffffff;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+.mouth {
+  position: absolute;
+  left: 45rpx;
+  right: 45rpx;
+  bottom: 34rpx;
+  height: 34rpx;
+  border-bottom: 10rpx solid #ffffff;
+  border-radius: 0 0 70rpx 70rpx;
+}
+.app-name {
+  margin-top: 36rpx;
+  font-size: 42rpx;
+  font-weight: 500;
+  color: #1f2430;
+}
+.slogan {
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  color: #999999;
+}
+.form {
+  margin-top: 90rpx;
+  padding: 0 60rpx;
+  position: relative;
+}
+.input {
+  background: #f6f7f9;
+  border-radius: 24rpx;
+  padding: 26rpx 30rpx;
+  font-size: 28rpx;
+  margin-bottom: 24rpx;
+}
+.ph {
+  color: #b9c0c9;
+}
+.code-row {
+  display: flex;
+  justify-content: space-between;
+}
+.code-input {
+  width: 380rpx;
+}
+.code-btn {
+  width: 190rpx;
+  height: 90rpx;
+  border-radius: 24rpx;
+  background: #ffe8ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.code-btn-text {
+  color: #ff2442;
+  font-size: 26rpx;
+}
+.login-btn {
+  margin-top: 44rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+}
+.tip {
+  display: block;
+  text-align: center;
+  margin-top: 18rpx;
+  font-size: 22rpx;
+  color: #b9c0c9;
+}
+.tip + .tip {
+  margin-top: 8rpx;
+}
+</style>
