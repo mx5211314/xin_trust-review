@@ -71,9 +71,10 @@ public class UserController {
 
     /** GET /user/notify —— 消息列表 */
     @GetMapping("/notify")
-    public R<Map<String, Object>> notify(@RequestParam(defaultValue = "1") int page,
+    public R<Map<String, Object>> notify(@RequestParam(required = false) String category,
+                                         @RequestParam(defaultValue = "1") int page,
                                          @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(notifyService.list(currentUserId(), page, pageSize));
+        return R.ok(notifyService.list(currentUserId(), category, page, pageSize));
     }
 
     /** GET /user/notify/unread —— 未读数 */

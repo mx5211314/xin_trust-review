@@ -34,6 +34,9 @@ public class NotifyService {
     public static final String T_FAV = "FAV";
     public static final String T_AUDIT_PASS = "AUDIT_PASS";
     public static final String T_AUDIT_REJECT = "AUDIT_REJECT";
+    public static final String T_MESSAGE = "MESSAGE";
+    /** 管理员公告 */
+    public static final String T_ANNOUNCE = "ANNOUNCE";
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("MM-dd HH:mm");
 
@@ -63,12 +66,22 @@ public class NotifyService {
                 .eq(Notify::getIsRead, 0));
     }
 
-    /** 消息列表（时间倒序，组装触发人昵称与内容标题文案） */
-    public Map<String, Object> list(Long me, int page, int pageSize) {
-        Page<Notify> p = notifyMapper.selectPage(new Page<>(page, pageSize),
-                new LambdaQueryWrapper<Notify>()
-                        .eq(Notify::getUserId, me)
-                        .orderByDesc(Notify::getCreateTime));
+    /**
+     * 消息列表（时间倒序）。
+     * category: interact = 互动（赞/评/关注/收藏/审核，不含私信与公告）
+     *           announce = 管理员公告
+     *           空 = 全部
+     */
+    public Map<String, Object> list(Long me, String category, int page, int pageSize) {
+        LambdaQueryWrapper<Notify> w = new LambdaQueryWrapper<Notify>()
+                .eq(Notify::getUserId, me);
+        if ("announce".equals(category)) {
+            w.eq(Notify::getType, T_ANNOUNCE);
+        } else if ("interact".equals(category)) {
+            w.notIn(Notify::getType, T_ANNOUNCE, T_MESSAGE);
+        }
+        w.orderByDesc(Notify::getCreateTime);
+        Page<Notify> p = notifyMapper.selectPage(new Page<>(page, pageSize), w);
         List<Long> actorIds = p.getRecords().stream()
                 .map(Notify::getActorId).filter(id -> id > 0).distinct().toList();
         Map<Long, User> actors = actorIds.isEmpty() ? Map.of()
@@ -93,6 +106,31 @@ public class NotifyService {
         data.put("unread", unreadCount(me));
         data.put("list", list);
         return data;
+    }
+
+    /** 管理员发布公告：给所有正常用户群发一条 ANNOUNCE 通知 */
+    public int announce(String text) {
+        String t = text == null ? "" : text.trim();
+        if (t.isEmpty()) {
+            return 0;
+        }
+        if (t.length() > 200) {
+            t = t.substring(0, 200);
+        }
+        List<User> users = userMapper.selectList(new LambdaQueryWrapper<User>()
+                .eq(User::getStatus, "NORMAL"));
+        for (User u : users) {
+            Notify n = new Notify();
+            n.setUserId(u.getId());
+            n.setType(T_ANNOUNCE);
+            n.setActorId(0L);
+            n.setContentId(0L);
+            n.setCommentId(0L);
+            n.setText(t);
+            n.setIsRead(0);
+            notifyMapper.insert(n);
+        }
+        return users.size();
     }
 
     /** 全部已读 */

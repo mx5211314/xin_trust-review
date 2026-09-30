@@ -6,6 +6,8 @@ import com.dianping.dto.ContentVO;
 import com.dianping.dto.RejectReq;
 import com.dianping.service.AdminService;
 import com.dianping.service.ContentService;
+import com.dianping.service.NotifyService;
+import java.util.Map;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +28,16 @@ public class AdminController {
 
     private final AdminService adminService;
     private final ContentService contentService;
+    private final NotifyService notifyService;
+
+    /** POST /admin/announce  body: {"text":"公告内容"} —— 管理员发布公告（群发所有用户） */
+    @PostMapping("/announce")
+    @RequireRole({"ADMIN"})
+    public R<Map<String, Object>> announce(@RequestBody Map<String, Object> body) {
+        Object text = body.get("text");
+        int count = notifyService.announce(text == null ? "" : String.valueOf(text));
+        return R.ok(java.util.Map.of("sent", count));
+    }
 
     /** GET /admin/content/list?status=&page=&pageSize= —— 返回 VO（含完整图片 URL） */
     @GetMapping("/content/list")

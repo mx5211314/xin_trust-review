@@ -2,10 +2,11 @@
   <view class="page">
     <view class="topbar">
       <view class="tabs">
-        <text class="tab" :class="{ on: tab === 'notify' }" @tap="switchTab('notify')">通知</text>
+        <text class="tab" :class="{ on: tab === 'interact' }" @tap="switchTab('interact')">互动</text>
         <text class="tab" :class="{ on: tab === 'chat' }" @tap="switchTab('chat')">私信</text>
+        <text class="tab" :class="{ on: tab === 'announce' }" @tap="switchTab('announce')">通知</text>
       </view>
-      <text v-if="tab === 'notify'" class="readall" @tap="readAll">全部已读</text>
+      <text v-if="tab === 'interact'" class="readall" @tap="readAll">全部已读</text>
     </view>
 
     <!-- 私信：会话列表 -->
@@ -34,7 +35,26 @@
     </view>
 
 
-    <view v-if="tab === 'notify'" v-for="n in list" :key="n.notifyId" class="item" :class="{ unread: !n.isRead }" @tap="tapItem(n)">
+    <!-- 管理员公告 -->
+    <view v-if="tab === 'announce'">
+      <view v-for="a in announces" :key="a.notifyId" class="item" :class="{ unread: !a.isRead }" @tap="a.isRead = 1">
+        <view class="icon announce-icon">
+          <text class="icon-text">📢</text>
+        </view>
+        <view class="body">
+          <view class="line1">
+            <text class="actor">平台公告</text>
+          </view>
+          <text class="ntext announce-text">{{ a.text }}</text>
+          <text class="ntime">{{ a.createTime }}</text>
+        </view>
+      </view>
+      <view v-if="!loadingAnnounce && !announces.length" class="empty">
+        <text class="muted">暂无公告</text>
+      </view>
+    </view>
+
+    <view v-if="tab === 'interact'" v-for="n in list" :key="n.notifyId" class="item" :class="{ unread: !n.isRead }" @tap="tapItem(n)">
       <view class="icon" :class="'icon-' + n.type">
         <text class="icon-text">{{ iconOf(n.type) }}</text>
       </view>
@@ -49,8 +69,8 @@
       <view v-if="!n.isRead" class="dot"></view>
     </view>
 
-    <view v-if="tab === 'notify' && !list.length" class="empty">
-      <text class="muted">还没有通知</text>
+    <view v-if="tab === 'interact' && !list.length" class="empty">
+      <text class="muted">还没有互动消息</text>
     </view>
   </view>
 </template>
@@ -67,9 +87,11 @@ export default {
       pageSize: 20,
       hasMore: true,
       loading: false,
-      tab: 'notify',
+      tab: 'interact',
       conversations: [],
-      loadingChat: false
+      loadingChat: false,
+      announces: [],
+      loadingAnnounce: false
     }
   },
   onShow() {
@@ -80,6 +102,7 @@ export default {
     this.page = 1
     this.fetch()
     this.loadConversations()
+    this.loadAnnounces()
     // 清除消息 tab 徽标（进入即视为查看）
     setTimeout(() => {
       uni.removeTabBarBadge({ index: 2 })
@@ -96,6 +119,19 @@ export default {
       this.tab = t
       if (t === 'chat') {
         this.loadConversations()
+      } else if (t === 'announce') {
+        this.loadAnnounces()
+      }
+    },
+    async loadAnnounces() {
+      this.loadingAnnounce = true
+      try {
+        const data = await request({ url: '/user/notify?category=announce&page=1&pageSize=20' })
+        this.announces = data.list || []
+      } catch (e) {
+        this.announces = []
+      } finally {
+        this.loadingAnnounce = false
       }
     },
     async loadConversations() {
@@ -135,7 +171,7 @@ export default {
       this.loading = true
       try {
         const data = await request({
-          url: `/user/notify?page=${this.page}&pageSize=${this.pageSize}`
+          url: `/user/notify?category=interact&page=${this.page}&pageSize=${this.pageSize}`
         })
         this.list = append ? this.list.concat(data.list) : data.list
         this.hasMore = this.list.length < data.total
@@ -233,6 +269,13 @@ export default {
   font-size: 22rpx;
   color: #c2c8d0;
   margin-top: 10rpx;
+}
+.announce-icon {
+  background: #fff7e8;
+}
+.announce-text {
+  white-space: normal;
+  line-height: 1.55;
 }
 .item {
   display: flex;

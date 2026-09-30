@@ -130,6 +130,10 @@
         <text class="menu-text">内容管理（后台）</text>
         <text class="menu-arrow">›</text>
       </view>
+      <view class="menu-item" v-if="isAdminUser" @tap="goAnnounce">
+        <text class="menu-text">发布公告</text>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" v-if="isAdminUser" @tap="goAdminUsers">
         <text class="menu-text">用户管理（后台）</text>
         <text class="menu-arrow">›</text>
@@ -354,6 +358,9 @@ export default {
     },
     goAdminUsers() {
       uni.navigateTo({ url: '/pagesAdmin/users/users' })
+    },
+    goAnnounce() {
+      uni.navigateTo({ url: '/pagesAdmin/announce/announce' })
     },
     doLogout() {
       uni.showModal({

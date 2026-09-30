@@ -54,7 +54,8 @@
       "root": "pagesAdmin",
       "pages": [
         { "path": "audit/audit", "style": { "navigationBarTitleText": "内容管理" } },
-        { "path": "users/users", "style": { "navigationBarTitleText": "用户管理" } }
+        { "path": "users/users", "style": { "navigationBarTitleText": "用户管理" } },
+        { "path": "announce/announce", "style": { "navigationBarTitleText": "发布公告" } }
       ]
     }
   ],
