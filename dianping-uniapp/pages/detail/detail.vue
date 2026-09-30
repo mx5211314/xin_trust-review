@@ -95,43 +95,44 @@
           <text class="cavatar-text">{{ c.user ? c.user.nickname.slice(0, 1) : '客' }}</text>
         </view>
         <view class="cbody">
-          <view class="cinfo">
-            <text class="cnick">{{ c.user ? c.user.nickname : '匿名' }}</text>
-            <view class="cinfo-r">
-              <text class="creply" @tap="tapReply(c, null)">回复</text>
-              <text
-                v-if="isMyComment(c)"
-                class="cdel"
-                @tap="delComment(c)"
-              >删除</text>
-              <text class="ctime">{{ c.createTime }}</text>
+          <view class="crow">
+            <view class="cmain">
+              <view class="cnick-row">
+                <text class="cnick">{{ c.user ? c.user.nickname : '匿名' }}</text>
+                <text class="ctime">{{ c.createTime }}</text>
+              </view>
+              <text class="ctext">{{ c.text }}</text>
+              <view class="cops">
+                <text class="creply" @tap="tapReply(c, null)">回复</text>
+                <text v-if="isMyComment(c)" class="cdel" @tap="delComment(c)">删除</text>
+              </view>
             </view>
-          </view>
-          <text class="ctext">{{ c.text }}</text>
-          <view class="cfoot">
-            <view class="clike" @tap="likeComment(c)">
+            <!-- 点赞：竖排在评论最右侧（小红书式） -->
+            <view class="clike-col" @tap="likeComment(c)">
               <text class="clike-icon" :class="{ liked: c.liked }">{{ c.liked ? '♥' : '♡' }}</text>
-              <text class="clike-num" v-if="c.likeCount > 0">{{ c.likeCount }}</text>
+              <text class="clike-num">{{ c.likeCount > 0 ? c.likeCount : '' }}</text>
             </view>
           </view>
 
-          <!-- 楼中楼：子回复缩进挂在本评论下 -->
+          <!-- 楼中楼：子回复缩进挂在本评论下（同样带头像） -->
           <view v-if="c.replies && c.replies.length" class="replies">
             <view v-for="r in c.replies" :key="r.commentId" class="reply-item">
-              <view class="cinfo">
-                <text class="cnick rnick">{{ r.user ? r.user.nickname : '匿名' }}</text>
-                <view class="cinfo-r">
+              <view class="ravatar">
+                <text class="ravatar-text">{{ r.user ? r.user.nickname.slice(0, 1) : '客' }}</text>
+              </view>
+              <view class="rbody">
+                <view class="cnick-row">
+                  <text class="cnick rnick">{{ r.user ? r.user.nickname : '匿名' }}</text>
+                  <text class="ctime">{{ r.createTime }}</text>
+                </view>
+                <text class="rtext">
+                  <text v-if="r.replyToNickname && (!r.user || r.user.nickname !== r.replyToNickname)" class="reply-tag">回复 @{{ r.replyToNickname }}：</text>{{ r.text }}
+                </text>
+                <view class="cops">
                   <text class="creply" @tap="tapReply(c, r)">回复</text>
-                  <text
-                    v-if="isMyComment(r)"
-                    class="cdel"
-                    @tap="delComment(r)"
-                  >删除</text>
+                  <text v-if="isMyComment(r)" class="cdel" @tap="delComment(r)">删除</text>
                 </view>
               </view>
-              <text class="rtext">
-                <text v-if="r.replyToNickname && (!r.user || r.user.nickname !== r.replyToNickname)" class="reply-tag">回复 @{{ r.replyToNickname }}：</text>{{ r.text }}
-              </text>
             </view>
           </view>
         </view>
@@ -616,12 +617,12 @@ export default {
 }
 .comment-item {
   display: flex;
-  padding: 22rpx 0;
+  padding: 24rpx 0;
   border-bottom: 1rpx solid #f6f7f9;
 }
 .cavatar {
-  width: 60rpx;
-  height: 60rpx;
+  width: 64rpx;
+  height: 64rpx;
   border-radius: 50%;
   background: #ffe8ea;
   margin-right: 18rpx;
@@ -636,20 +637,55 @@ export default {
 }
 .cbody {
   flex: 1;
+  min-width: 0;
 }
-.cinfo {
+.crow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+}
+.cmain {
+  flex: 1;
+  min-width: 0;
+}
+.cnick-row {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
   margin-bottom: 8rpx;
 }
 .cnick {
-  font-size: 24rpx;
-  color: #666666;
+  font-size: 25rpx;
+  color: #888888;
 }
 .ctime {
   font-size: 20rpx;
   color: #c2c8d0;
+}
+.cops {
+  display: flex;
+  align-items: center;
+  margin-top: 10rpx;
+}
+.clike-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 20rpx;
+  padding-top: 4rpx;
+  flex-shrink: 0;
+}
+.clike-icon {
+  font-size: 34rpx;
+  color: #999999;
+}
+.clike-icon.liked {
+  color: #ff2442;
+}
+.clike-num {
+  font-size: 20rpx;
+  color: #999999;
+  margin-top: 2rpx;
+  min-height: 20rpx;
 }
 .ctext {
   font-size: 28rpx;
@@ -731,54 +767,52 @@ export default {
   color: #4a90d9;
   margin-right: 16rpx;
 }
-.cinfo-r {
-  display: flex;
-  align-items: center;
-}
 .cdel {
   font-size: 22rpx;
   color: #ff2442;
   margin-right: 16rpx;
 }
-.cfoot {
-  margin-top: 10rpx;
-}
-.clike {
-  display: inline-flex;
-  align-items: center;
-}
-.clike-icon {
-  font-size: 26rpx;
-  color: #999999;
-}
-.clike-icon.liked {
-  color: #ff2442;
-}
-.clike-num {
-  margin-left: 8rpx;
-  font-size: 22rpx;
-  color: #999999;
-}
 .replies {
-  margin-top: 18rpx;
+  margin-top: 16rpx;
   background: #f7f8fa;
   border-radius: 12rpx;
-  padding: 6rpx 20rpx;
+  padding: 8rpx 20rpx;
 }
 .reply-item {
-  padding: 16rpx 0;
+  display: flex;
+  align-items: flex-start;
+  padding: 18rpx 0;
   border-bottom: 1rpx solid #eef0f2;
 }
 .reply-item:last-child {
   border-bottom: none;
 }
+.ravatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1rpx solid #ffe0e4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 14rpx;
+}
+.ravatar-text {
+  font-size: 22rpx;
+  color: #ff2442;
+}
+.rbody {
+  flex: 1;
+  min-width: 0;
+}
 .rnick {
   font-size: 24rpx;
-  color: #1f2430;
+  color: #888888;
 }
 .rtext {
   display: block;
-  margin-top: 8rpx;
   font-size: 26rpx;
   color: #333333;
   line-height: 1.5;
