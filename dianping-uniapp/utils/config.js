@@ -5,8 +5,15 @@
  * - 真机调试：改成电脑的局域网 IP（cmd 里 ipconfig 看 IPv4），且手机和电脑连同一 WiFi
  * - 上线：改成服务器域名（需 ICP 备案 + HTTPS）
  */
-// 真机调试：用电脑局域网 IP（手机和电脑需同一 WiFi）；浏览器调试也可以用 localhost
+// #ifdef H5
+// H5 版本：空字符串 = 相对路径（与后端同源部署时自动跟随访问域名，换 IP/穿透域名都不用改）
+export const BASE_URL = ''
+// #endif
+
+// #ifndef H5
+// 小程序/App 真机调试：电脑局域网 IP（手机与电脑需同一 WiFi）
 export const BASE_URL = 'http://192.168.1.113:18080'
+// #endif
 
 /** 地区列表（demo 用河北 11 市，按需增删） */
 export const REGIONS = [
