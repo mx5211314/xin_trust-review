@@ -109,11 +109,14 @@ public class UserController {
         return R.ok();
     }
 
-    /** GET /user/stats —— 我的数据三卡：发布/获赞/浏览量 */
+    /** GET /user/stats —— 我的数据：关注/粉丝/笔记/获赞/浏览量 */
     @GetMapping("/stats")
     public R<Map<String, Object>> stats() {
         Long me = currentUserId();
-        return R.ok(contentService.userStats(me));
+        Map<String, Object> data = contentService.userStats(me);
+        data.put("following", followService.followingIds(me).size());
+        data.put("followers", followService.followersCount(me));
+        return R.ok(data);
     }
 
     /** GET /user/liked?page=&pageSize= —— 我赞过的内容（"赞过" tab） */

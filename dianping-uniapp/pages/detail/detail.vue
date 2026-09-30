@@ -46,7 +46,7 @@
         object-fit="contain"
       />
       <view v-else class="banner banner-empty">
-        <text class="banner-empty-text">视频处理中</text>
+        <text class="banner-empty-text">视频加载失败，请检查网络后重试</text>
       </view>
     </view>
 
@@ -112,7 +112,7 @@
             </view>
             <!-- 点赞：竖排在评论最右侧（小红书式） -->
             <view class="clike-col" @tap="likeComment(c)">
-              <text class="clike-icon" :class="{ liked: c.liked }">{{ c.liked ? '♥' : '♡' }}</text>
+              <image class="clike-img" :src="c.liked ? '/static/icons/heart-on.png' : '/static/icons/heart.png'" />
               <text class="clike-num">{{ c.likeCount > 0 ? c.likeCount : '' }}</text>
             </view>
           </view>
@@ -172,15 +172,15 @@
       <!-- 无输入：显示 赞/藏/评论 三图标 -->
       <view v-else class="acts">
         <view class="act" @tap="doLike">
-          <text class="act-icon" :class="{ liked: content.liked }">{{ content.liked ? '♥' : '♡' }}</text>
+          <image class="act-img" :src="content.liked ? '/static/icons/heart-on.png' : '/static/icons/heart.png'" />
           <text class="act-num">{{ fmtNum(content.likeCount) }}</text>
         </view>
         <view class="act" @tap="doFav">
-          <text class="act-icon star" :class="{ faved: favorited }">{{ favorited ? '★' : '☆' }}</text>
+          <image class="act-img" :src="favorited ? '/static/icons/star-on.png' : '/static/icons/star.png'" />
           <text class="act-num">{{ fmtNum(favoriteCount) }}</text>
         </view>
         <view class="act">
-          <text class="act-icon cmt">💬</text>
+          <image class="act-img" src="/static/icons/bubble.png" />
           <text class="act-num">{{ fmtNum(commentTotal) }}</text>
         </view>
       </view>
@@ -707,12 +707,13 @@ export default {
   padding-top: 4rpx;
   flex-shrink: 0;
 }
-.clike-icon {
-  font-size: 34rpx;
-  color: #999999;
-}
+
 .clike-icon.liked {
   color: #ff2442;
+}
+.clike-img {
+  width: 38rpx;
+  height: 38rpx;
 }
 .clike-num {
   font-size: 20rpx;
@@ -767,10 +768,7 @@ export default {
   align-items: center;
   margin-left: 22rpx;
 }
-.act-icon {
-  font-size: 40rpx;
-  color: #999999;
-}
+
 .act-icon.liked {
   color: #ff2442;
   animation: dpop 0.3s ease;
@@ -786,6 +784,10 @@ export default {
 }
 .act-icon.star.faved {
   color: #ff8a3d;
+}
+.act-img {
+  width: 46rpx;
+  height: 46rpx;
 }
 .act-num {
   font-size: 20rpx;

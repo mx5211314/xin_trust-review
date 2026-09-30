@@ -202,3 +202,25 @@ INSERT IGNORE INTO message (id, from_user_id, to_user_id, text, is_read) VALUES
 (9001, 1006, 1001, '老王，你推荐那家烧烤店具体在哪条街呀？', 1),
 (9002, 1001, 1006, '建设南路和新华道交叉口往南200米，路东，红色招牌', 1),
 (9003, 1006, 1001, '收到！周末就去，谢谢老王🙏', 0);
+
+-- 12. 演示图改为本地托管（demo/dpN.jpg，由后端 /upload/** 提供，手机可访问）
+UPDATE content SET images='["demo/dp1.jpg","demo/dp2.jpg","demo/dp3.jpg"]' WHERE id=2001;
+UPDATE content SET images='["demo/dp2.jpg","demo/dp9.jpg"]' WHERE id=2002;
+UPDATE content SET images='["demo/dp3.jpg","demo/dp10.jpg"]' WHERE id=2003;
+UPDATE content SET images='["demo/dp4.jpg"]' WHERE id=2004;
+UPDATE content SET images='["demo/dp5.jpg","demo/dp6.jpg"]' WHERE id=2005;
+UPDATE content SET images='["demo/dp6.jpg"]' WHERE id=2006;
+UPDATE content SET images='["demo/dp7.jpg"]' WHERE id=2007;
+UPDATE content SET images='["demo/dp8.jpg","demo/dp10.jpg"]' WHERE id=2008;
+
+-- 13. 新增 3 条视频笔记（视频为外链示例，封面用本地图）
+INSERT IGNORE INTO content (id, user_id, title, `text`, images, video_key, cover_key, duration, region_code, poi_name, status, reject_reason, like_count, view_count, tags) VALUES
+(2009, 1001, '炭火烤肉现场，滋滋冒油',
+ '现场实拍！肉下去的那一刻太治愈了。\n老板说每天现切现腌，不隔夜。',
+ '[]', 'https://vjs.zencdn.net/v/oceans.mp4', 'demo/dp9.jpg', 46, '130200', '炭火自助烤肉（万达店）', 'APPROVED', '', 42, 128, '["唐山美食","探店"]'),
+(2010, 1005, '唐山南湖夜景实拍，随手出片',
+ '晚上遛弯顺手拍的，灯光秀确实漂亮。\n周末人多，建议提前占机位。',
+ '[]', 'https://media.w3.org/2010/05/sintel/trailer.mp4', 'demo/dp10.jpg', 52, '130200', '南湖景区', 'APPROVED', '', 38, 96, '["拍照","游玩"]'),
+(2011, 1003, '带娃逛唐山宴实拍vlog',
+ '娃看到糖画走不动道，哈哈哈。\n周末亲子好去处，室内不晒。',
+ '[]', 'https://res.wx.qq.com/wxdoc/dist/assets/video/friend.mp4', 'demo/dp5.jpg', 30, '130200', '唐山宴', 'APPROVED', '', 27, 74, '["遛娃","游玩"]');

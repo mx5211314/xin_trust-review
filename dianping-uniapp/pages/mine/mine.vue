@@ -13,7 +13,8 @@
             <text v-if="user && user.role === 'REVIEWER'" class="tag tag-reviewer">点评人</text>
             <text v-else-if="user && user.role === 'ADMIN'" class="tag tag-admin">管理员</text>
           </view>
-          <text class="muted">点评号：{{ dianpingNo }}</text>
+          <text class="muted head-muted">点评号：{{ dianpingNo }}</text>
+          <text v-if="user && user.bio" class="muted head-muted">{{ user.bio }}</text>
         </view>
         <view class="head-icons" @tap="openEdit">
           <text class="icon-text">✎</text>
@@ -21,21 +22,21 @@
       </view>
     </view>
 
-    <!-- 数据三卡 -->
+    <!-- 数据行：关注 / 粉丝 / 获赞（小红书式） -->
     <view class="stats">
+      <view class="stat" @tap="goFollowing">
+        <text class="stat-num">{{ stats.following }}</text>
+        <text class="stat-label">关注</text>
+      </view>
+      <view class="stat-div"></view>
       <view class="stat">
-        <text class="stat-num">{{ stats.posts }}</text>
-        <text class="stat-label">笔记</text>
+        <text class="stat-num">{{ stats.followers }}</text>
+        <text class="stat-label">粉丝</text>
       </view>
       <view class="stat-div"></view>
       <view class="stat">
         <text class="stat-num">{{ stats.likes }}</text>
         <text class="stat-label">获赞</text>
-      </view>
-      <view class="stat-div"></view>
-      <view class="stat">
-        <text class="stat-num">{{ fmtViews(stats.views) }}</text>
-        <text class="stat-label">浏览量</text>
       </view>
     </view>
 
@@ -55,24 +56,94 @@
       </view>
     </view>
 
-    <!-- 内容瀑布流（单列简版：笔记=自己发布；赞过=我赞过的） -->
-    <view v-for="item in list" :key="item.contentId" class="card mini-card" @tap="goDetail(item)">
-      <image
-        v-if="item.coverUrl || (item.images && item.images.length)"
-        class="mini-cover"
-        :src="item.coverUrl || item.images[0]"
-        mode="aspectFill"
-      />
-      <view v-else class="mini-cover mini-cover-empty">
-        <text class="muted">视频</text>
+    <!-- 双列瀑布流 -->
+    <view class="waterfall" v-if="list.length">
+      <view class="col">
+        <view
+          v-for="item in leftList"
+          :key="item.contentId"
+          class="wcard"
+          hover-class="card-hover"
+          @tap="goDetail(item)"
+          @longpress="onCardLong(item)"
+        >
+          <view class="cover-wrap">
+            <image
+              v-if="item.coverUrl || (item.images && item.images.length)"
+              class="cover"
+              :src="item.coverUrl || item.images[0]"
+              mode="aspectFill"
+              lazy-load
+            />
+            <view v-else class="cover cover-empty">
+              <text class="cover-empty-text">视频</text>
+            </view>
+          </view>
+          <text class="wtitle">{{ item.title }}</text>
+          <view class="wfoot">
+            <text class="wlike-num">{{ item.likeCount }} 赞</text>
+          </view>
+        </view>
       </view>
-      <view class="mini-right">
-        <text class="mini-title">{{ item.title }}</text>
-        <text class="muted">{{ item.likeCount }} 赞 · {{ item.createTime }}</text>
+      <view class="col">
+        <view
+          v-for="item in rightList"
+          :key="item.contentId"
+          class="wcard"
+          hover-class="card-hover"
+          @tap="goDetail(item)"
+          @longpress="onCardLong(item)"
+        >
+          <view class="cover-wrap">
+            <image
+              v-if="item.coverUrl || (item.images && item.images.length)"
+              class="cover"
+              :src="item.coverUrl || item.images[0]"
+              mode="aspectFill"
+              lazy-load
+            />
+            <view v-else class="cover cover-empty">
+              <text class="cover-empty-text">视频</text>
+            </view>
+          </view>
+          <text class="wtitle">{{ item.title }}</text>
+          <view class="wfoot">
+            <text class="wlike-num">{{ item.likeCount }} 赞</text>
+          </view>
+        </view>
       </view>
-      <view v-if="tab === 'note'" class="mini-ops">
-        <text class="mini-edit" @tap.stop="editNote(item)">编辑</text>
-        <text class="mini-del" @tap.stop="delNote(item)">删除</text>
+    </view>
+
+    <view v-if="!loading && !list.length" class="empty">
+      <text class="empty-emoji">📝</text>
+      <text class="muted">{{ tab === 'note' ? '还没有发布过笔记' : tab === 'fav' ? '还没有收藏内容' : '还没有赞过内容' }}</text>
+      <text v-if="tab === 'note' && isReviewer" class="muted small">长按卡片可编辑或删除</text>
+    </view>
+
+    <!-- 菜单 -->
+    <view class="menu">
+      <view class="menu-item" @tap="goNotify">
+        <view class="menu-left">
+          <text class="menu-text">我的消息</text>
+          <view v-if="unread > 0" class="badge"><text class="badge-text">{{ unread > 99 ? '99+' : unread }}</text></view>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" v-if="user && user.role === 'USER'" @tap="goGuide">
+        <text class="menu-text">如何成为点评人</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" v-if="isAdminUser" @tap="goAdminAudit">
+        <text class="menu-text">内容管理（后台）</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" v-if="isAdminUser" @tap="goAdminUsers">
+        <text class="menu-text">用户管理（后台）</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" @tap="doLogout">
+        <text class="menu-text logout">退出登录</text>
+        <text class="menu-arrow"></text>
       </view>
     </view>
 
@@ -95,41 +166,6 @@
         </view>
       </view>
     </view>
-
-    <view v-if="!loading && !list.length" class="empty">
-      <text class="muted">{{ tab === 'note' ? '还没有发布过笔记' : tab === 'fav' ? '还没有收藏内容' : '还没有赞过内容' }}</text>
-    </view>
-
-    <!-- 菜单（原功能保留） -->
-    <view class="menu">
-      <view class="menu-item" @tap="goFollowing">
-        <text class="menu-text">我关注的</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" v-if="user && user.role === 'USER'" @tap="goGuide">
-        <text class="menu-text">如何成为点评人</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @tap="goNotify">
-        <view class="menu-left">
-          <text class="menu-text">我的消息</text>
-          <view v-if="unread > 0" class="badge"><text class="badge-text">{{ unread > 99 ? '99+' : unread }}</text></view>
-        </view>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" v-if="isAdminUser" @tap="goAdminAudit">
-        <text class="menu-text">内容管理（后台）</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" v-if="isAdminUser" @tap="goAdminUsers">
-        <text class="menu-text">用户管理（后台）</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @tap="doLogout">
-        <text class="menu-text logout">退出登录</text>
-        <text class="menu-arrow"></text>
-      </view>
-    </view>
   </view>
 </template>
 
@@ -142,14 +178,14 @@ export default {
   data() {
     return {
       user: null,
-      stats: { posts: 0, likes: 0, views: 0 },
-      unread: 0,
+      stats: { posts: 0, likes: 0, views: 0, following: 0, followers: 0 },
       tab: 'note',
       list: [],
       page: 1,
       pageSize: 10,
       hasMore: true,
       loading: false,
+      unread: 0,
       editShow: false,
       editNickname: '',
       editAvatar: '',
@@ -160,13 +196,22 @@ export default {
     isAdminUser() {
       return isAdmin()
     },
+    isReviewer() {
+      const u = this.user
+      return !!u && (u.role === 'REVIEWER' || u.role === 'ADMIN')
+    },
     shortName() {
       return this.user && this.user.nickname ? this.user.nickname.slice(0, 1) : '我'
     },
     dianpingNo() {
-      // 点评号 = 用户ID数字（雪花ID后8位，保证唯一）
       const id = this.user && this.user.userId ? String(this.user.userId) : ''
       return id.length > 8 ? id.slice(-8) : id
+    },
+    leftList() {
+      return this.list.filter((_, i) => i % 2 === 0)
+    },
+    rightList() {
+      return this.list.filter((_, i) => i % 2 === 1)
     }
   },
   onShow() {
@@ -175,6 +220,7 @@ export default {
       return
     }
     this.user = getUser()
+    this.page = 1
     this.fetch()
   },
   onReachBottom() {
@@ -184,37 +230,35 @@ export default {
     }
   },
   methods: {
-    fmtViews(n) {
-      return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n)
-    },
     async fetch(append) {
       this.loading = true
       try {
         const me = await request({ url: '/user/me' })
         this.user = Object.assign({}, getUser(), me)
         const stats = await request({ url: '/user/stats' })
-        this.stats = stats
+        this.stats = Object.assign(this.stats, stats)
         Promise.all([
           request({ url: '/user/notify/unread' }).catch(() => ({ unread: 0 })),
           request({ url: '/chat/unread' }).catch(() => ({ unread: 0 }))
         ]).then(([a, b]) => {
           this.unread = Number(a.unread || 0) + Number(b.unread || 0)
         })
+        let data
         if (this.tab === 'note') {
-          const data = await request({
+          data = await request({
             url: `/user/${this.user.userId}?page=${this.page}&pageSize=${this.pageSize}`
           })
           const items = data.contents ? data.contents.list : []
           this.list = append ? this.list.concat(items) : items
           this.hasMore = this.list.length < (data.contents ? data.contents.total : 0)
         } else if (this.tab === 'fav') {
-          const data = await request({
+          data = await request({
             url: `/user/favorites?page=${this.page}&pageSize=${this.pageSize}`
           })
           this.list = append ? this.list.concat(data.list) : data.list
           this.hasMore = this.list.length < data.total
         } else {
-          const data = await request({
+          data = await request({
             url: `/user/liked?page=${this.page}&pageSize=${this.pageSize}`
           })
           this.list = append ? this.list.concat(data.list) : data.list
@@ -234,8 +278,40 @@ export default {
       this.list = []
       this.fetch()
     },
+    /** 长按卡片：编辑 / 删除（仅笔记 tab）——小红书式 */
+    onCardLong(item) {
+      if (this.tab !== 'note') return
+      uni.showActionSheet({
+        itemList: ['编辑', '删除'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            this.editNote(item)
+          } else {
+            this.delNote(item)
+          }
+        }
+      })
+    },
     goDetail(item) {
       uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
+    },
+    editNote(item) {
+      uni.navigateTo({ url: '/pages/publish/publish?id=' + item.contentId })
+    },
+    delNote(item) {
+      uni.showModal({
+        title: '删除笔记',
+        content: '「' + item.title + '」删除后不可恢复',
+        success: async (res) => {
+          if (!res.confirm) return
+          try {
+            await request({ url: `/content/${item.contentId}`, method: 'DELETE', silent: true })
+            uni.showToast({ title: '已删除', icon: 'none' })
+            this.page = 1
+            this.fetch()
+          } catch (e) { /* toast 已提示 */ }
+        }
+      })
     },
     openEdit() {
       this.editNickname = this.user ? this.user.nickname : ''
@@ -277,31 +353,14 @@ export default {
         this.fetch()
       } catch (e) { /* toast 已提示 */ }
     },
-    editNote(item) {
-      uni.navigateTo({ url: '/pages/publish/publish?id=' + item.contentId })
-    },
-    delNote(item) {
-      uni.showModal({
-        title: '删除笔记',
-        content: '「' + item.title + '」删除后不可恢复',
-        success: async (res) => {
-          if (!res.confirm) return
-          try {
-            await request({ url: `/content/${item.contentId}`, method: 'DELETE', silent: true })
-            uni.showToast({ title: '已删除', icon: 'none' })
-            this.fetch()
-          } catch (e) { /* toast 已提示 */ }
-        }
-      })
-    },
-    goGuide() {
-      uni.navigateTo({ url: '/pages/guide/guide' })
-    },
     goNotify() {
       uni.navigateTo({ url: '/pages/notify/notify' })
     },
     goFollowing() {
       uni.navigateTo({ url: '/pages/following/following' })
+    },
+    goGuide() {
+      uni.navigateTo({ url: '/pages/guide/guide' })
     },
     goAdminAudit() {
       uni.navigateTo({ url: '/pagesAdmin/audit/audit' })
@@ -365,17 +424,23 @@ export default {
 }
 .head-info {
   flex: 1;
+  min-width: 0;
 }
 .name-row {
   display: flex;
   align-items: center;
-  margin-bottom: 10rpx;
+  margin-bottom: 8rpx;
 }
 .nickname {
   font-size: 36rpx;
   font-weight: 500;
   color: #ffffff;
   margin-right: 16rpx;
+}
+.head-muted {
+  display: block;
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 22rpx;
 }
 .head-icons {
   padding: 10rpx;
@@ -442,55 +507,74 @@ export default {
   border-radius: 3rpx;
   background: #ff2442;
 }
-.mini-card {
+.waterfall {
   display: flex;
-  align-items: center;
-  padding: 20rpx;
+  padding: 20rpx 16rpx;
+  background: #f7f8fa;
+  min-height: 200rpx;
 }
-.mini-cover {
-  width: 150rpx;
-  height: 150rpx;
-  border-radius: 12rpx;
-  background: #f1f2f4;
-  margin-right: 24rpx;
-  flex-shrink: 0;
+.col {
+  flex: 1;
 }
-.mini-cover-empty {
+.col + .col {
+  margin-left: 16rpx;
+}
+.wcard {
+  background: #ffffff;
+  border-radius: 14rpx;
+  overflow: hidden;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.card-hover {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+.cover-wrap {
+  width: 100%;
+  height: 240rpx;
+}
+.cover {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.cover-empty {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100%;
+  background: #eceef1;
 }
-.mini-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 150rpx;
+.cover-empty-text {
+  font-size: 22rpx;
+  color: #b9c0c9;
 }
-.mini-title {
-  font-size: 28rpx;
+.wtitle {
+  display: block;
+  padding: 12rpx 14rpx 0;
+  font-size: 25rpx;
   font-weight: 500;
+  color: #1f2430;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.wfoot {
+  padding: 8rpx 14rpx 14rpx;
+}
+.wlike-num {
+  font-size: 20rpx;
+  color: #999999;
 }
 .menu {
   background: #ffffff;
   border-radius: 20rpx;
   margin: 20rpx 24rpx;
   padding: 0 28rpx;
-}
-.menu-left {
-  display: flex;
-  align-items: center;
-}
-.badge {
-  background: #ff2442;
-  border-radius: 999rpx;
-  padding: 2rpx 12rpx;
-  margin-left: 12rpx;
-}
-.badge-text {
-  color: #ffffff;
-  font-size: 18rpx;
 }
 .menu-item {
   display: flex;
@@ -501,6 +585,10 @@ export default {
 }
 .menu-item:last-child {
   border-bottom: none;
+}
+.menu-left {
+  display: flex;
+  align-items: center;
 }
 .menu-text {
   font-size: 28rpx;
@@ -513,25 +601,31 @@ export default {
   color: #c2c8d0;
   font-size: 32rpx;
 }
-.empty {
-  text-align: center;
-  padding: 80rpx 0;
+.badge {
+  background: #ff2442;
+  border-radius: 999rpx;
+  padding: 2rpx 12rpx;
+  margin-left: 12rpx;
 }
-.mini-ops {
+.badge-text {
+  color: #ffffff;
+  font-size: 18rpx;
+}
+.empty {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  flex-shrink: 0;
+  align-items: center;
+  padding: 100rpx 0;
+  background: #f7f8fa;
 }
-.mini-edit {
-  font-size: 22rpx;
-  color: #4a90d9;
-  padding: 6rpx 12rpx;
+.empty-emoji {
+  font-size: 70rpx;
+  margin-bottom: 20rpx;
 }
-.mini-del {
+.small {
   font-size: 22rpx;
-  color: #ff2442;
-  padding: 6rpx 12rpx;
+  color: #c2c8d0;
+  margin-top: 10rpx;
 }
 .edit-mask {
   position: fixed;
@@ -585,6 +679,9 @@ export default {
   padding: 22rpx 26rpx;
   font-size: 28rpx;
   margin-bottom: 20rpx;
+}
+.ph {
+  color: #b9c0c9;
 }
 .edit-btns {
   display: flex;

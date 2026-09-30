@@ -7,7 +7,11 @@
         <text class="seg-item" :class="{ on: tab === 'find' }" @tap="switchTab('find')">发现</text>
         <text class="seg-item" :class="{ on: tab === 'city' }" @tap="switchTab('city')">同城</text>
       </view>
-      <view class="sicon" @tap="goSearch">
+      <view class="sicon msg-entry" @tap="goNotify">
+        <image class="msg-icon" src="/static/icons/bubble.png" />
+        <view v-if="unread > 0" class="msg-dot"></view>
+      </view>
+      <view class="sicon search-icon" @tap="goSearch">
         <view class="sicon-ring"></view>
         <view class="sicon-handle"></view>
       </view>
@@ -59,7 +63,7 @@
                 <text class="wnick">{{ item.author ? item.author.nickname : '匿名' }}</text>
               </view>
               <view class="wlike" @tap.stop="doLike(item)">
-                <text class="wlike-icon" :class="{ liked: item.liked }">{{ item.liked ? '♥' : '♡' }}</text>
+                <image class="wlike-img" :src="item.liked ? '/static/icons/heart-on.png' : '/static/icons/heart.png'" />
                 <text class="wlike-num">{{ item.likeCount }}</text>
               </view>
             </view>
@@ -96,7 +100,7 @@
                 <text class="wnick">{{ item.author ? item.author.nickname : '匿名' }}</text>
               </view>
               <view class="wlike" @tap.stop="doLike(item)">
-                <text class="wlike-icon" :class="{ liked: item.liked }">{{ item.liked ? '♥' : '♡' }}</text>
+                <image class="wlike-img" :src="item.liked ? '/static/icons/heart-on.png' : '/static/icons/heart.png'" />
                 <text class="wlike-num">{{ item.likeCount }}</text>
               </view>
             </view>
@@ -149,6 +153,7 @@ export default {
       total: 0,
       hasMore: true,
       loading: false,
+      unread: 0,
       statusBarHeight: 20
     }
   },
@@ -171,6 +176,7 @@ export default {
       return
     }
     this.refresh()
+    this.loadUnread()
   },
   onPullDownRefresh() {
     this.refresh().finally(() => uni.stopPullDownRefresh())
@@ -207,6 +213,17 @@ export default {
     },
     goSearch() {
       uni.navigateTo({ url: '/pages/search/search' })
+    },
+    goNotify() {
+      uni.navigateTo({ url: '/pages/notify/notify' })
+    },
+    loadUnread() {
+      Promise.all([
+        request({ url: '/user/notify/unread' }).catch(() => ({ unread: 0 })),
+        request({ url: '/chat/unread' }).catch(() => ({ unread: 0 }))
+      ]).then(([a, b]) => {
+        this.unread = Number(a.unread || 0) + Number(b.unread || 0)
+      })
     },
     goDetail(item) {
       uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
@@ -308,11 +325,30 @@ export default {
 }
 .sicon {
   position: absolute;
-  right: 32rpx;
   top: 50%;
   transform: translateY(-50%);
   width: 36rpx;
   height: 36rpx;
+}
+.search-icon {
+  right: 32rpx;
+}
+.msg-entry {
+  right: 110rpx;
+}
+.msg-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+.msg-dot {
+  position: absolute;
+  right: -6rpx;
+  top: -6rpx;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #ff2442;
+  border: 2rpx solid #ffffff;
 }
 .sicon-ring {
   width: 24rpx;
@@ -452,12 +488,9 @@ export default {
   align-items: center;
   flex-shrink: 0;
 }
-.wlike-icon {
-  font-size: 28rpx;
-  color: #b9c0c9;
-}
-.wlike-icon.liked {
-  color: #ff2442;
+.wlike-img {
+  width: 30rpx;
+  height: 30rpx;
 }
 .wlike-num {
   margin-left: 6rpx;

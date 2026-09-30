@@ -12,12 +12,12 @@
       </view>
       <text class="muted bio">{{ profile && profile.role ? regionText : '' }}</text>
       <view v-if="!isMine" class="btn-row">
-        <button
-          class="follow-btn"
-          :class="{ on: isFollowing }"
-          @tap="toggleFollow"
-        >{{ isFollowing ? '已关注' : '+ 关注' }}</button>
-        <button class="chat-btn" @tap="goChat">私信</button>
+        <view class="follow-btn" :class="{ on: isFollowing }" @tap="toggleFollow">
+          <text class="btn-text" :class="{ on: isFollowing }">{{ isFollowing ? '已关注' : '+ 关注' }}</text>
+        </view>
+        <view class="chat-btn" @tap="goChat">
+          <text class="chat-btn-text">私信</text>
+        </view>
       </view>
     </view>
 
@@ -243,25 +243,34 @@ export default {
 .chat-btn {
   margin-left: 20rpx;
   background: #f6f7f9;
+  border-radius: 40rpx;
+  padding: 0 58rpx;
+  height: 70rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-btn-text {
   color: #1f2430;
   font-size: 28rpx;
-  border-radius: 40rpx;
-  padding: 0 60rpx;
-  height: 70rpx;
-  line-height: 70rpx;
 }
 .follow-btn {
-  margin-top: 0;
   background: #ff2442;
-  color: #ffffff;
-  font-size: 28rpx;
   border-radius: 40rpx;
-  padding: 0 70rpx;
+  padding: 0 66rpx;
   height: 70rpx;
-  line-height: 70rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .follow-btn.on {
   background: #f6f7f9;
+}
+.btn-text {
+  color: #ffffff;
+  font-size: 28rpx;
+}
+.btn-text.on {
   color: #666666;
 }
 .stats {
