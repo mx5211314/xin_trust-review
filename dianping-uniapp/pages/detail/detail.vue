@@ -92,6 +92,12 @@
           <text class="ctext">
             <text v-if="c.parentId !== '0' && c.replyToNickname" class="reply-tag">回复 @{{ c.replyToNickname }}：</text>{{ c.text }}
           </text>
+          <view class="cfoot">
+            <view class="clike" @tap="likeComment(c)">
+              <text class="clike-icon" :class="{ liked: c.liked }">{{ c.liked ? '♥' : '♡' }}</text>
+              <text class="clike-num" v-if="c.likeCount > 0">{{ c.likeCount }}</text>
+            </view>
+          </view>
         </view>
       </view>
       <view v-if="!comments.length" class="empty">
@@ -199,9 +205,26 @@ export default {
         const data = await request({
           url: `/content/${this.id}/comments?page=1&pageSize=50`
         })
-        this.comments = data.list || []
+        this.comments = (data.list || []).map(c => ({ ...c, liked: false }))
         this.commentTotal = data.total || this.comments.length
       } catch (e) { /* ignore */ }
+    },
+    async likeComment(c) {
+      if (c.liked) {
+        try {
+          await request({ url: `/content/comments/${c.commentId}/like`, method: 'DELETE', silent: true })
+          c.liked = false
+          c.likeCount = Math.max(0, (c.likeCount || 0) - 1)
+        } catch (e) { /* ignore */ }
+      } else {
+        try {
+          await request({ url: `/content/comments/${c.commentId}/like`, method: 'POST', silent: true })
+          c.liked = true
+          c.likeCount = (c.likeCount || 0) + 1
+        } catch (e) {
+          if (e.code === 2003) c.liked = true
+        }
+      }
     },
     isMyComment(c) {
       const me = getUser()
@@ -599,5 +622,24 @@ export default {
   font-size: 22rpx;
   color: #ff2442;
   margin-right: 16rpx;
+}
+.cfoot {
+  margin-top: 10rpx;
+}
+.clike {
+  display: inline-flex;
+  align-items: center;
+}
+.clike-icon {
+  font-size: 26rpx;
+  color: #999999;
+}
+.clike-icon.liked {
+  color: #ff2442;
+}
+.clike-num {
+  margin-left: 8rpx;
+  font-size: 22rpx;
+  color: #999999;
 }
 </style>

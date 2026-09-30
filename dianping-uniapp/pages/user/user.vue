@@ -11,6 +11,12 @@
         <text v-if="isBanned" class="tag tag-banned">已封禁</text>
       </view>
       <text class="muted bio">{{ profile && profile.role ? regionText : '' }}</text>
+      <button
+        v-if="!isMine"
+        class="follow-btn"
+        :class="{ on: isFollowing }"
+        @tap="toggleFollow"
+      >{{ isFollowing ? '已关注' : '+ 关注' }}</button>
     </view>
 
     <!-- 数据栏 -->
@@ -18,6 +24,11 @@
       <view class="stat">
         <text class="stat-num">{{ total }}</text>
         <text class="stat-label">笔记</text>
+      </view>
+      <view class="stat-div"></view>
+      <view class="stat">
+        <text class="stat-num">{{ followers }}</text>
+        <text class="stat-label">粉丝</text>
       </view>
       <view class="stat-div"></view>
       <view class="stat">
@@ -95,6 +106,8 @@ export default {
       list: [],
       total: 0,
       totalLikes: 0,
+      followers: 0,
+      isFollowing: false,
       page: 1,
       pageSize: 10,
       hasMore: true,
@@ -139,6 +152,8 @@ export default {
           url: `/user/${this.userId}?page=${this.page}&pageSize=${this.pageSize}`
         })
         this.profile = data.profile
+        this.followers = data.profile.followers || 0
+        this.isFollowing = !!data.profile.following
         this.total = data.contents.total
         this.totalLikes = (data.contents.list || []).reduce((s, c) => s + (c.likeCount || 0), this.totalLikes)
         this.list = append ? this.list.concat(data.contents.list) : data.contents.list
@@ -147,6 +162,25 @@ export default {
         uni.showToast({ title: '用户不存在', icon: 'none' })
       } finally {
         this.loading = false
+      }
+    },
+    async toggleFollow() {
+      const uid = this.userId
+      if (this.isFollowing) {
+        try {
+          await request({ url: `/user/${uid}/follow`, method: 'DELETE', silent: true })
+          this.isFollowing = false
+          this.followers = Math.max(0, this.followers - 1)
+        } catch (e) { /* ignore */ }
+      } else {
+        try {
+          await request({ url: `/user/${uid}/follow`, method: 'POST', silent: true })
+          this.isFollowing = true
+          this.followers += 1
+          uni.showToast({ title: '关注成功，可在首页"关注"tab 看到TA的更新', icon: 'none', duration: 2500 })
+        } catch (e) {
+          if (e.code === 2003) this.isFollowing = true
+        }
       }
     },
     goDetail(item) {
@@ -192,6 +226,20 @@ export default {
 }
 .bio {
   margin-top: 10rpx;
+}
+.follow-btn {
+  margin-top: 24rpx;
+  background: #ff2442;
+  color: #ffffff;
+  font-size: 28rpx;
+  border-radius: 40rpx;
+  padding: 0 70rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+}
+.follow-btn.on {
+  background: #f6f7f9;
+  color: #666666;
 }
 .stats {
   display: flex;

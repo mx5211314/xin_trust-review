@@ -107,6 +107,13 @@
         <text class="menu-text">如何成为点评人</text>
         <text class="menu-arrow">›</text>
       </view>
+      <view class="menu-item" @tap="goNotify">
+        <view class="menu-left">
+          <text class="menu-text">我的消息</text>
+          <view v-if="unread > 0" class="badge"><text class="badge-text">{{ unread > 99 ? '99+' : unread }}</text></view>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" v-if="isAdminUser" @tap="goAdminAudit">
         <text class="menu-text">内容管理（后台）</text>
         <text class="menu-arrow">›</text>
@@ -133,6 +140,7 @@ export default {
     return {
       user: null,
       stats: { posts: 0, likes: 0, views: 0 },
+      unread: 0,
       tab: 'note',
       list: [],
       page: 1,
@@ -183,6 +191,9 @@ export default {
         this.user = Object.assign({}, getUser(), me)
         const stats = await request({ url: '/user/stats' })
         this.stats = stats
+        request({ url: '/user/notify/unread' }).then(d => {
+          this.unread = Number(d.unread || 0)
+        }).catch(() => {})
         if (this.tab === 'note') {
           const data = await request({
             url: `/user/${this.user.userId}?page=${this.page}&pageSize=${this.pageSize}`
@@ -276,6 +287,9 @@ export default {
     },
     goGuide() {
       uni.navigateTo({ url: '/pages/guide/guide' })
+    },
+    goNotify() {
+      uni.navigateTo({ url: '/pages/notify/notify' })
     },
     goAdminAudit() {
       uni.navigateTo({ url: '/pagesAdmin/audit/audit' })
@@ -451,6 +465,20 @@ export default {
   border-radius: 20rpx;
   margin: 20rpx 24rpx;
   padding: 0 28rpx;
+}
+.menu-left {
+  display: flex;
+  align-items: center;
+}
+.badge {
+  background: #ff2442;
+  border-radius: 999rpx;
+  padding: 2rpx 12rpx;
+  margin-left: 12rpx;
+}
+.badge-text {
+  color: #ffffff;
+  font-size: 18rpx;
 }
 .menu-item {
   display: flex;

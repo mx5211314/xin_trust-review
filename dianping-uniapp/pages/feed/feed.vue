@@ -3,6 +3,7 @@
     <!-- 自定义导航：发现/同城 + 搜索入口 -->
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="seg">
+        <text class="seg-item" :class="{ on: tab === 'follow' }" @tap="switchTab('follow')">关注</text>
         <text class="seg-item" :class="{ on: tab === 'find' }" @tap="switchTab('find')">发现</text>
         <text class="seg-item" :class="{ on: tab === 'city' }" @tap="switchTab('city')">同城</text>
       </view>
@@ -109,7 +110,8 @@
     </view>
 
     <view v-if="!loading && !list.length" class="empty">
-      <text class="muted">这里还没有点评，等第一位点评人吧</text>
+      <text v-if="tab === 'follow'" class="muted">关注点评人后，这里展示 TA 们的最新笔记</text>
+      <text v-else class="muted">这里还没有点评，等第一位点评人吧</text>
     </view>
     <view v-if="list.length && !hasMore" class="empty">
       <text class="muted">— 到底啦 —</text>
@@ -129,6 +131,7 @@ export default {
       regions: REGIONS,
       tab: 'find',
       region: '130100',
+      followedIds: [],
       list: [],
       page: 1,
       pageSize: 10,
@@ -205,11 +208,18 @@ export default {
     async fetch(reset) {
       this.loading = true
       try {
-        const region = this.tab === 'city' ? this.region : ''
-        const data = await request({
-          url: `/content/feed?page=${this.page}&pageSize=${this.pageSize}` +
-            (region ? `&regionCode=${region}` : '')
-        })
+        let data
+        if (this.tab === 'follow') {
+          data = await request({
+            url: `/content/follow-feed?page=${this.page}&pageSize=${this.pageSize}`
+          })
+        } else {
+          const region = this.tab === 'city' ? this.region : ''
+          data = await request({
+            url: `/content/feed?page=${this.page}&pageSize=${this.pageSize}` +
+              (region ? `&regionCode=${region}` : '')
+          })
+        }
         this.total = data.total
         this.list = reset ? data.list : this.list.concat(data.list)
         this.hasMore = this.list.length < data.total

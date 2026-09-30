@@ -35,6 +35,10 @@
     {
       "path": "pages/guide/guide",
       "style": { "navigationBarTitleText": "如何成为点评人" }
+    },
+    {
+      "path": "pages/notify/notify",
+      "style": { "navigationBarTitleText": "消息" }
     }
   ],
   "subPackages": [
