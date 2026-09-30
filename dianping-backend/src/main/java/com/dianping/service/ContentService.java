@@ -134,39 +134,83 @@ public class ContentService {
         return toVoDetail(c, me);
     }
 
-    /** 评论列表（时间倒序；带回复关系，前端按 parentId 缩进） */
+    /**
+     * 评论列表（小红书式）：顶级评论按时间正序分页，子回复挂在父评论的 replies 里。
+     * total = 全部评论数（含回复）。
+     */
     public Map<String, Object> commentsOf(Long contentId, int page, int pageSize) {
+        // 1. 顶级评论（正序：早的在前，新评论追加在底部，符合对话习惯）
         Page<Comment> p = commentMapper.selectPage(new Page<>(page, pageSize),
                 new LambdaQueryWrapper<Comment>()
                         .eq(Comment::getContentId, contentId)
-                        .orderByDesc(Comment::getId));
-        List<Long> uids = p.getRecords().stream()
-                .flatMap(c -> java.util.stream.Stream.of(c.getUserId(), c.getReplyToUserId()))
+                        .eq(Comment::getParentId, 0L)
+                        .orderByAsc(Comment::getId));
+        List<Comment> roots = p.getRecords();
+        List<Long> rootIds = roots.stream().map(Comment::getId).toList();
+
+        // 2. 子回复：一次 in 查询，正序
+        List<Comment> replies = rootIds.isEmpty() ? java.util.List.of()
+                : commentMapper.selectList(new LambdaQueryWrapper<Comment>()
+                        .eq(Comment::getContentId, contentId)
+                        .in(Comment::getParentId, rootIds)
+                        .orderByAsc(Comment::getId));
+
+        // 3. 收集所有涉及的用户 id，批量查昵称
+        List<Long> uids = java.util.stream.Stream.concat(
+                java.util.stream.Stream.concat(roots.stream(), replies.stream())
+                        .map(Comment::getUserId),
+                replies.stream().map(Comment::getReplyToUserId))
                 .filter(id -> id != null && id > 0)
                 .distinct().toList();
         Map<Long, User> users = uids.isEmpty() ? Map.of()
                 : userMapper.selectBatchIds(uids).stream()
                         .collect(Collectors.toMap(User::getId, Function.identity()));
-        List<Map<String, Object>> list = p.getRecords().stream().map(c -> {
-            User u = users.get(c.getUserId());
-            User replyTo = c.getReplyToUserId() != null && c.getReplyToUserId() > 0
-                    ? users.get(c.getReplyToUserId()) : null;
-            Map<String, Object> m = new java.util.HashMap<>();
-            m.put("commentId", String.valueOf(c.getId()));
-            m.put("text", c.getText());
-            m.put("createTime", c.getCreateTime() == null ? "" : c.getCreateTime().format(FMT));
-            m.put("parentId", String.valueOf(c.getParentId() == null ? 0 : c.getParentId()));
-            m.put("replyToNickname", replyTo == null ? "" : replyTo.getNickname());
-            m.put("user", u == null ? null : Map.of(
-                    "userId", String.valueOf(u.getId()),
-                    "nickname", u.getNickname(),
-                    "avatar", u.getAvatar()));
-            return m;
-        }).toList();
+
+        // 4. 子回复按 parentId 归组
+        Map<Long, List<Comment>> replyGroup = replies.stream()
+                .collect(Collectors.groupingBy(Comment::getParentId));
+
+        // 5. 组装：父 + replies
+        List<Map<String, Object>> list = new java.util.ArrayList<>();
+        for (Comment r : roots) {
+            list.add(commentVo(r, null, users));
+            List<Comment> rs = replyGroup.getOrDefault(r.getId(), java.util.List.of());
+            ((Map<String, Object>) list.get(list.size() - 1)).put("replyCount", rs.size());
+            List<Map<String, Object>> rlist = new java.util.ArrayList<>();
+            for (Comment c : rs) {
+                User replyTo = c.getReplyToUserId() != null && c.getReplyToUserId() > 0
+                        ? users.get(c.getReplyToUserId()) : null;
+                Map<String, Object> cm = commentVo(c, replyTo, users);
+                cm.put("replyToNickname", replyTo == null ? "" : replyTo.getNickname());
+                rlist.add(cm);
+            }
+            ((Map<String, Object>) list.get(list.size() - 1)).put("replies", rlist);
+        }
+
+        long totalAll = commentMapper.selectCount(new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getContentId, contentId));
         Map<String, Object> data = new java.util.HashMap<>();
-        data.put("total", p.getTotal());
+        data.put("total", totalAll);
+        data.put("rootTotal", p.getTotal());
         data.put("list", list);
         return data;
+    }
+
+    /** 评论 VO 组装（扁平 map）；replyTo 传入时带"回复 @"关系，否则为顶级评论 */
+    private Map<String, Object> commentVo(Comment c, User replyTo, Map<Long, User> users) {
+        User u = users.get(c.getUserId());
+        Map<String, Object> m = new java.util.HashMap<>();
+        m.put("commentId", String.valueOf(c.getId()));
+        m.put("text", c.getText());
+        m.put("createTime", c.getCreateTime() == null ? "" : c.getCreateTime().format(FMT));
+        m.put("parentId", String.valueOf(c.getParentId() == null ? 0 : c.getParentId()));
+        m.put("likeCount", c.getLikeCount() == null ? 0 : c.getLikeCount());
+        m.put("liked", false);
+        m.put("user", u == null ? null : Map.of(
+                "userId", String.valueOf(u.getId()),
+                "nickname", u.getNickname(),
+                "avatar", u.getAvatar()));
+        return m;
     }
 
     /** 发布评论（支持回复：传 parentId 时自动带上被回复人） */
@@ -184,7 +228,10 @@ public class ContentService {
             if (parent == null || !parent.getContentId().equals(contentId)) {
                 throw new BizException(ResultCode.PARAM_ERROR, "被回复的评论不存在");
             }
-            c.setParentId(parentId);
+            // 楼中楼统一挂在根评论下；被回复人 = 被回复那条评论的作者
+            Long rootId = parent.getParentId() != null && parent.getParentId() > 0
+                    ? parent.getParentId() : parent.getId();
+            c.setParentId(rootId);
             c.setReplyToUserId(parent.getUserId());
             replyToUser = parent.getUserId();
         } else {

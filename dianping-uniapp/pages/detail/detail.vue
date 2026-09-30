@@ -67,12 +67,7 @@
       <view class="comments-head">
         <text class="comments-title">评论 {{ commentTotal }}</text>
       </view>
-      <view
-        v-for="c in comments"
-        :key="c.commentId"
-        class="comment-item"
-        :class="{ reply: c.parentId !== '0' }"
-      >
+      <view v-for="c in comments" :key="c.commentId" class="comment-item">
         <view class="cavatar">
           <text class="cavatar-text">{{ c.user ? c.user.nickname.slice(0, 1) : '客' }}</text>
         </view>
@@ -80,7 +75,7 @@
           <view class="cinfo">
             <text class="cnick">{{ c.user ? c.user.nickname : '匿名' }}</text>
             <view class="cinfo-r">
-              <text class="creply" @tap="tapReply(c)">回复</text>
+              <text class="creply" @tap="tapReply(c, null)">回复</text>
               <text
                 v-if="isMyComment(c)"
                 class="cdel"
@@ -89,13 +84,31 @@
               <text class="ctime">{{ c.createTime }}</text>
             </view>
           </view>
-          <text class="ctext">
-            <text v-if="c.parentId !== '0' && c.replyToNickname" class="reply-tag">回复 @{{ c.replyToNickname }}：</text>{{ c.text }}
-          </text>
+          <text class="ctext">{{ c.text }}</text>
           <view class="cfoot">
             <view class="clike" @tap="likeComment(c)">
               <text class="clike-icon" :class="{ liked: c.liked }">{{ c.liked ? '♥' : '♡' }}</text>
               <text class="clike-num" v-if="c.likeCount > 0">{{ c.likeCount }}</text>
+            </view>
+          </view>
+
+          <!-- 楼中楼：子回复缩进挂在本评论下 -->
+          <view v-if="c.replies && c.replies.length" class="replies">
+            <view v-for="r in c.replies" :key="r.commentId" class="reply-item">
+              <view class="cinfo">
+                <text class="cnick rnick">{{ r.user ? r.user.nickname : '匿名' }}</text>
+                <view class="cinfo-r">
+                  <text class="creply" @tap="tapReply(c, r)">回复</text>
+                  <text
+                    v-if="isMyComment(r)"
+                    class="cdel"
+                    @tap="delComment(r)"
+                  >删除</text>
+                </view>
+              </view>
+              <text class="rtext">
+                <text v-if="r.replyToNickname && (!r.user || r.user.nickname !== r.replyToNickname)" class="reply-tag">回复 @{{ r.replyToNickname }}：</text>{{ r.text }}
+              </text>
             </view>
           </view>
         </view>
@@ -242,9 +255,8 @@ export default {
               method: 'DELETE',
               silent: true
             })
-            this.commentTotal = Math.max(0, this.commentTotal - 1)
-            this.comments = this.comments.filter(x => x.commentId !== c.commentId)
             uni.showToast({ title: '已删除', icon: 'none' })
+            this.loadComments()
           } catch (e) { /* toast 已提示 */ }
         }
       })
@@ -268,10 +280,11 @@ export default {
         uni.showToast({ title: '评论成功', icon: 'none' })
       } catch (e) { /* toast 已提示 */ }
     },
-    tapReply(c) {
+    /** 回复：root=顶级评论对象；sub=子回复对象（回复楼中楼里某条时传） */
+    tapReply(root, sub) {
       this.replyTarget = {
-        commentId: c.commentId,
-        nickname: c.user ? c.user.nickname : '匿名'
+        commentId: root.commentId,
+        nickname: sub && sub.user ? sub.user.nickname : (root.user ? root.user.nickname : '匿名')
       }
     },
     async doFav() {
@@ -641,5 +654,29 @@ export default {
   margin-left: 8rpx;
   font-size: 22rpx;
   color: #999999;
+}
+.replies {
+  margin-top: 18rpx;
+  background: #f7f8fa;
+  border-radius: 12rpx;
+  padding: 6rpx 20rpx;
+}
+.reply-item {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #eef0f2;
+}
+.reply-item:last-child {
+  border-bottom: none;
+}
+.rnick {
+  font-size: 24rpx;
+  color: #1f2430;
+}
+.rtext {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: #333333;
+  line-height: 1.5;
 }
 </style>
