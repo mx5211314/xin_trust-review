@@ -43,7 +43,8 @@
         </view>
         <view class="body">
           <view class="line1">
-            <text class="actor">平台公告</text>
+            <text class="actor">{{ a.actorNickname === '系统' ? '平台官方' : a.actorNickname }}</text>
+            <text class="announce-tag">平台公告</text>
           </view>
           <text class="ntext announce-text">{{ a.text }}</text>
           <text class="ntime">{{ a.createTime }}</text>
@@ -151,6 +152,21 @@ export default {
     }
   },
   methods: {
+    /** 进页面/切 tab 时把当前分类标记为已读并同步徽标 */
+    async markCurrentTabRead() {
+      const cat = this.tab === 'chat' ? '' : this.tab
+      if (!cat) return
+      try {
+        await request({ url: `/user/notify/read-all?category=${cat}`, method: 'POST', silent: true })
+        if (cat === 'announce') {
+          this.announces.forEach(a => { a.isRead = 1 })
+        } else {
+          this.list.forEach(n => { n.isRead = 1 })
+        }
+        this.refreshBadge()
+        this.loadSummary()
+      } catch (e) { /* ignore */ }
+    },
     async loadSummary() {
       try {
         this.summary = await request({ url: '/user/notify/summary' })
@@ -167,6 +183,9 @@ export default {
         this.loadConversations()
       } else if (t === 'announce') {
         this.loadAnnounces()
+      }
+      if (t !== 'chat') {
+        this.markCurrentTabRead()
       }
     },
     async loadAnnounces() {
@@ -264,8 +283,8 @@ export default {
         this.refreshBadge()
       }
       uni.showModal({
-        title: '平台公告',
-        content: a.text,
+        title: a.actorNickname === '系统' ? '平台公告' : `公告 · ${a.actorNickname}`,
+        content: `${a.text}\n\n发布时间：${a.createTime}`,
         showCancel: false,
         confirmText: '知道了'
       })
@@ -422,6 +441,14 @@ export default {
 }
 .announce-icon {
   background: #fff7e8;
+}
+.announce-tag {
+  font-size: 20rpx;
+  color: #b8860b;
+  background: #fff7e8;
+  border-radius: 6rpx;
+  padding: 2rpx 10rpx;
+  margin-left: 10rpx;
 }
 .announce-text {
   white-space: normal;

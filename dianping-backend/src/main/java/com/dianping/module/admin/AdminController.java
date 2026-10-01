@@ -35,7 +35,8 @@ public class AdminController {
     @RequireRole({"ADMIN"})
     public R<Map<String, Object>> announce(@RequestBody Map<String, Object> body) {
         Object text = body.get("text");
-        int count = notifyService.announce(text == null ? "" : String.valueOf(text));
+        int count = notifyService.announce(text == null ? "" : String.valueOf(text),
+                com.dianping.common.UserContext.userId());
         return R.ok(java.util.Map.of("sent", count));
     }
 

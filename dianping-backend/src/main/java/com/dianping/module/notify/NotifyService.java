@@ -126,6 +126,11 @@ public class NotifyService {
      */
     @org.springframework.transaction.annotation.Transactional
     public int announce(String text) {
+        return announce(text, 0L);
+    }
+
+    /** 发布公告（actorId = 发布的管理员，用于前端展示"谁发的"） */
+    public int announce(String text, Long actorId) {
         String t = text == null ? "" : text.trim();
         if (t.isEmpty()) {
             return 0;
@@ -139,7 +144,7 @@ public class NotifyService {
             Notify n = new Notify();
             n.setUserId(u.getId());
             n.setType(T_ANNOUNCE);
-            n.setActorId(0L);
+            n.setActorId(actorId == null ? 0L : actorId);
             n.setContentId(0L);
             n.setCommentId(0L);
             n.setText(t);
