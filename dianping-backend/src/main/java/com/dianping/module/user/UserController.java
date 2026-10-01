@@ -49,6 +49,14 @@ public class UserController {
         return R.ok(data);
     }
 
+    /** 手机号脱敏：138****0000 */
+    private String maskPhone(String phone) {
+        if (phone == null || phone.length() < 7) {
+            return "";
+        }
+        return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
+    }
+
     /** POST /user/{userId}/follow —— 关注（幂等：重复返回 2003） */
     @org.springframework.web.bind.annotation.PostMapping("/{userId}/follow")
     public R<Void> follow(@PathVariable Long userId) {
@@ -159,6 +167,7 @@ public class UserController {
         profile.put("avatar", u.getAvatar());
         profile.put("role", u.getRole());
         profile.put("status", u.getStatus());
+        profile.put("phoneMasked", maskPhone(u.getPhone()));
         profile.put("followers", followService.followersCount(u.getId()));
         Long meId0 = currentUserId();
         profile.put("following", followService.isFollowing(meId0, u.getId()));

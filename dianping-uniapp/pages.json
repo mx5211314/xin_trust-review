@@ -47,6 +47,10 @@
     {
       "path": "pages/chat/chat",
       "style": { "navigationBarTitleText": "私信" }
+    },
+    {
+      "path": "pages/settings/settings",
+      "style": { "navigationBarTitleText": "设置" }
     }
   ],
   "subPackages": [

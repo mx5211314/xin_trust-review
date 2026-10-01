@@ -16,8 +16,8 @@
           <text class="muted head-muted">点评号：{{ dianpingNo }}</text>
           <text v-if="user && user.bio" class="muted head-muted">{{ user.bio }}</text>
         </view>
-        <view class="head-icons" @tap="openEdit">
-          <text class="icon-text">✎</text>
+        <view class="head-icons" @tap="goSettings">
+          <text class="icon-text">⚙</text>
         </view>
       </view>
     </view>
@@ -138,10 +138,6 @@
         <text class="menu-text">用户管理（后台）</text>
         <text class="menu-arrow">›</text>
       </view>
-      <view class="menu-item" @tap="doLogout">
-        <text class="menu-text logout">退出登录</text>
-        <text class="menu-arrow"></text>
-      </view>
     </view>
 
     <!-- 编辑资料弹层 -->
@@ -209,6 +205,12 @@ export default {
     },
     rightList() {
       return this.list.filter((_, i) => i % 2 === 1)
+    }
+  },
+  onLoad(query) {
+    // 从设置页"编辑资料"跳来时自动打开编辑弹层
+    if (query && query.edit === '1') {
+      setTimeout(() => this.openEdit(), 300)
     }
   },
   onShow() {
@@ -346,6 +348,9 @@ export default {
     },
     goNotify() {
       uni.navigateTo({ url: '/pages/notify/notify' })
+    },
+    goSettings() {
+      uni.navigateTo({ url: '/pages/settings/settings' })
     },
     goFollowing() {
       uni.navigateTo({ url: '/pages/following/following' })

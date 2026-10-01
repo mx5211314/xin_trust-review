@@ -1,0 +1,215 @@
+<template>
+  <view class="page">
+    <!-- 账号信息卡 -->
+    <view class="card">
+      <view class="row">
+        <text class="label">手机号</text>
+        <text class="value">{{ profile.phoneMasked || '—' }}</text>
+      </view>
+      <view class="row">
+        <text class="label">身份</text>
+        <text class="value">{{ roleText }}</text>
+      </view>
+      <view class="row">
+        <text class="label">点评号</text>
+        <text class="value">{{ dianpingNo }}</text>
+      </view>
+    </view>
+
+    <!-- 通用设置 -->
+    <view class="card">
+      <view class="row tap" @tap="goEditProfile">
+        <text class="label">编辑资料</text>
+        <text class="arrow">›</text>
+      </view>
+      <view class="row">
+        <text class="label">接收互动通知</text>
+        <switch :checked="notifyOn" color="#ff2442" style="transform:scale(0.8)" @change="toggleNotify" />
+      </view>
+      <view class="row tap" @tap="clearCache">
+        <text class="label">清理缓存</text>
+        <text class="value">{{ cacheSize }}</text>
+      </view>
+    </view>
+
+    <!-- 关于 -->
+    <view class="card">
+      <view class="row tap" @tap="showAbout">
+        <text class="label">关于本地点评</text>
+        <text class="value">v0.1.0</text>
+      </view>
+      <view class="row tap" @tap="showPolicy">
+        <text class="label">用户协议与隐私政策</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+
+    <view class="logout-wrap">
+      <text class="logout" @tap="doLogout">退出登录</text>
+    </view>
+
+    <text class="footer-tip">本地点评 · 发现身边的真实好店</text>
+  </view>
+</template>
+
+<script>
+import { request } from '@/utils/request'
+import { getUser, logout, setUserInfo } from '@/utils/auth'
+
+export default {
+  data() {
+    return {
+      profile: {},
+      notifyOn: true,
+      cacheSize: '0 KB'
+    }
+  },
+  computed: {
+    roleText() {
+      const r = this.profile.role
+      if (r === 'ADMIN') return '管理员'
+      if (r === 'REVIEWER') return '点评人'
+      return '普通用户'
+    },
+    dianpingNo() {
+      const id = this.profile.userId ? String(this.profile.userId) : ''
+      return id.length > 8 ? id.slice(-8) : (id || '—')
+    }
+  },
+  onShow() {
+    if (!getUser()) {
+      uni.reLaunch({ url: '/pages/login/login' })
+      return
+    }
+    this.loadProfile()
+    this.calcCache()
+    try {
+      const v = uni.getStorageSync('dp_notify_on')
+      this.notifyOn = v === '' ? true : !!v
+    } catch (e) { /* ignore */ }
+  },
+  methods: {
+    async loadProfile() {
+      try {
+        this.profile = await request({ url: '/user/me' })
+      } catch (e) { /* ignore */ }
+    },
+    calcCache() {
+      try {
+        const info = uni.getStorageInfoSync()
+        const kb = info.currentSize || 0
+        this.cacheSize = kb > 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB'
+      } catch (e) {
+        this.cacheSize = '0 KB'
+      }
+    },
+    goEditProfile() {
+      uni.navigateTo({ url: '/pages/mine/mine?edit=1' })
+    },
+    toggleNotify(e) {
+      this.notifyOn = e.detail.value
+      try {
+        uni.setStorageSync('dp_notify_on', this.notifyOn)
+      } catch (err) { /* ignore */ }
+      uni.showToast({ title: this.notifyOn ? '已开启通知' : '已关闭通知', icon: 'none' })
+    },
+    clearCache() {
+      uni.showModal({
+        title: '清理缓存',
+        content: '将清理本地缓存（不会退出登录）',
+        success: (res) => {
+          if (!res.confirm) return
+          const token = uni.getStorageSync('dp_token')
+          const user = uni.getStorageSync('dp_user')
+          const notifyOn = uni.getStorageSync('dp_notify_on')
+          uni.clearStorageSync()
+          if (token) uni.setStorageSync('dp_token', token)
+          if (user) uni.setStorageSync('dp_user', user)
+          if (notifyOn !== '') uni.setStorageSync('dp_notify_on', notifyOn)
+          this.calcCache()
+          uni.showToast({ title: '缓存已清理', icon: 'success' })
+        }
+      })
+    },
+    showAbout() {
+      uni.showModal({
+        title: '本地点评 v0.1.0',
+        content: '一个专注本地生活的地方生活点评平台：点评人分享真实体验，用户发现身边好店。\n\n技术栈：Spring Boot 3 + MyBatis-Plus + MySQL + Redis\n客户端：uni-app（小程序 / App / H5）',
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    },
+    showPolicy() {
+      uni.showModal({
+        title: '用户协议与隐私政策',
+        content: '我们仅收集必要信息（手机号用于登录、发布内容用于展示）。不会向第三方出售你的个人信息。演示版本，完整协议上线前提供。',
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    },
+    doLogout() {
+      uni.showModal({
+        title: '退出登录',
+        content: '确定要退出吗？',
+        success: (res) => {
+          if (res.confirm) logout()
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style scoped>
+.page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  padding: 24rpx 0 60rpx;
+}
+.card {
+  background: #ffffff;
+  border-radius: 20rpx;
+  margin: 0 24rpx 24rpx;
+  padding: 0 28rpx;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx 0;
+  border-bottom: 1rpx solid #f6f7f9;
+}
+.row:last-child {
+  border-bottom: none;
+}
+.label {
+  font-size: 28rpx;
+  color: #1f2430;
+}
+.value {
+  font-size: 26rpx;
+  color: #999999;
+}
+.arrow {
+  font-size: 32rpx;
+  color: #c2c8d0;
+}
+.logout-wrap {
+  margin: 40rpx 24rpx 0;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 32rpx 0;
+  text-align: center;
+}
+.logout {
+  font-size: 28rpx;
+  color: #ff2442;
+}
+.footer-tip {
+  display: block;
+  text-align: center;
+  margin-top: 40rpx;
+  font-size: 22rpx;
+  color: #c2c8d0;
+}
+</style>

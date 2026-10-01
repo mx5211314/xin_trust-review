@@ -492,6 +492,46 @@ export default {
   width: 30rpx;
   height: 30rpx;
 }
+.wfoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 14rpx 14rpx;
+}
+.wuser {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.wavatar {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: #ffe8ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10rpx;
+  flex-shrink: 0;
+}
+.wavatar-text {
+  font-size: 20rpx;
+  color: #ff2442;
+}
+.wnick {
+  font-size: 21rpx;
+  color: #999999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140rpx;
+}
+.wlike {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
 .wlike-num {
   margin-left: 6rpx;
   font-size: 22rpx;
