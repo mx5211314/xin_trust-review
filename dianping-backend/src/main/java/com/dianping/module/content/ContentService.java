@@ -214,6 +214,55 @@ public class ContentService {
         return pageResult(me, p);
     }
 
+    /** 热门话题：统计最近已上架内容的 tags 词频（TopN） */
+    public List<Map<String, Object>> hotTags(int limit) {
+        List<Content> recents = contentMapper.selectList(
+                new LambdaQueryWrapper<Content>()
+                        .eq(Content::getStatus, "APPROVED")
+                        .orderByDesc(Content::getCreateTime)
+                        .last("LIMIT 300"));
+        java.util.Map<String, Integer> cnt = new java.util.HashMap<>();
+        for (Content c : recents) {
+            for (String t : fromJson(c.getTags())) {
+                if (t != null && !t.isBlank()) cnt.merge(t, 1, Integer::sum);
+            }
+        }
+        return cnt.entrySet().stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(limit)
+                .map(e -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("tag", e.getKey());
+                    m.put("count", e.getValue());
+                    return m;
+                }).collect(java.util.stream.Collectors.toList());
+    }
+
+    /** 热门店铺：统计最近已上架内容的 poiName 词频（TopN） */
+    public List<Map<String, Object>> hotShops(int limit) {
+        List<Content> recents = contentMapper.selectList(
+                new LambdaQueryWrapper<Content>()
+                        .eq(Content::getStatus, "APPROVED")
+                        .isNotNull(Content::getPoiName)
+                        .ne(Content::getPoiName, "")
+                        .orderByDesc(Content::getCreateTime)
+                        .last("LIMIT 300"));
+        java.util.Map<String, Integer> cnt = new java.util.HashMap<>();
+        for (Content c : recents) {
+            String p = c.getPoiName();
+            if (p != null && !p.isBlank()) cnt.merge(p, 1, Integer::sum);
+        }
+        return cnt.entrySet().stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(limit)
+                .map(e -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("shop", e.getKey());
+                    m.put("count", e.getValue());
+                    return m;
+                }).collect(java.util.stream.Collectors.toList());
+    }
+
     /** 编辑自己的笔记：文字信息可改，修改后重新走机审（状态回 PENDING） */
     public void updateContent(Long id, Long me, ContentCreateReq req) {
         Content c = contentMapper.selectById(id);

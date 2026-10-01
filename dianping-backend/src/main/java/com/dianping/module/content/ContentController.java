@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -86,6 +87,18 @@ public class ContentController {
         Long me = com.dianping.common.UserContext.userId();
         Long meId = me != null ? me : 0L;
         return R.ok(contentService.search(meId, keyword.trim(), page, pageSize));
+    }
+
+    /** GET /content/hot-tags?limit= —— 热门话题词云 */
+    @GetMapping("/hot-tags")
+    public R<List<Map<String, Object>>> hotTags(@RequestParam(defaultValue = "20") int limit) {
+        return R.ok(contentService.hotTags(limit));
+    }
+
+    /** GET /content/hot-shops?limit= —— 热门店铺词云 */
+    @GetMapping("/hot-shops")
+    public R<List<Map<String, Object>>> hotShops(@RequestParam(defaultValue = "20") int limit) {
+        return R.ok(contentService.hotShops(limit));
     }
 
     /** POST /content/{id}/view —— 浏览计数上报 */

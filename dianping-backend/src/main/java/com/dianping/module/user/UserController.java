@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
@@ -46,6 +48,24 @@ public class UserController {
         data.put("nickname", u.getNickname());
         data.put("avatar", u.getAvatar());
         return R.ok(data);
+    }
+
+    /** GET /user/search?keyword=&limit= —— 用户搜索（按昵称模糊，供搜索页"用户"Tab） */
+    @GetMapping("/search")
+    public R<List<Map<String, Object>>> searchUsers(@RequestParam String keyword,
+                                                     @RequestParam(defaultValue = "20") int limit) {
+        List<User> users = userMapper.selectList(
+                new LambdaQueryWrapper<User>()
+                        .like(User::getNickname, keyword)
+                        .last("LIMIT " + Math.min(limit, 50)));
+        List<Map<String, Object>> list = users.stream().map(u -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("userId", String.valueOf(u.getId()));
+            m.put("nickname", u.getNickname());
+            m.put("avatar", u.getAvatar());
+            return m;
+        }).collect(Collectors.toList());
+        return R.ok(list);
     }
 
     /** GET /user/me */
