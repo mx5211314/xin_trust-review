@@ -555,7 +555,7 @@ export default {
       this.favPanelShow = true
       if (!this.folders.length) {
         try {
-          this.folders = await request({ url: '/favorite/folders', silent: true }) || []
+          this.folders = await request({ url: '/user/favorite/folders', silent: true }) || []
         } catch (e) {
           this.folders = []
         }
@@ -597,8 +597,8 @@ export default {
           const name = (res.content || '').trim()
           if (!name) return uni.showToast({ title: '名称不能为空', icon: 'none' })
           try {
-            await request({ url: '/favorite/folder', method: 'POST', data: { name } })
-            this.folders = await request({ url: '/favorite/folders', silent: true }) || []
+            await request({ url: '/user/favorite/folder', method: 'POST', data: { name } })
+            this.folders = await request({ url: '/user/favorite/folders', silent: true }) || []
             uni.showToast({ title: '已创建', icon: 'success' })
           } catch (e) { /* toast 已提示 */ }
         }

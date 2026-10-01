@@ -295,10 +295,10 @@ export default {
       }
       this.fetch()
     },
-    /** 收藏夹列表（含各夹收藏数） */
+    /** 收藏夹列表（含各夹收藏数）。注意：接口挂在 /user 前缀下 */
     async loadFolders() {
       try {
-        this.folders = await request({ url: '/favorite/folders', silent: true }) || []
+        this.folders = await request({ url: '/user/favorite/folders', silent: true }) || []
       } catch (e) {
         this.folders = []
       }
@@ -323,7 +323,7 @@ export default {
           const name = (res.content || '').trim()
           if (!name) return uni.showToast({ title: '名称不能为空', icon: 'none' })
           try {
-            await request({ url: '/favorite/folder', method: 'POST', data: { name } })
+            await request({ url: '/user/favorite/folder', method: 'POST', data: { name } })
             uni.showToast({ title: '已创建', icon: 'success' })
             await this.loadFolders()
           } catch (e) { /* toast 已提示 */ }
