@@ -434,7 +434,7 @@ export default {
         }
       })
     },
-    /** 举报评论：选原因后提交 */
+    /** 举报评论：选原因后提交（雪花 ID 按字符串传） */
     reportComment(commentId) {
       uni.showActionSheet({
         itemList: this.reportReasons,
@@ -444,7 +444,7 @@ export default {
             await request({
               url: '/report',
               method: 'POST',
-              data: { targetType: 'COMMENT', targetId: Number(commentId), reason },
+              data: { targetType: 'COMMENT', targetId: commentId, reason },
               silent: true
             })
             uni.showToast({ title: '举报已提交，感谢反馈', icon: 'none' })
@@ -561,8 +561,9 @@ export default {
         }
       }
     },
-    /** 收藏到指定收藏夹 */
+    /** 收藏到指定收藏夹（已收藏时=移动，不重复加计数） */
     async chooseFolder(folderId) {
+      const wasFav = this.favorited
       try {
         await request({
           url: `/content/${this.id}/favorite?folderId=${folderId}`,
@@ -570,16 +571,10 @@ export default {
           silent: true
         })
         this.favorited = true
-        this.favoriteCount += 1
+        if (!wasFav) this.favoriteCount += 1
         this.favPanelShow = false
-        uni.showToast({ title: '已收藏 ★', icon: 'none', duration: 900 })
-      } catch (e) {
-        if (e.code === 2003) {
-          this.favorited = true
-          this.favPanelShow = false
-          uni.showToast({ title: '已在该收藏夹', icon: 'none' })
-        }
-      }
+        uni.showToast({ title: wasFav ? '已移动到该收藏夹' : '已收藏 ★', icon: 'none', duration: 900 })
+      } catch (e) { /* toast 已提示 */ }
     },
     /** 取消收藏 */
     async cancelFavFromPanel() {
@@ -642,7 +637,7 @@ export default {
         }
       })
     },
-    /** 举报当前内容：选原因后提交 */
+    /** 举报当前内容：选原因后提交（雪花 ID 一律按字符串传，Number 会精度失真） */
     reportContent() {
       uni.showActionSheet({
         itemList: this.reportReasons,
@@ -652,7 +647,7 @@ export default {
             await request({
               url: '/report',
               method: 'POST',
-              data: { targetType: 'CONTENT', targetId: Number(this.id), reason },
+              data: { targetType: 'CONTENT', targetId: this.id, reason },
               silent: true
             })
             uni.showToast({ title: '举报已提交，感谢反馈', icon: 'none' })

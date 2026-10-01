@@ -230,7 +230,7 @@ export default {
             await request({
               url: '/report',
               method: 'POST',
-              data: { targetType: 'USER', targetId: Number(this.userId), reason: reasons[res.tapIndex] },
+              data: { targetType: 'USER', targetId: this.userId, reason: reasons[res.tapIndex] },
               silent: true
             })
             uni.showToast({ title: '举报已提交，感谢反馈', icon: 'none' })

@@ -131,7 +131,7 @@ public class FavoriteService {
                         .orderByDesc(FavoriteFolder::getCreateTime));
         List<Map<String, Object>> list = new java.util.ArrayList<>();
         Map<String, Object> m0 = new java.util.HashMap<>();
-        m0.put("folderId", 0);
+        m0.put("folderId", "0"); // 统一字符串，与自建夹(雪花ID)类型一致，避免前端比较失效
         m0.put("name", "未分类");
         m0.put("count", uncategorized);
         list.add(m0);
@@ -141,7 +141,7 @@ public class FavoriteService {
                     .eq(UserAction::getType, UserAction.TYPE_FAV)
                     .eq(UserAction::getFolderId, f.getId()));
             Map<String, Object> m = new java.util.HashMap<>();
-            m.put("folderId", f.getId());
+            m.put("folderId", String.valueOf(f.getId()));
             m.put("name", f.getName());
             m.put("count", c);
             list.add(m);

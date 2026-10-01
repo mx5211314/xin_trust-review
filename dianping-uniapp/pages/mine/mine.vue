@@ -191,7 +191,7 @@ export default {
       stats: { posts: 0, likes: 0, views: 0, following: 0, followers: 0 },
       tab: 'note',
       folders: [],
-      curFolder: 0,
+      curFolder: '0', // 后端统一返回字符串，'0'=未分类
       list: [],
       page: 1,
       pageSize: 10,
@@ -290,7 +290,7 @@ export default {
       this.hasMore = true
       this.list = []
       if (t === 'fav') {
-        this.curFolder = 0
+        this.curFolder = '0'
         this.loadFolders()
       }
       this.fetch()
