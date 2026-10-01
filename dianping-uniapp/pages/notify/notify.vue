@@ -58,6 +58,7 @@
           <text class="ntext announce-text">{{ a.text }}</text>
           <text class="ntime">{{ a.createTime }}</text>
         </view>
+        <view v-if="!a.isRead" class="dot"></view>
       </view>
       <view v-if="!loadingAnnounce && !announces.length" class="empty">
         <text class="muted">暂无公告</text>
@@ -162,7 +163,10 @@ export default {
     }
   },
   methods: {
-    /** 进消息页：清互动 + 通知全部未读（私信未读在进入对应聊天时清） */
+    /**
+     * 全部已读（供"全部已读"按钮 / 特定场景调用）。
+     * 注意：进消息页不再自动清——未读条目保留蓝点标识，点开/全部已读后才消失。
+     */
     async markAllRead() {
       try {
         await request({ url: '/user/notify/read-all', method: 'POST', silent: true })
@@ -495,7 +499,11 @@ export default {
   position: relative;
 }
 .item.unread {
-  background: #fff8f9;
+  background: #fff5f6;
+}
+.item.unread .actor {
+  font-weight: 600;
+  color: #1f2430;
 }
 .icon {
   width: 72rpx;
