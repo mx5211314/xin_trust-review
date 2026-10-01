@@ -2,9 +2,18 @@
   <view class="page">
     <view class="topbar">
       <view class="tabs">
-        <text class="tab" :class="{ on: tab === 'interact' }" @tap="switchTab('interact')">互动</text>
-        <text class="tab" :class="{ on: tab === 'chat' }" @tap="switchTab('chat')">私信</text>
-        <text class="tab" :class="{ on: tab === 'announce' }" @tap="switchTab('announce')">通知</text>
+        <view class="tab" :class="{ on: tab === 'interact' }" @tap="switchTab('interact')">
+          <text class="tab-text">互动</text>
+          <view v-if="tabUnread.interact > 0" class="tab-dot"><text class="tab-dot-text">{{ tabUnread.interact > 99 ? '99+' : tabUnread.interact }}</text></view>
+        </view>
+        <view class="tab" :class="{ on: tab === 'chat' }" @tap="switchTab('chat')">
+          <text class="tab-text">私信</text>
+          <view v-if="tabUnread.chat > 0" class="tab-dot"><text class="tab-dot-text">{{ tabUnread.chat > 99 ? '99+' : tabUnread.chat }}</text></view>
+        </view>
+        <view class="tab" :class="{ on: tab === 'announce' }" @tap="switchTab('announce')">
+          <text class="tab-text">通知</text>
+          <view v-if="tabUnread.announce > 0" class="tab-dot"><text class="tab-dot-text">{{ tabUnread.announce > 99 ? '99+' : tabUnread.announce }}</text></view>
+        </view>
       </view>
       <text v-if="tab === 'interact'" class="readall" @tap="readAll">全部已读</text>
     </view>
@@ -129,7 +138,8 @@ export default {
       announces: [],
       loadingAnnounce: false,
       summary: {},
-      interactSub: ''
+      interactSub: '',
+      tabUnread: { interact: 0, chat: 0, announce: 0 }
     }
   },
   onShow() {
@@ -169,7 +179,17 @@ export default {
     },
     async loadSummary() {
       try {
-        this.summary = await request({ url: '/user/notify/summary' })
+        const d = await request({ url: '/user/notify/summary' })
+        this.summary = d
+        this.tabUnread.interact =
+          Number(d.likeFav || 0) + Number(d.follow || 0) + Number(d.comment || 0)
+        this.tabUnread.announce = Number(d.announce || 0)
+      } catch (e) { /* ignore */ }
+    },
+    async loadChatUnread() {
+      try {
+        const d = await request({ url: '/chat/unread' })
+        this.tabUnread.chat = Number(d.unread || 0)
       } catch (e) { /* ignore */ }
     },
     filterSub(sub) {
@@ -181,6 +201,7 @@ export default {
       this.tab = t
       if (t === 'chat') {
         this.loadConversations()
+        this.loadChatUnread()
       } else if (t === 'announce') {
         this.loadAnnounces()
       }
@@ -332,6 +353,24 @@ export default {
   color: #999999;
   margin-right: 40rpx;
   position: relative;
+  padding-bottom: 14rpx;
+}
+.tab-dot {
+  position: absolute;
+  right: -30rpx;
+  top: -8rpx;
+  background: #ff2442;
+  border-radius: 999rpx;
+  min-width: 30rpx;
+  height: 30rpx;
+  padding: 0 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tab-dot-text {
+  color: #ffffff;
+  font-size: 18rpx;
 }
 .tab.on {
   color: #1f2430;
