@@ -133,10 +133,11 @@ public class ContentController {
         return R.ok(data);
     }
 
-    /** POST /content/{id}/favorite —— 收藏（幂等：重复返回 2003） */
+    /** POST /content/{id}/favorite?folderId= —— 收藏到指定收藏夹（folderId 默认 0=未分类） */
     @PostMapping("/{id}/favorite")
-    public R<Void> favorite(@PathVariable Long id) {
-        favoriteService.addFavorite(id, com.dianping.common.UserContext.userId());
+    public R<Void> favorite(@PathVariable Long id,
+                            @RequestParam(defaultValue = "0") long folderId) {
+        favoriteService.addFavorite(id, com.dianping.common.UserContext.userId(), folderId);
         return R.ok();
     }
 

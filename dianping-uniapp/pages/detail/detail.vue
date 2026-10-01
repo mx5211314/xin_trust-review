@@ -199,6 +199,35 @@
         </view>
       </view>
     </view>
+
+    <!-- 收藏夹选择面板（底部弹层） -->
+    <view v-if="favPanelShow" class="fav-mask" @tap="favPanelShow = false">
+      <view class="fav-sheet" @tap.stop>
+        <view class="fav-sheet-head">
+          <text class="fav-sheet-title">{{ favorited ? '管理收藏' : '收藏到' }}</text>
+          <text class="fav-sheet-close" @tap="favPanelShow = false">✕</text>
+        </view>
+        <scroll-view class="fav-sheet-list" scroll-y="true">
+          <view
+            v-for="f in folders"
+            :key="f.folderId"
+            class="fav-row"
+            @tap="chooseFolder(f.folderId)"
+          >
+            <text class="fav-row-icon">📁</text>
+            <text class="fav-row-name">{{ f.name }}</text>
+            <text class="fav-row-count">{{ f.count }}</text>
+          </view>
+          <view class="fav-row fav-row-add" @tap="createFolderInPanel">
+            <text class="fav-row-icon">＋</text>
+            <text class="fav-row-name">新建收藏夹</text>
+          </view>
+        </scroll-view>
+        <view v-if="favorited" class="fav-cancel" @tap="cancelFavFromPanel">
+          <text class="fav-cancel-text">取消收藏</text>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -225,7 +254,9 @@ export default {
       inputFocus: false,
       authorFollowing: false,
       favorited: false,
-      favoriteCount: 0
+      favoriteCount: 0,
+      favPanelShow: false,
+      folders: []
     }
   },
   computed: {
@@ -462,23 +493,63 @@ export default {
       }
     },
     async doFav() {
-      if (this.favorited) {
+      // 打开收藏夹选择面板（已收藏则用于管理/移动/取消）
+      this.favPanelShow = true
+      if (!this.folders.length) {
         try {
-          await request({ url: `/content/${this.id}/favorite`, method: 'DELETE', silent: true })
-          this.favorited = false
-          this.favoriteCount = Math.max(0, this.favoriteCount - 1)
-          uni.showToast({ title: '已取消收藏', icon: 'none', duration: 900 })
-        } catch (e) { /* ignore */ }
-      } else {
-        try {
-          await request({ url: `/content/${this.id}/favorite`, method: 'POST', silent: true })
-          this.favorited = true
-          this.favoriteCount += 1
-          uni.showToast({ title: '已收藏 ★', icon: 'none', duration: 900 })
+          this.folders = await request({ url: '/favorite/folders', silent: true }) || []
         } catch (e) {
-          if (e.code === 2003) this.favorited = true
+          this.folders = []
         }
       }
+    },
+    /** 收藏到指定收藏夹 */
+    async chooseFolder(folderId) {
+      try {
+        await request({
+          url: `/content/${this.id}/favorite?folderId=${folderId}`,
+          method: 'POST',
+          silent: true
+        })
+        this.favorited = true
+        this.favoriteCount += 1
+        this.favPanelShow = false
+        uni.showToast({ title: '已收藏 ★', icon: 'none', duration: 900 })
+      } catch (e) {
+        if (e.code === 2003) {
+          this.favorited = true
+          this.favPanelShow = false
+          uni.showToast({ title: '已在该收藏夹', icon: 'none' })
+        }
+      }
+    },
+    /** 取消收藏 */
+    async cancelFavFromPanel() {
+      try {
+        await request({ url: `/content/${this.id}/favorite`, method: 'DELETE', silent: true })
+        this.favorited = false
+        this.favoriteCount = Math.max(0, this.favoriteCount - 1)
+        this.favPanelShow = false
+        uni.showToast({ title: '已取消收藏', icon: 'none', duration: 900 })
+      } catch (e) { /* ignore */ }
+    },
+    /** 面板内新建收藏夹 */
+    createFolderInPanel() {
+      uni.showModal({
+        title: '新建收藏夹',
+        editable: true,
+        placeholderText: '如：美食清单',
+        success: async (res) => {
+          if (!res.confirm) return
+          const name = (res.content || '').trim()
+          if (!name) return uni.showToast({ title: '名称不能为空', icon: 'none' })
+          try {
+            await request({ url: '/favorite/folder', method: 'POST', data: { name } })
+            this.folders = await request({ url: '/favorite/folders', silent: true }) || []
+            uni.showToast({ title: '已创建', icon: 'success' })
+          } catch (e) { /* toast 已提示 */ }
+        }
+      })
     },
     preview(index) {
       uni.previewImage({ urls: this.content.images, current: index })
@@ -1022,6 +1093,79 @@ export default {
 }
 .more-comments-text {
   font-size: 26rpx;
+  color: #ff2442;
+}
+.fav-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+}
+.fav-sheet {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 20rpx 0 calc(20rpx + env(safe-area-inset-bottom));
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+.fav-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 32rpx 20rpx;
+  border-bottom: 1rpx solid #f1f3f5;
+}
+.fav-sheet-title {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #1f2430;
+}
+.fav-sheet-close {
+  font-size: 30rpx;
+  color: #c2c8d0;
+  padding: 0 10rpx;
+}
+.fav-sheet-list {
+  flex: 1;
+  max-height: 50vh;
+}
+.fav-row {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 32rpx;
+  border-bottom: 1rpx solid #f6f7f9;
+}
+.fav-row-icon {
+  font-size: 32rpx;
+  margin-right: 18rpx;
+}
+.fav-row-name {
+  flex: 1;
+  font-size: 28rpx;
+  color: #1f2430;
+}
+.fav-row-count {
+  font-size: 24rpx;
+  color: #b9c0c9;
+  margin-left: 12rpx;
+}
+.fav-row-add .fav-row-name {
+  color: #ff2442;
+}
+.fav-cancel {
+  padding: 24rpx 32rpx;
+  text-align: center;
+  border-top: 1rpx solid #f1f3f5;
+}
+.fav-cancel-text {
+  font-size: 28rpx;
   color: #ff2442;
 }
 </style>

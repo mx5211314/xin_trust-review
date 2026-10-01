@@ -56,6 +56,23 @@
       </view>
     </view>
 
+    <!-- 收藏夹筛选条（仅收藏 tab） -->
+    <scroll-view v-if="tab === 'fav'" class="folder-bar" scroll-x="true" :show-scrollbar="false">
+      <view
+        v-for="f in folders"
+        :key="f.folderId"
+        class="folder-chip"
+        :class="{ on: curFolder === f.folderId }"
+        @tap="pickFolder(f.folderId)"
+      >
+        <text class="folder-chip-text">{{ f.name }}</text>
+        <text class="folder-chip-count">{{ f.count }}</text>
+      </view>
+      <view class="folder-chip folder-add" @tap="newFolder">
+        <text class="folder-add-text">＋ 新建</text>
+      </view>
+    </scroll-view>
+
     <!-- 双列瀑布流 -->
     <view class="waterfall" v-if="list.length">
       <view class="col">
@@ -173,6 +190,8 @@ export default {
       user: null,
       stats: { posts: 0, likes: 0, views: 0, following: 0, followers: 0 },
       tab: 'note',
+      folders: [],
+      curFolder: 0,
       list: [],
       page: 1,
       pageSize: 10,
@@ -247,7 +266,7 @@ export default {
           this.hasMore = this.list.length < (data.contents ? data.contents.total : 0)
         } else if (this.tab === 'fav') {
           data = await request({
-            url: `/user/favorites?page=${this.page}&pageSize=${this.pageSize}`
+            url: `/user/favorites?page=${this.page}&pageSize=${this.pageSize}&folderId=${this.curFolder}`
           })
           this.list = append ? this.list.concat(data.list) : data.list
           this.hasMore = this.list.length < data.total
@@ -270,7 +289,46 @@ export default {
       this.page = 1
       this.hasMore = true
       this.list = []
+      if (t === 'fav') {
+        this.curFolder = 0
+        this.loadFolders()
+      }
       this.fetch()
+    },
+    /** 收藏夹列表（含各夹收藏数） */
+    async loadFolders() {
+      try {
+        this.folders = await request({ url: '/favorite/folders', silent: true }) || []
+      } catch (e) {
+        this.folders = []
+      }
+    },
+    /** 切换收藏夹：重新拉对应夹内容 */
+    pickFolder(id) {
+      if (this.curFolder === id) return
+      this.curFolder = id
+      this.page = 1
+      this.hasMore = true
+      this.list = []
+      this.fetch()
+    },
+    /** 新建收藏夹（弹窗输入名称） */
+    newFolder() {
+      uni.showModal({
+        title: '新建收藏夹',
+        editable: true,
+        placeholderText: '如：美食清单',
+        success: async (res) => {
+          if (!res.confirm) return
+          const name = (res.content || '').trim()
+          if (!name) return uni.showToast({ title: '名称不能为空', icon: 'none' })
+          try {
+            await request({ url: '/favorite/folder', method: 'POST', data: { name } })
+            uni.showToast({ title: '已创建', icon: 'success' })
+            await this.loadFolders()
+          } catch (e) { /* toast 已提示 */ }
+        }
+      })
     },
     /** 长按卡片：编辑 / 删除（仅笔记 tab）——小红书式 */
     onCardLong(item) {
@@ -512,6 +570,47 @@ export default {
   padding: 20rpx 16rpx;
   background: #f7f8fa;
   min-height: 200rpx;
+}
+.folder-bar {
+  white-space: nowrap;
+  background: #ffffff;
+  padding: 18rpx 20rpx;
+  border-bottom: 1rpx solid #f1f3f5;
+}
+.folder-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 12rpx 24rpx;
+  margin-right: 16rpx;
+  background: #f5f6f8;
+  border-radius: 999rpx;
+}
+.folder-chip.on {
+  background: #ffe8ea;
+}
+.folder-chip-text {
+  font-size: 26rpx;
+  color: #555555;
+}
+.folder-chip.on .folder-chip-text {
+  color: #ff2442;
+  font-weight: 500;
+}
+.folder-chip-count {
+  font-size: 20rpx;
+  color: #b9c0c9;
+  margin-left: 10rpx;
+}
+.folder-chip.on .folder-chip-count {
+  color: #ff7a8e;
+}
+.folder-add {
+  background: transparent;
+  border: 1rpx dashed #d8dbe0;
+}
+.folder-add-text {
+  font-size: 26rpx;
+  color: #999999;
 }
 .col {
   flex: 1;

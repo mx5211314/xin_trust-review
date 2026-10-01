@@ -8,18 +8,12 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("user_action")
-public class UserAction {
+@TableName("favorite_folder")
+public class FavoriteFolder {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     private Long userId;
-    private Long contentId;
-    /** 1 = 点赞 */
-    private Integer type;
-    /** 收藏所属收藏夹 id（0 = 未分类）；仅 type=FAV 时使用 */
-    private Long folderId;
+    private String name;
+    private Integer sort;
     private LocalDateTime createTime;
-
-    public static final int TYPE_LIKE = 1;
-    public static final int TYPE_FAV = 2;
 }

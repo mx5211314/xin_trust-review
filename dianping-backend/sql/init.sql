@@ -57,11 +57,24 @@ CREATE TABLE IF NOT EXISTS `user_action` (
     `user_id`     BIGINT   NOT NULL,
     `content_id`  BIGINT   NOT NULL,
     `type`        TINYINT  NOT NULL DEFAULT 1 COMMENT '1=点赞 2=收藏',
+    `folder_id`   BIGINT   NOT NULL DEFAULT 0 COMMENT '收藏夹id，0=未分类（仅 type=2 收藏时有效）',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_content_type` (`user_id`, `content_id`, `type`),
-    KEY `idx_content` (`content_id`)
+    KEY `idx_content` (`content_id`),
+    KEY `idx_user_folder` (`user_id`, `folder_id`)
 ) COMMENT '用户行为';
+
+-- ---------- 收藏夹（用户自建分类）----------
+CREATE TABLE IF NOT EXISTS `favorite_folder` (
+    `id`          BIGINT       NOT NULL COMMENT '雪花ID',
+    `user_id`     BIGINT       NOT NULL COMMENT '所属用户',
+    `name`        VARCHAR(30)  NOT NULL DEFAULT '我的收藏夹' COMMENT '收藏夹名称',
+    `sort`        INT          NOT NULL DEFAULT 0 COMMENT '排序权重',
+    `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_user` (`user_id`)
+) COMMENT '收藏夹';
 
 -- ---------- 评论（支持楼中楼：parent_id=0 为顶级评论）----------
 CREATE TABLE IF NOT EXISTS `comment` (
@@ -139,6 +152,17 @@ SET @e2 := (SELECT COUNT(*) FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='content' AND COLUMN_NAME='tags');
 SET @d2 := IF(@e2=0, 'ALTER TABLE content ADD COLUMN tags VARCHAR(500) NOT NULL DEFAULT '''' AFTER images', 'SELECT 1');
 PREPARE s2 FROM @d2; EXECUTE s2; DEALLOCATE PREPARE s2;
+
+-- ---------- 收藏夹功能迁移：user_action.folder_id + favorite_folder 表 ----------
+SET @e3 := (SELECT COUNT(*) FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='user_action' AND COLUMN_NAME='folder_id');
+SET @d3 := IF(@e3=0, 'ALTER TABLE user_action ADD COLUMN folder_id BIGINT NOT NULL DEFAULT 0 COMMENT ''收藏夹id，0=未分类'' AFTER type', 'SELECT 1');
+PREPARE s3 FROM @d3; EXECUTE s3; DEALLOCATE PREPARE s3;
+
+SET @e4 := (SELECT COUNT(*) FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='favorite_folder');
+SET @d4 := IF(@e4=0, 'CREATE TABLE favorite_folder (id BIGINT NOT NULL, user_id BIGINT NOT NULL, name VARCHAR(30) NOT NULL DEFAULT ''我的收藏夹'', sort INT NOT NULL DEFAULT 0, create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY idx_user (user_id)) COMMENT=''收藏夹''', 'SELECT 1');
+PREPARE s4 FROM @d4; EXECUTE s4; DEALLOCATE PREPARE s4;
 
 -- ---------- 初始管理员（dev 环境验证码固定 8888）----------
 INSERT INTO `user` (`id`, `phone`, `nickname`, `role`)

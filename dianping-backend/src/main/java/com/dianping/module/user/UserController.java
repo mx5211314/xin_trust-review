@@ -187,12 +187,27 @@ public class UserController {
         return R.ok(contentService.likedContents(me, page, pageSize));
     }
 
-    /** GET /user/favorites?page=&pageSize= —— 我的收藏 */
+    /** GET /user/favorites?page=&pageSize=&folderId= —— 我的收藏（可按收藏夹筛选） */
     @GetMapping("/favorites")
     public R<Map<String, Object>> favorites(@RequestParam(defaultValue = "1") int page,
-                                            @RequestParam(defaultValue = "10") int pageSize) {
+                                            @RequestParam(defaultValue = "10") int pageSize,
+                                            @RequestParam(defaultValue = "0") long folderId) {
         Long me = currentUserId();
-        return R.ok(favoriteService.favoriteContents(me, page, pageSize));
+        return R.ok(favoriteService.favoriteContents(me, folderId, page, pageSize));
+    }
+
+    /** GET /favorite/folders —— 我的收藏夹列表（含各夹收藏数 + 未分类） */
+    @GetMapping("/favorite/folders")
+    public R<List<Map<String, Object>>> listFolders() {
+        return R.ok(favoriteService.listFolders(currentUserId()));
+    }
+
+    /** POST /favorite/folder {name} —— 新建收藏夹 */
+    @PostMapping("/favorite/folder")
+    public R<Map<String, Object>> createFolder(@org.springframework.web.bind.annotation.RequestBody java.util.Map<String, String> body) {
+        Long me = currentUserId();
+        long id = favoriteService.createFolder(me, body == null ? null : body.get("name"));
+        return R.ok(java.util.Collections.singletonMap("folderId", String.valueOf(id)));
     }
 
     /** GET /user/{userId}?page=&pageSize= —— 用户主页 + TA 的点评列表 */
