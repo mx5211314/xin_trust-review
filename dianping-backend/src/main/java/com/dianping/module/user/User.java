@@ -22,6 +22,8 @@ public class User {
     private String role;
     /** NORMAL / BANNED */
     private String status;
+    /** 微信小程序 openid（微信登录/订阅消息用，未接入微信登录前为空） */
+    private String openid;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     @TableLogic

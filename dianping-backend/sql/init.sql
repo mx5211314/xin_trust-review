@@ -167,6 +167,17 @@ CREATE TABLE IF NOT EXISTS `report` (
     KEY `idx_status` (`status`)
 ) COMMENT '举报';
 
+-- ---------- 订阅消息授权额度（微信一次性订阅记账） ----------
+CREATE TABLE IF NOT EXISTS `subscribe_grant` (
+    `id`           BIGINT      NOT NULL COMMENT '雪花ID',
+    `user_id`      BIGINT      NOT NULL,
+    `template_key` VARCHAR(30) NOT NULL COMMENT 'audit/interact（映射配置的模板ID）',
+    `grant_count`  INT         NOT NULL DEFAULT 0 COMMENT '剩余可下发条数',
+    `update_time`  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user_tmpl` (`user_id`, `template_key`)
+) COMMENT '订阅消息授权额度';
+
 -- ---------- 已有库的增量补列（幂等；新库由上方建表语句直接包含）----------
 SET @e1 := (SELECT COUNT(*) FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='user' AND COLUMN_NAME='bio');
@@ -199,6 +210,17 @@ SET @e6 := (SELECT COUNT(*) FROM information_schema.TABLES
             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='report');
 SET @d6 := IF(@e6=0, 'CREATE TABLE report (id BIGINT NOT NULL, reporter_id BIGINT NOT NULL, target_type VARCHAR(20) NOT NULL, target_id BIGINT NOT NULL, reason VARCHAR(200) NOT NULL DEFAULT '''', status VARCHAR(20) NOT NULL DEFAULT ''PENDING'', create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY idx_target (target_type, target_id), KEY idx_status (status)) COMMENT=''举报''', 'SELECT 1');
 PREPARE s6 FROM @d6; EXECUTE s6; DEALLOCATE PREPARE s6;
+
+-- ---------- 微信订阅消息迁移：user.openid + subscribe_grant 表 ----------
+SET @e7 := (SELECT COUNT(*) FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='user' AND COLUMN_NAME='openid');
+SET @d7 := IF(@e7=0, 'ALTER TABLE `user` ADD COLUMN openid VARCHAR(64) NOT NULL DEFAULT '''' COMMENT ''微信openid'' AFTER status', 'SELECT 1');
+PREPARE s7 FROM @d7; EXECUTE s7; DEALLOCATE PREPARE s7;
+
+SET @e8 := (SELECT COUNT(*) FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='subscribe_grant');
+SET @d8 := IF(@e8=0, 'CREATE TABLE subscribe_grant (id BIGINT NOT NULL, user_id BIGINT NOT NULL, template_key VARCHAR(30) NOT NULL, grant_count INT NOT NULL DEFAULT 0, update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY uk_user_tmpl (user_id, template_key)) COMMENT=''订阅消息授权额度''', 'SELECT 1');
+PREPARE s8 FROM @d8; EXECUTE s8; DEALLOCATE PREPARE s8;
 
 -- ---------- 初始管理员（dev 环境验证码固定 8888）----------
 INSERT INTO `user` (`id`, `phone`, `nickname`, `role`)

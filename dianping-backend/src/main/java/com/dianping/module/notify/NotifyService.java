@@ -45,6 +45,7 @@ public class NotifyService {
     private final NotifyMapper notifyMapper;
     private final UserMapper userMapper;
     private final com.dianping.module.interaction.BlockService blockService;
+    private final com.dianping.module.wechat.WechatPushService wechatPushService;
 
     /** 写一条通知；给自己触发的写；actor=0 表示系统；拉黑双向隔离——任一方拉黑对方则不写 */
     public void send(Long userId, String type, Long actorId, Long contentId, Long commentId, String text) {
@@ -65,6 +66,43 @@ public class NotifyService {
         n.setText(text == null ? "" : text);
         n.setIsRead(0);
         notifyMapper.insert(n);
+
+        // 微信订阅消息（未配置模板时为 no-op；@Async 不阻塞主流程）
+        String tplKey = wechatTemplateKey(type);
+        if (tplKey != null) {
+            String page = n.getContentId() > 0
+                    ? "pages/detail/detail?id=" + n.getContentId()
+                    : "pages/notify/notify";
+            Map<String, String> data = new java.util.HashMap<>();
+            data.put("thing1", abbreviate(n.getText(), 18));
+            data.put("time2", java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            wechatPushService.pushAsync(userId, tplKey, page, data);
+        }
+    }
+
+    /** 通知类型 → 订阅消息模板业务键；null = 不推 */
+    private String wechatTemplateKey(String type) {
+        switch (type == null ? "" : type) {
+            case T_AUDIT_PASS:
+            case T_AUDIT_REJECT:
+                return "audit";
+            case T_LIKE:
+            case T_COMMENT:
+            case T_REPLY:
+            case T_FOLLOW:
+            case T_FAV:
+            case T_MENTION:
+            case T_MESSAGE:
+                return "interact";
+            default:
+                return null; // ANNOUNCE 等系统类不推
+        }
+    }
+
+    private String abbreviate(String s, int max) {
+        if (s == null || s.isBlank()) return "查看详情";
+        return s.length() > max ? s.substring(0, max) + "…" : s;
     }
 
     /** 未读数 */

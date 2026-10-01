@@ -118,6 +118,7 @@
 <script>
 import { request } from '@/utils/request'
 import { getUser } from '@/utils/auth'
+import { askSubscribeOnce } from '@/utils/subscribe'
 
 export default {
   computed: {
@@ -150,6 +151,8 @@ export default {
     }
     this.page = 1
     this.fetch()
+    // 引导订阅"互动通知"（未配置模板时静默；每次启动只弹一次）
+    askSubscribeOnce('interact')
     this.loadConversations()
     this.loadAnnounces()
     this.loadSummary()

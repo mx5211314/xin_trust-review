@@ -150,6 +150,7 @@ import { request } from '@/utils/request'
 import { uploadFile } from '@/utils/upload'
 import { REGIONS } from '@/utils/config'
 import { getUser } from '@/utils/auth'
+import { askSubscribeOnce } from '@/utils/subscribe'
 
 export default {
   data() {
@@ -306,6 +307,8 @@ export default {
           await request({ url: `/content/${this.editId}`, method: 'PUT', data: payload })
         } else {
           await request({ url: '/content', method: 'POST', data: payload })
+          // 发布成功 → 引导订阅"审核结果通知"（未配置模板时静默跳过；tap 手势内合法）
+          askSubscribeOnce('audit')
         }
         uni.showToast({ title: this.editId ? '已保存，审核通过后公开' : '已提交，审核通过后公开', icon: 'success' })
         setTimeout(() => {

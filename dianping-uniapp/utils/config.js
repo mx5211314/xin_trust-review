@@ -34,3 +34,13 @@ export function regionName(code) {
   const r = REGIONS.find(item => item.code === code)
   return r ? r.name : code
 }
+
+/**
+ * 微信订阅消息模板 ID（mp.weixin.qq.com 订阅消息里选用后复制）。
+ * 留空 = 不弹授权、不请求（本地开发/未配置时静默跳过）。
+ * audit = 审核结果通知；interact = 互动通知（赞/评/关注/@）。
+ */
+export const SUBSCRIBE_TEMPLATES = {
+  audit: '',
+  interact: ''
+}

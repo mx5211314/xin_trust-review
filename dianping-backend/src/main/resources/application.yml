@@ -62,6 +62,14 @@ dianping:
     video-max-size: 104857600
     # 凭证有效期（分钟）
     policy-expire-minutes: 30
+  wechat:
+    # 小程序订阅消息：填入 AppID/Secret/模板ID 后自动启用；留空 = 全链路 no-op（只打日志）
+    # 前置条件：微信小程序 appid + mp.weixin.qq.com 选用的订阅消息模板 ID + 用户 openid（需接入微信登录）
+    # 注意：data 字段名(thing1/time2 等)需与所选模板字段一致，在 WechatPushService.pushAsync 调用处调整
+    appid: ${WX_APPID:}
+    secret: ${WX_SECRET:}
+    template-audit: ${WX_TMPL_AUDIT:}      # 审核结果通知（发布成功后引导订阅）
+    template-interact: ${WX_TMPL_INTERACT:} # 互动通知（赞/评/关注/@）
 
 logging:
   level:
