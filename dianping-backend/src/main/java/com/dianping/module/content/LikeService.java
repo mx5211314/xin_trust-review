@@ -64,19 +64,22 @@ public class LikeService {
     }
 
     /**
-     * 标记内容点赞数待落库（SyncTask 消费后按 user_action 重算）。
-     * Redis 不可用时降级为"立即同步落库"，保证没有 Redis 的环境计数也是准确的。
+     * 点赞后同步计数：标记脏集合（对账兜底）+ 立即按 user_action 重算落库（保证前端即时看到）。
+     *
+     * 设计取舍：当前数据量下"实时落库"体验最好；
+     * 若点赞 QPS 变高（主表写热点），改为只标记脏集合、由 LikeSyncTask 异步落库，
+     * 前端计数改读 Redis 即可（两边都是增量/真值源，不会倒退）。
      */
     private void markDirty(Long contentId) {
         try {
             redis.opsForSet().add(com.dianping.common.DianpingConst.REDIS_LIKE_DIRTY, String.valueOf(contentId));
-        } catch (Exception e) {
-            // 无 Redis：直接按关系表重算落库（优雅降级）
-            try {
-                contentMapper.syncLikeCountFromActions(contentId);
-            } catch (Exception ignored) {
-                // 落库也失败：不影响点赞关系已写入的主流程
-            }
+        } catch (Exception ignored) {
+            // Redis 不可用：不影响，下面仍会同步落库
+        }
+        try {
+            contentMapper.syncLikeCountFromActions(contentId);
+        } catch (Exception ignored) {
+            // 落库失败：点赞关系已写入，dirty 集合/SyncTask 后续会修正
         }
     }
 }
