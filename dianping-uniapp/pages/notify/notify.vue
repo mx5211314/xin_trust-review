@@ -54,6 +54,35 @@
       </view>
     </view>
 
+    <!-- 互动分类聚合入口（小红书式：赞和收藏 / 新增关注 / 评论和@） -->
+    <view v-if="tab === 'interact'" class="sum-cards">
+      <view class="sum-card" :class="{ on: interactSub === 'like' }" @tap="filterSub('like')">
+        <text class="sum-emoji">♥</text>
+        <text class="sum-label">赞和收藏</text>
+        <view v-if="summary.likeFav > 0" class="sum-badge">
+          <text class="sum-badge-text">{{ summary.likeFav }}</text>
+        </view>
+      </view>
+      <view class="sum-card" :class="{ on: interactSub === 'follow' }" @tap="filterSub('follow')">
+        <text class="sum-emoji">＋</text>
+        <text class="sum-label">新增关注</text>
+        <view v-if="summary.follow > 0" class="sum-badge">
+          <text class="sum-badge-text">{{ summary.follow }}</text>
+        </view>
+      </view>
+      <view class="sum-card" :class="{ on: interactSub === 'comment' }" @tap="filterSub('comment')">
+        <text class="sum-emoji">💬</text>
+        <text class="sum-label">评论和@</text>
+        <view v-if="summary.comment > 0" class="sum-badge">
+          <text class="sum-badge-text">{{ summary.comment }}</text>
+        </view>
+      </view>
+    </view>
+    <view v-if="tab === 'interact' && interactSub" class="sub-filter">
+      <text class="sub-filter-text">已筛选：{{ subLabel }}</text>
+      <text class="sub-filter-clear" @tap="filterSub('')">查看全部 ✕</text>
+    </view>
+
     <view v-if="tab === 'interact'" v-for="n in list" :key="n.notifyId" class="item" :class="{ unread: !n.isRead }" @tap="tapItem(n)">
       <view class="icon" :class="'icon-' + n.type">
         <text class="icon-text">{{ iconOf(n.type) }}</text>
@@ -80,6 +109,12 @@ import { request } from '@/utils/request'
 import { getUser } from '@/utils/auth'
 
 export default {
+  computed: {
+    subLabel() {
+      const map = { like: '赞和收藏', follow: '新增关注', comment: '评论和@' }
+      return map[this.interactSub] || ''
+    }
+  },
   data() {
     return {
       list: [],
@@ -91,7 +126,9 @@ export default {
       conversations: [],
       loadingChat: false,
       announces: [],
-      loadingAnnounce: false
+      loadingAnnounce: false,
+      summary: {},
+      interactSub: ''
     }
   },
   onShow() {
@@ -103,6 +140,7 @@ export default {
     this.fetch()
     this.loadConversations()
     this.loadAnnounces()
+    this.loadSummary()
     // 同步一次徽标（未读以服务端为准，点击/全部已读后更新）
     this.refreshBadge()
   },
@@ -113,6 +151,16 @@ export default {
     }
   },
   methods: {
+    async loadSummary() {
+      try {
+        this.summary = await request({ url: '/user/notify/summary' })
+      } catch (e) { /* ignore */ }
+    },
+    filterSub(sub) {
+      this.interactSub = sub
+      this.page = 1
+      this.fetch()
+    },
     switchTab(t) {
       this.tab = t
       if (t === 'chat') {
@@ -168,8 +216,9 @@ export default {
     async fetch(append) {
       this.loading = true
       try {
+        const sub = this.interactSub ? `&subType=${this.interactSub}` : ''
         const data = await request({
-          url: `/user/notify?category=interact&page=${this.page}&pageSize=${this.pageSize}`
+          url: `/user/notify?category=interact${sub}&page=${this.page}&pageSize=${this.pageSize}`
         })
         this.list = append ? this.list.concat(data.list) : data.list
         this.hasMore = this.list.length < data.total
@@ -195,13 +244,15 @@ export default {
     },
     async readAll() {
       try {
-        await request({ url: `/user/notify/read-all?category=${this.tab}`, method: 'POST' })
+        const sub = this.interactSub ? `&subType=${this.interactSub}` : ''
+        await request({ url: `/user/notify/read-all?category=${this.tab}${sub}`, method: 'POST' })
         if (this.tab === 'announce') {
           this.announces.forEach(a => { a.isRead = 1 })
         } else {
           this.list.forEach(n => { n.isRead = 1 })
         }
         this.refreshBadge()
+        this.loadSummary()
         uni.showToast({ title: '已全部标记为已读', icon: 'none' })
       } catch (e) { /* ignore */ }
     },
@@ -224,6 +275,7 @@ export default {
         n.isRead = 1
         request({ url: `/user/notify/${n.notifyId}/read`, method: 'POST', silent: true }).catch(() => {})
         this.refreshBadge()
+        this.loadSummary()
       }
       if (n.contentId) {
         uni.navigateTo({ url: '/pages/detail/detail?id=' + n.contentId })
@@ -304,6 +356,69 @@ export default {
   font-size: 22rpx;
   color: #c2c8d0;
   margin-top: 10rpx;
+}
+.sum-cards {
+  display: flex;
+  padding: 24rpx 24rpx 8rpx;
+}
+.sum-card {
+  flex: 1;
+  background: #ffffff;
+  border: 1.5rpx solid #f1f3f5;
+  border-radius: 18rpx;
+  padding: 26rpx 0;
+  margin-right: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.sum-card:last-child {
+  margin-right: 0;
+}
+.sum-card.on {
+  border-color: #ff2442;
+  background: #fff8f9;
+}
+.sum-emoji {
+  font-size: 34rpx;
+  color: #ff2442;
+}
+.sum-label {
+  font-size: 22rpx;
+  color: #666666;
+  margin-top: 8rpx;
+}
+.sum-badge {
+  position: absolute;
+  right: 14rpx;
+  top: 12rpx;
+  background: #ff2442;
+  border-radius: 999rpx;
+  min-width: 30rpx;
+  padding: 0 8rpx;
+  height: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sum-badge-text {
+  color: #ffffff;
+  font-size: 18rpx;
+}
+.sub-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 28rpx 16rpx;
+}
+.sub-filter-text {
+  font-size: 22rpx;
+  color: #999999;
+}
+.sub-filter-clear {
+  font-size: 22rpx;
+  color: #ff2442;
 }
 .announce-icon {
   background: #fff7e8;

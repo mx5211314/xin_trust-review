@@ -73,12 +73,24 @@ public class NotifyService {
      *           空 = 全部
      */
     public Map<String, Object> list(Long me, String category, int page, int pageSize) {
+        return list(me, category, null, page, pageSize);
+    }
+
+    /** 列表（category 见上；subType: like|follow|comment 进一步细分） */
+    public Map<String, Object> list(Long me, String category, String subType, int page, int pageSize) {
         LambdaQueryWrapper<Notify> w = new LambdaQueryWrapper<Notify>()
                 .eq(Notify::getUserId, me);
         if ("announce".equals(category)) {
             w.eq(Notify::getType, T_ANNOUNCE);
         } else if ("interact".equals(category)) {
             w.notIn(Notify::getType, T_ANNOUNCE, T_MESSAGE);
+        }
+        if ("like".equals(subType)) {
+            w.in(Notify::getType, java.util.List.of(T_LIKE, T_FAV));
+        } else if ("follow".equals(subType)) {
+            w.eq(Notify::getType, T_FOLLOW);
+        } else if ("comment".equals(subType)) {
+            w.in(Notify::getType, java.util.List.of(T_COMMENT, T_REPLY));
         }
         w.orderByDesc(Notify::getCreateTime);
         Page<Notify> p = notifyMapper.selectPage(new Page<>(page, pageSize), w);
@@ -135,6 +147,24 @@ public class NotifyService {
             notifyMapper.insert(n);
         }
         return users.size();
+    }
+
+    /** 消息分类未读汇总（小红书式：赞和收藏 / 新增关注 / 评论和@） */
+    public Map<String, Object> summary(Long me) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("likeFav", countUnread(me, T_LIKE, T_FAV));
+        m.put("follow", countUnread(me, T_FOLLOW));
+        m.put("comment", countUnread(me, T_COMMENT, T_REPLY));
+        m.put("announce", countUnread(me, T_ANNOUNCE));
+        m.put("unread", unreadCount(me));
+        return m;
+    }
+
+    private long countUnread(Long me, String... types) {
+        return notifyMapper.selectCount(new LambdaQueryWrapper<Notify>()
+                .eq(Notify::getUserId, me)
+                .eq(Notify::getIsRead, 0)
+                .in(Notify::getType, java.util.List.of(types)));
     }
 
     /** 单条已读（点击某条消息时调用） */

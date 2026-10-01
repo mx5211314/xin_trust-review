@@ -81,9 +81,16 @@ public class UserController {
     /** GET /user/notify —— 消息列表 */
     @GetMapping("/notify")
     public R<Map<String, Object>> notify(@RequestParam(required = false) String category,
+                                         @RequestParam(required = false) String subType,
                                          @RequestParam(defaultValue = "1") int page,
                                          @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(notifyService.list(currentUserId(), category, page, pageSize));
+        return R.ok(notifyService.list(currentUserId(), category, subType, page, pageSize));
+    }
+
+    /** GET /user/notify/summary —— 分类未读汇总（赞和收藏/新增关注/评论和@） */
+    @GetMapping("/notify/summary")
+    public R<Map<String, Object>> notifySummary() {
+        return R.ok(notifyService.summary(currentUserId()));
     }
 
     /** GET /user/notify/unread —— 未读数 */

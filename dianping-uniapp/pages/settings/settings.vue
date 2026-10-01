@@ -16,6 +16,26 @@
       </view>
     </view>
 
+    <!-- 账号与安全 -->
+    <view class="card">
+      <view class="row tap" @tap="showAccountSecurity">
+        <text class="label">账号与安全</text>
+        <text class="arrow">›</text>
+      </view>
+      <view class="row tap" @tap="showPrivacy">
+        <text class="label">隐私设置</text>
+        <text class="arrow">›</text>
+      </view>
+      <view class="row">
+        <text class="label">隐藏我的关注列表</text>
+        <switch :checked="hideFollowing" color="#ff2442" style="transform:scale(0.8)" @change="toggleHideFollowing" />
+      </view>
+      <view class="row">
+        <text class="label">允许他人评论我的笔记</text>
+        <switch :checked="allowComment" color="#ff2442" style="transform:scale(0.8)" @change="toggleAllowComment" />
+      </view>
+    </view>
+
     <!-- 通用设置 -->
     <view class="card">
       <view class="row tap" @tap="goEditProfile">
@@ -42,6 +62,10 @@
         <text class="label">用户协议与隐私政策</text>
         <text class="arrow">›</text>
       </view>
+      <view class="row tap" @tap="showHelp">
+        <text class="label">帮助与客服</text>
+        <text class="arrow">›</text>
+      </view>
     </view>
 
     <view class="logout-wrap">
@@ -61,7 +85,9 @@ export default {
     return {
       profile: {},
       notifyOn: true,
-      cacheSize: '0 KB'
+      cacheSize: '0 KB',
+      hideFollowing: false,
+      allowComment: true
     }
   },
   computed: {
@@ -86,6 +112,10 @@ export default {
     try {
       const v = uni.getStorageSync('dp_notify_on')
       this.notifyOn = v === '' ? true : !!v
+      const hf = uni.getStorageSync('dp_hide_following')
+      this.hideFollowing = hf === '' ? false : !!hf
+      const ac = uni.getStorageSync('dp_allow_comment')
+      this.allowComment = ac === '' ? true : !!ac
     } catch (e) { /* ignore */ }
   },
   methods: {
@@ -129,6 +159,44 @@ export default {
           this.calcCache()
           uni.showToast({ title: '缓存已清理', icon: 'success' })
         }
+      })
+    },
+    showAccountSecurity() {
+      uni.showModal({
+        title: '账号与安全',
+        content: `手机号：${this.profile.phoneMasked || '—'}\n登录方式：手机号 + 验证码\n账号状态：${this.profile.status === 'BANNED' ? '已封禁' : '正常'}\n\n（演示版本：换绑手机号、注销账号等功能上线前提供）`,
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    },
+    showPrivacy() {
+      uni.showModal({
+        title: '隐私设置说明',
+        content: '可控制关注列表可见性、是否允许他人评论。演示版本开关仅保存在本机，正式版将生效于服务端。',
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    },
+    toggleHideFollowing(e) {
+      this.hideFollowing = e.detail.value
+      try {
+        uni.setStorageSync('dp_hide_following', this.hideFollowing)
+      } catch (err) { /* ignore */ }
+      uni.showToast({ title: this.hideFollowing ? '已隐藏关注列表' : '已公开关注列表', icon: 'none' })
+    },
+    toggleAllowComment(e) {
+      this.allowComment = e.detail.value
+      try {
+        uni.setStorageSync('dp_allow_comment', this.allowComment)
+      } catch (err) { /* ignore */ }
+      uni.showToast({ title: this.allowComment ? '已允许评论' : '已关闭评论', icon: 'none' })
+    },
+    showHelp() {
+      uni.showModal({
+        title: '帮助与客服',
+        content: '遇到问题？\n\n1. 检查网络与后端是否启动\n2. 账号问题联系管理员：13800000000\n3. 意见反馈：在问题详情点右上角···→举报',
+        showCancel: false,
+        confirmText: '知道了'
       })
     },
     showAbout() {
