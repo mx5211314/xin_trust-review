@@ -25,7 +25,8 @@ mybatis-plus:
       logic-delete-field: deleted
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 开发期打印SQL，上线删
+    # 需要排查 SQL 时再打开（会打印参数，含手机号等敏感信息，生产禁用）
+    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 dianping:
   jwt:
@@ -34,7 +35,11 @@ dianping:
     expire-days: 7
   audit:
     # true = 机审直接通过（本地开发用）；false = 停在 PENDING，等后台人工审
+    # 【上线改 false】否则等于没有审核
     mock-auto-pass: true
+  # 跨源白名单：开发期 "*"，生产收敛为前端域名（逗号分隔）
+  cors:
+    allowed-origins: ${CORS_ORIGINS:*}
   oss:
     # local  = 开发期本地磁盘存储（图片/视频存电脑硬盘，/upload/** 直接访问，零成本）
     # aliyun = 正式阿里云 OSS 直传（去控制台创建 Bucket、拿到 AK 后把 mode 改回 aliyun）
@@ -43,6 +48,8 @@ dianping:
     local-dir: ${OSS_LOCAL_DIR:D:/dianping-upload}
     # 本地模式对外访问前缀：浏览器调试 localhost 即可；真机调试建议改成电脑局域网 IP
     local-public-url: ${OSS_LOCAL_PUBLIC:http://localhost:18080}
+    # true=资源URL跟随请求Host（本地/真机调试方便）；生产设为 false 用固定域名，防 Host 头注入
+    dynamic-host: ${OSS_DYNAMIC_HOST:true}
     # ---- 以下为 aliyun 模式配置，切换 mode 后生效；AK 走环境变量，不进代码 ----
     access-key-id: ${OSS_ACCESS_KEY_ID:your-ak}
     access-key-secret: ${OSS_ACCESS_KEY_SECRET:your-sk}
@@ -58,4 +65,4 @@ dianping:
 
 logging:
   level:
-    com.dianping: debug
+    com.dianping: info

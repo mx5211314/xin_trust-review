@@ -8,6 +8,9 @@ import lombok.Getter;
 @Getter
 public enum ResultCode {
     OK(0, "ok"),
+    /** 操作太频繁（限流） */
+    TOO_MANY_REQUESTS(1029, "操作太频繁，请稍后再试"),
+
     PARAM_ERROR(1001, "参数错误"),
     UNAUTHORIZED(1002, "请先登录"),
     FORBIDDEN(1003, "没有权限"),

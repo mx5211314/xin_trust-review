@@ -25,6 +25,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${dianping.oss.local-dir:D:/dianping-upload}")
     private String localDir;
 
+    /** 跨源白名单：开发期 "*"，生产按需收敛为前端域名（逗号分隔） */
+    @Value("${dianping.cors.allowed-origins:*}")
+    private String allowedOrigins;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
@@ -48,7 +52,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                .allowedOriginPatterns(allowedOrigins.split(","))
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
     }
