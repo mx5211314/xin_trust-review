@@ -98,9 +98,12 @@
 
       <!-- 6. 话题（默认折叠成一行，点击展开） -->
       <view class="line-row" @tap="topicOpen = !topicOpen">
-        <text class="line-topic" :class="{ picked: tags.length }">
+        <view class="row-left">
+          <image class="ficon-img" src="/static/icons/topic.png" />
+          <text class="line-topic" :class="{ picked: tags.length }">
           # {{ tags.length ? tags.join('  # ') : '添加话题' }}
-        </text>
+          </text>
+        </view>
         <text class="arrow">{{ topicOpen ? '▴' : '▾' }}</text>
       </view>
       <view v-if="topicOpen" class="topic-chips">
@@ -119,18 +122,24 @@
       <!-- 7. 地点 -->
       <picker :range="regionNames" @change="onRegionChange">
         <view class="line-row">
-          <text class="line-topic" :class="{ picked: regionIndex >= 0 }">
-            📍 {{ regionIndex >= 0 ? regionNames[regionIndex] : '添加地区' }}
-          </text>
+          <view class="row-left">
+            <image class="ficon-img" src="/static/icons/location.png" />
+            <text class="line-topic" :class="{ picked: regionIndex >= 0 }">
+              {{ regionIndex >= 0 ? regionNames[regionIndex] : '添加地区' }}
+            </text>
+          </view>
           <text class="arrow">▾</text>
         </view>
       </picker>
-      <input
-        v-model="poiName"
-        class="input poi-input"
-        placeholder="店铺名（选填）"
-        placeholder-class="ph"
-      />
+      <view class="poi-row-wrap">
+        <image class="ficon-img" src="/static/icons/shop.png" />
+        <input
+          v-model="poiName"
+          class="input poi-input"
+          placeholder="店铺名（选填）"
+          placeholder-class="ph"
+        />
+      </view>
       <view style="height: 60rpx"></view>
     </view>
   </view>
@@ -572,6 +581,23 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 28rpx 4rpx;
+}
+.row-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.ficon-img {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 22rpx;
+  flex-shrink: 0;
+}
+.poi-row-wrap {
+  display: flex;
+  align-items: center;
+  padding: 10rpx 4rpx;
 }
 .line-topic {
   font-size: 28rpx;
