@@ -96,7 +96,7 @@
 
     <view v-if="tab === 'interact'" v-for="n in list" :key="n.notifyId" class="item" :class="{ unread: !n.isRead }" @tap="tapItem(n)">
       <view class="icon" :class="'icon-' + n.type">
-        <text class="icon-text">{{ iconOf(n.type) }}</text>
+        <image class="icon-img" :src="iconImg(n.type)" />
       </view>
       <view class="body">
         <view class="line1">
@@ -240,7 +240,8 @@ export default {
         COMMENT: '/static/icons/bubble.png',
         REPLY: '/static/icons/bubble.png',
         FAV: '/static/icons/star-on.png',
-        MESSAGE: '/static/icons/bubble.png'
+        MESSAGE: '/static/icons/bubble.png',
+        MENTION: '/static/icons/at.png'
       }
       return map[type] || '/static/icons/bubble.png'
     },
@@ -253,7 +254,8 @@ export default {
         FOLLOW: '关注了你',
         FAV: '收藏了你的笔记',
         AUDIT_PASS: '你的笔记已通过审核',
-        AUDIT_REJECT: '你的笔记未通过审核'
+        AUDIT_REJECT: '你的笔记未通过审核',
+        MENTION: '提到了你'
       }
       return map[n.type] || '互动了你的内容'
     },

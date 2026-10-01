@@ -7,6 +7,7 @@ import com.dianping.module.user.User;
 import com.dianping.module.user.UserMapper;
 import com.dianping.module.content.ContentService;
 import com.dianping.module.oss.OssService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,21 @@ public class UserController {
     private final com.dianping.module.interaction.FollowService followService;
     private final com.dianping.module.notify.NotifyService notifyService;
     private final com.dianping.module.interaction.FavoriteService favoriteService;
+
+    /** GET /user/by-nickname?nick= —— 按昵称查用户（供 @提及 跳转用户主页） */
+    @GetMapping("/by-nickname")
+    public R<Map<String, Object>> byNickname(@RequestParam String nick) {
+        User u = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getNickname, nick).last("LIMIT 1"));
+        if (u == null) {
+            return R.ok(java.util.Collections.emptyMap());
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("userId", String.valueOf(u.getId()));
+        data.put("nickname", u.getNickname());
+        data.put("avatar", u.getAvatar());
+        return R.ok(data);
+    }
 
     /** GET /user/me */
     @GetMapping("/me")

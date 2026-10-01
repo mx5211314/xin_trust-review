@@ -168,7 +168,8 @@ export default {
       poiName: '',
       submitting: false,
       editId: '',
-      statusBarHeight: 20
+      statusBarHeight: 20,
+      draftKey: 'dp_publish_draft'
     }
   },
   onLoad(query) {
@@ -178,7 +179,13 @@ export default {
     if (query && query.id) {
       this.editId = query.id
       this.loadForEdit()
+    } else {
+      this.offerRestoreDraft()
     }
+  },
+  onHide() {
+    // 离开页面自动存草稿（仅新建模式、且有内容时）
+    if (!this.editId) this.saveDraft()
   },
   onShow() {
     const u = getUser()
@@ -303,6 +310,7 @@ export default {
         uni.showToast({ title: this.editId ? '已保存，审核通过后公开' : '已提交，审核通过后公开', icon: 'success' })
         setTimeout(() => {
           this.reset()
+          try { uni.removeStorageSync(this.draftKey) } catch (e) { /* ignore */ }
           uni.switchTab({ url: '/pages/feed/feed' })
         }, 900)
       } catch (e) {
@@ -310,6 +318,48 @@ export default {
       } finally {
         this.submitting = false
       }
+    },
+    hasContent() {
+      return !!(this.title.trim() || this.text.trim() || this.localImages.length || this.localVideo || this.tags.length || this.poiName.trim())
+    },
+    saveDraft() {
+      if (!this.hasContent()) return
+      try {
+        uni.setStorageSync(this.draftKey, JSON.stringify({
+          title: this.title,
+          text: this.text,
+          regionIndex: this.regionIndex,
+          tags: this.tags,
+          poiName: this.poiName,
+          type: this.type
+        }))
+      } catch (e) { /* ignore */ }
+    },
+    offerRestoreDraft() {
+      let raw
+      try { raw = uni.getStorageSync(this.draftKey) } catch (e) { return }
+      if (!raw) return
+      let d
+      try { d = JSON.parse(raw) } catch (e) { return }
+      if (!(d.title || d.text || (d.tags && d.tags.length) || d.poiName)) return
+      uni.showModal({
+        title: '恢复草稿',
+        content: '检测到上次未发布的草稿，是否继续编辑？（图片需重新选择）',
+        confirmText: '恢复',
+        cancelText: '放弃',
+        success: (res) => {
+          if (res.confirm) {
+            this.title = d.title || ''
+            this.text = d.text || ''
+            this.regionIndex = typeof d.regionIndex === 'number' ? d.regionIndex : -1
+            this.tags = Array.isArray(d.tags) ? d.tags : []
+            this.poiName = d.poiName || ''
+            if (d.type === 'video' || d.type === 'image') this.type = d.type
+          } else {
+            try { uni.removeStorageSync(this.draftKey) } catch (e) { /* ignore */ }
+          }
+        }
+      })
     },
     reset() {
       this.title = ''

@@ -37,6 +37,8 @@ public class NotifyService {
     public static final String T_MESSAGE = "MESSAGE";
     /** 管理员公告 */
     public static final String T_ANNOUNCE = "ANNOUNCE";
+    /** 笔记正文中 @昵称 提及 */
+    public static final String T_MENTION = "MENTION";
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("MM-dd HH:mm");
 
@@ -90,7 +92,7 @@ public class NotifyService {
         } else if ("follow".equals(subType)) {
             w.eq(Notify::getType, T_FOLLOW);
         } else if ("comment".equals(subType)) {
-            w.in(Notify::getType, java.util.List.of(T_COMMENT, T_REPLY));
+            w.in(Notify::getType, java.util.List.of(T_COMMENT, T_REPLY, T_MENTION));
         }
         w.orderByDesc(Notify::getCreateTime);
         Page<Notify> p = notifyMapper.selectPage(new Page<>(page, pageSize), w);
@@ -159,7 +161,7 @@ public class NotifyService {
         Map<String, Object> m = new HashMap<>();
         m.put("likeFav", countUnread(me, T_LIKE, T_FAV));
         m.put("follow", countUnread(me, T_FOLLOW));
-        m.put("comment", countUnread(me, T_COMMENT, T_REPLY));
+        m.put("comment", countUnread(me, T_COMMENT, T_REPLY, T_MENTION));
         m.put("announce", countUnread(me, T_ANNOUNCE));
         m.put("unread", unreadCount(me));
         return m;

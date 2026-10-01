@@ -72,7 +72,14 @@
           <text class="follow-mini-text">{{ authorFollowing ? '已关注' : '+ 关注' }}</text>
         </view>
       </view>
-      <text class="text">{{ content.text }}</text>
+      <view class="text">
+        <text
+          v-for="(p, i) in textParts"
+          :key="i"
+          :class="['seg', { mention: p.t === 'mention' }]"
+          @tap.stop="p.t === 'mention' && goUser(p.v)"
+        >{{ p.t === 'mention' ? '@' + p.v : p.v }}</text>
+      </view>
 
       <!-- 话题标签 -->
       <view class="topic-row" v-if="content.tags && content.tags.length">
@@ -222,6 +229,22 @@ export default {
     }
   },
   computed: {
+    /** 正文分段：普通文本 / @昵称（可点跳转用户主页） */
+    textParts() {
+      const text = this.content ? this.content.text : ''
+      if (!text) return []
+      const re = /@([^\s@，。！？!?,，、]+)/g
+      const parts = []
+      let last = 0
+      let m
+      while ((m = re.exec(text)) !== null) {
+        if (m.index > last) parts.push({ t: 'text', v: text.slice(last, m.index) })
+        parts.push({ t: 'mention', v: m[1] })
+        last = m.index + m[0].length
+      }
+      if (last < text.length) parts.push({ t: 'text', v: text.slice(last) })
+      return parts
+    },
     isRejectedMine() {
       const me = getUser()
       return (
@@ -324,6 +347,15 @@ export default {
     goPoi(name) {
       if (!name) return
       uni.navigateTo({ url: '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(name) })
+    },
+    async goUser(nick) {
+      if (!nick) return
+      try {
+        const data = await request({ url: '/user/by-nickname?nick=' + encodeURIComponent(nick), silent: true })
+        if (data && data.userId) {
+          uni.navigateTo({ url: '/pages/user/user?userId=' + data.userId })
+        }
+      } catch (e) { /* ignore */ }
     },
     async likeComment(c) {
       if (c.liked) {
@@ -464,12 +496,31 @@ export default {
               success: () => uni.showToast({ title: '链接已复制', icon: 'none' })
             })
           } else if (res.tapIndex === 1) {
-            uni.showToast({ title: '请点右下角分享按钮', icon: 'none' })
+            this.shareToFriend()
           } else {
             uni.showToast({ title: '已收到举报，我们会尽快核实', icon: 'none' })
           }
         }
       })
+    },
+    shareToFriend() {
+      const title = this.content ? this.content.title : '本地点评'
+      const path = '/pages/detail/detail?id=' + this.id
+      // #ifdef APP-PLUS
+      uni.share({
+        provider: 'weixin',
+        scene: 'WXSceneSession',
+        type: 0,
+        href: 'https://dianping.demo' + path,
+        title,
+        summary: title,
+        success: () => uni.showToast({ title: '已调起分享', icon: 'none' }),
+        fail: () => uni.showToast({ title: '当前未安装微信或环境不支持', icon: 'none' })
+      })
+      // #endif
+      // #ifndef APP-PLUS
+      uni.showToast({ title: '请点右上角 ··· 转发给好友', icon: 'none' })
+      // #endif
     },
     goAuthor() {
       if (this.content.author) {
@@ -617,6 +668,13 @@ export default {
   line-height: 1.75;
   color: #333333;
   white-space: pre-wrap;
+}
+.text .seg {
+  display: inline;
+}
+.text .mention {
+  color: #4a90d9;
+  font-weight: 500;
 }
 .topic-row {
   margin-top: 26rpx;

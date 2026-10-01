@@ -86,6 +86,16 @@ public class ContentService {
         c.setViewCount(0);
         contentMapper.insert(c);
 
+        // @提及：解析正文里的 @昵称，给被提及的用户发站内通知（零额外字段，复用 notify 表）
+        Set<String> nicks = parseMentions(req.text());
+        if (!nicks.isEmpty()) {
+            List<User> mentioned = userMapper.selectList(
+                    new LambdaQueryWrapper<User>().in(User::getNickname, nicks));
+            for (User u : mentioned) {
+                notifyService.send(u.getId(), NotifyService.T_MENTION, userId, c.getId(), null, null);
+            }
+        }
+
         // 机审：通过 -> 上架；不通过 -> 停 PENDING 转后台人工
         boolean pass = auditService.machinePass(c);
         if (pass) {
@@ -100,6 +110,18 @@ public class ContentService {
             data.put("tip", "审核中");
         }
         return data;
+    }
+
+    /** 解析正文中 @昵称（中文/字母/数字/连字符，遇空格或标点截断） */
+    private static Set<String> parseMentions(String text) {
+        Set<String> nicks = new java.util.LinkedHashSet<>();
+        if (text == null || text.isBlank()) return nicks;
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("@([\\u4e00-\\u9fa5A-Za-z0-9_\\-]+)");
+        java.util.regex.Matcher m = p.matcher(text);
+        while (m.find()) {
+            nicks.add(m.group(1));
+        }
+        return nicks;
     }
 
     /** 信息流：仅 APPROVED，按地区可选过滤，时间倒序 */
