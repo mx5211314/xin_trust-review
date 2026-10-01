@@ -69,14 +69,14 @@
         >
           <view class="cover-wrap">
             <image
-              v-if="item.coverUrl || (item.images && item.images.length)"
+              v-if="!item.coverError && (item.coverUrl || (item.images && item.images.length))"
               class="cover"
               :src="item.coverUrl || item.images[0]"
               mode="aspectFill"
-              lazy-load
+              @error="item.coverError = true"
             />
             <view v-else class="cover cover-empty">
-              <text class="cover-empty-text">视频</text>
+              <text class="cover-empty-text">{{ item.coverError ? '图片加载失败' : '视频' }}</text>
             </view>
           </view>
           <text class="wtitle">{{ item.title }}</text>
@@ -96,14 +96,14 @@
         >
           <view class="cover-wrap">
             <image
-              v-if="item.coverUrl || (item.images && item.images.length)"
+              v-if="!item.coverError && (item.coverUrl || (item.images && item.images.length))"
               class="cover"
               :src="item.coverUrl || item.images[0]"
               mode="aspectFill"
-              lazy-load
+              @error="item.coverError = true"
             />
             <view v-else class="cover cover-empty">
-              <text class="cover-empty-text">视频</text>
+              <text class="cover-empty-text">{{ item.coverError ? '图片加载失败' : '视频' }}</text>
             </view>
           </view>
           <text class="wtitle">{{ item.title }}</text>

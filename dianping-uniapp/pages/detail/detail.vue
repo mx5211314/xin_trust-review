@@ -31,7 +31,11 @@
             mode="aspectFill"
             @tap="preview(i)"
             @longpress="saveImage(i)"
+            @error="imgError = true"
           />
+          <view v-if="imgError && currentImage === i" class="img-err-tip">
+            <text class="img-err-text">图片加载失败 · 点击重试</text>
+          </view>
         </swiper-item>
       </swiper>
       <view v-if="content.images && content.images.length > 1" class="page-badge">
@@ -205,6 +209,7 @@ export default {
       loadedRoots: 0,
       commentPage: 1,
       currentImage: 0,
+      imgError: false,
       commentText: '',
       replyTarget: null,
       inputFocus: false,
@@ -290,6 +295,7 @@ export default {
     },
     onSwiperChange(e) {
       this.currentImage = e.detail.current
+      this.imgError = false
     },
     saveImage(index) {
       uni.showActionSheet({
@@ -905,6 +911,17 @@ export default {
 }
 .follow-mini.on .follow-mini-text {
   color: #999999;
+}
+.img-err-tip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  text-align: center;
+}
+.img-err-text {
+  color: #999999;
+  font-size: 24rpx;
 }
 .page-badge {
   position: absolute;

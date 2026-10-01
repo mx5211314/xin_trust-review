@@ -84,10 +84,17 @@ public class UserController {
         return R.ok(java.util.Collections.singletonMap("unread", notifyService.unreadCount(currentUserId())));
     }
 
-    /** POST /user/notify/read-all —— 全部已读 */
+    /** POST /user/notify/read-all?category= —— 全部已读（可按 interact/announce 分类） */
     @PostMapping("/notify/read-all")
-    public R<Void> notifyReadAll() {
-        notifyService.readAll(currentUserId());
+    public R<Void> notifyReadAll(@RequestParam(required = false) String category) {
+        notifyService.readAll(currentUserId(), category);
+        return R.ok();
+    }
+
+    /** POST /user/notify/{notifyId}/read —— 单条已读 */
+    @PostMapping("/notify/{notifyId}/read")
+    public R<Void> notifyReadOne(@PathVariable Long notifyId) {
+        notifyService.markRead(currentUserId(), notifyId);
         return R.ok();
     }
 

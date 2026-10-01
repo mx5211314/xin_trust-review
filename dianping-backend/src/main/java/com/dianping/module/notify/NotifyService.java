@@ -137,6 +137,29 @@ public class NotifyService {
         return users.size();
     }
 
+    /** 单条已读（点击某条消息时调用） */
+    public void markRead(Long me, Long notifyId) {
+        notifyMapper.update(null,
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Notify>()
+                        .eq(Notify::getId, notifyId)
+                        .eq(Notify::getUserId, me)
+                        .set(Notify::getIsRead, 1));
+    }
+
+    /** 按分类全部已读（category 为空则全部） */
+    public void readAll(Long me, String category) {
+        var w = new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Notify>()
+                .eq(Notify::getUserId, me)
+                .eq(Notify::getIsRead, 0)
+                .set(Notify::getIsRead, 1);
+        if ("announce".equals(category)) {
+            w.eq(Notify::getType, T_ANNOUNCE);
+        } else if ("interact".equals(category)) {
+            w.notIn(Notify::getType, T_ANNOUNCE, T_MESSAGE);
+        }
+        notifyMapper.update(null, w);
+    }
+
     /** 全部已读 */
     public void readAll(Long me) {
         notifyMapper.update(null, new LambdaUpdateWrapper<Notify>()

@@ -37,7 +37,7 @@
 
     <!-- 管理员公告 -->
     <view v-if="tab === 'announce'">
-      <view v-for="a in announces" :key="a.notifyId" class="item" :class="{ unread: !a.isRead }" @tap="a.isRead = 1">
+      <view v-for="a in announces" :key="a.notifyId" class="item" :class="{ unread: !a.isRead }" @tap="tapAnnounce(a)">
         <view class="icon announce-icon">
           <text class="icon-text">📢</text>
         </view>
@@ -103,10 +103,8 @@ export default {
     this.fetch()
     this.loadConversations()
     this.loadAnnounces()
-    // 清除消息 tab 徽标（进入即视为查看）
-    setTimeout(() => {
-      uni.removeTabBarBadge({ index: 2 })
-    }, 1500)
+    // 同步一次徽标（未读以服务端为准，点击/全部已读后更新）
+    this.refreshBadge()
   },
   onReachBottom() {
     if (this.hasMore && !this.loading) {
@@ -181,15 +179,52 @@ export default {
         this.loading = false
       }
     },
+    /** 拉未读总数并同步 tabBar 徽标 */
+    refreshBadge() {
+      Promise.all([
+        request({ url: '/user/notify/unread' }).catch(() => ({ unread: 0 })),
+        request({ url: '/chat/unread' }).catch(() => ({ unread: 0 }))
+      ]).then(([a, b]) => {
+        const t = Number(a.unread || 0) + Number(b.unread || 0)
+        if (t > 0) {
+          uni.setTabBarBadge({ index: 2, text: t > 99 ? '99+' : String(t) })
+        } else {
+          uni.removeTabBarBadge({ index: 2 })
+        }
+      })
+    },
     async readAll() {
       try {
-        await request({ url: '/user/notify/read-all', method: 'POST' })
-        this.list.forEach(n => { n.isRead = 1 })
+        await request({ url: `/user/notify/read-all?category=${this.tab}`, method: 'POST' })
+        if (this.tab === 'announce') {
+          this.announces.forEach(a => { a.isRead = 1 })
+        } else {
+          this.list.forEach(n => { n.isRead = 1 })
+        }
+        this.refreshBadge()
         uni.showToast({ title: '已全部标记为已读', icon: 'none' })
       } catch (e) { /* ignore */ }
     },
+    /** 公告：真已读 + 弹详情 */
+    tapAnnounce(a) {
+      if (!a.isRead) {
+        a.isRead = 1
+        request({ url: `/user/notify/${a.notifyId}/read`, method: 'POST', silent: true }).catch(() => {})
+        this.refreshBadge()
+      }
+      uni.showModal({
+        title: '平台公告',
+        content: a.text,
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    },
     tapItem(n) {
-      n.isRead = 1
+      if (!n.isRead) {
+        n.isRead = 1
+        request({ url: `/user/notify/${n.notifyId}/read`, method: 'POST', silent: true }).catch(() => {})
+        this.refreshBadge()
+      }
       if (n.contentId) {
         uni.navigateTo({ url: '/pages/detail/detail?id=' + n.contentId })
       }
