@@ -68,21 +68,21 @@
     <!-- 互动分类聚合入口（小红书式：赞和收藏 / 新增关注 / 评论和@） -->
     <view v-if="tab === 'interact'" class="sum-cards">
       <view class="sum-card" :class="{ on: interactSub === 'like' }" @tap="filterSub('like')">
-        <text class="sum-emoji">♥</text>
+        <image class="sum-img" src="/static/icons/heart-on.png" />
         <text class="sum-label">赞和收藏</text>
         <view v-if="summary.likeFav > 0" class="sum-badge">
           <text class="sum-badge-text">{{ summary.likeFav }}</text>
         </view>
       </view>
       <view class="sum-card" :class="{ on: interactSub === 'follow' }" @tap="filterSub('follow')">
-        <text class="sum-emoji">＋</text>
-        <text class="sum-label">新增关注</text>
+        <image class="sum-img" src="/static/icons/bubble.png" />
+        <text class="sum-label">私信与@</text>
         <view v-if="summary.follow > 0" class="sum-badge">
           <text class="sum-badge-text">{{ summary.follow }}</text>
         </view>
       </view>
       <view class="sum-card" :class="{ on: interactSub === 'comment' }" @tap="filterSub('comment')">
-        <text class="sum-emoji">💬</text>
+        <image class="sum-img" src="/static/icons/bubble.png" />
         <text class="sum-label">评论和@</text>
         <view v-if="summary.comment > 0" class="sum-badge">
           <text class="sum-badge-text">{{ summary.comment }}</text>
@@ -234,9 +234,15 @@ export default {
         url: `/pages/chat/chat?userId=${c.peerId}&nickname=${encodeURIComponent(c.nickname || '')}`
       })
     },
-    iconOf(type) {
-      const map = { LIKE: '♥', COMMENT: '💬', REPLY: '💬', FOLLOW: '＋', FAV: '★', MESSAGE: '✉', AUDIT_PASS: '✓', AUDIT_REJECT: '✕' }
-      return map[type] || '🔔'
+    iconImg(type) {
+      const map = {
+        LIKE: '/static/icons/heart-on.png',
+        COMMENT: '/static/icons/bubble.png',
+        REPLY: '/static/icons/bubble.png',
+        FAV: '/static/icons/star-on.png',
+        MESSAGE: '/static/icons/bubble.png'
+      }
+      return map[type] || '/static/icons/bubble.png'
     },
     actionOf(n) {
       const map = {
@@ -436,9 +442,9 @@ export default {
   border-color: #ff2442;
   background: #fff8f9;
 }
-.sum-emoji {
-  font-size: 34rpx;
-  color: #ff2442;
+.sum-img {
+  width: 44rpx;
+  height: 44rpx;
 }
 .sum-label {
   font-size: 22rpx;
@@ -522,9 +528,9 @@ export default {
 .icon-AUDIT_PASS, .icon-AUDIT_REJECT {
   background: #eeedfe;
 }
-.icon-text {
-  font-size: 30rpx;
-  color: #ff2442;
+.icon-img {
+  width: 40rpx;
+  height: 40rpx;
 }
 .icon-FOLLOW .icon-text {
   color: #0e7c66;
