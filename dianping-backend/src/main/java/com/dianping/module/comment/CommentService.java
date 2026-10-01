@@ -18,6 +18,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import com.dianping.module.content.ContentService;
@@ -38,6 +40,7 @@ public class CommentService {
     private final UserMapper userMapper;
     private final NotifyService notifyService;
     private final RateLimitService rateLimitService;
+    private final com.dianping.module.interaction.BlockService blockService;
 
     /** 评论总数（详情展示用） */
     public long countOf(Long contentId) {
@@ -55,22 +58,27 @@ public class CommentService {
      * 评论列表（小红书式）：顶级评论按时间正序分页，子回复挂在父评论的 replies 里。
      * total = 全部评论数（含回复）。
      */
-    public Map<String, Object> commentsOf(Long contentId, int page, int pageSize) {
+    public Map<String, Object> commentsOf(Long contentId, Long me, int page, int pageSize) {
+        // 0. 拉黑隔离：屏蔽双向拉黑用户的评论（SQL 级过滤，保证分页计数正确）
+        Set<Long> hidden = me == null ? Set.of() : blockService.hiddenAuthorIds(me);
+        boolean hasHidden = !hidden.isEmpty();
         // 1. 顶级评论（正序：早的在前，新评论追加在底部，符合对话习惯）
         Page<Comment> p = commentMapper.selectPage(new Page<>(page, pageSize),
                 new LambdaQueryWrapper<Comment>()
                         .eq(Comment::getContentId, contentId)
                         .eq(Comment::getParentId, 0L)
+                        .notIn(hasHidden, Comment::getUserId, hidden)
                         .orderByDesc(Comment::getLikeCount)
                         .orderByAsc(Comment::getId));
         List<Comment> roots = p.getRecords();
         List<Long> rootIds = roots.stream().map(Comment::getId).toList();
 
-        // 2. 子回复：一次 in 查询，正序
+        // 2. 子回复：一次 in 查询，正序（同样排除被屏蔽者）
         List<Comment> replies = rootIds.isEmpty() ? java.util.List.of()
                 : commentMapper.selectList(new LambdaQueryWrapper<Comment>()
                         .eq(Comment::getContentId, contentId)
                         .in(Comment::getParentId, rootIds)
+                        .notIn(hasHidden, Comment::getUserId, hidden)
                         .orderByAsc(Comment::getId));
 
         // 3. 收集所有涉及的用户 id，批量查昵称
@@ -93,7 +101,6 @@ public class CommentService {
         for (Comment r : roots) {
             list.add(commentVo(r, null, users));
             List<Comment> rs = replyGroup.getOrDefault(r.getId(), java.util.List.of());
-            ((Map<String, Object>) list.get(list.size() - 1)).put("replyCount", rs.size());
             List<Map<String, Object>> rlist = new java.util.ArrayList<>();
             for (Comment c : rs) {
                 User replyTo = c.getReplyToUserId() != null && c.getReplyToUserId() > 0
@@ -102,11 +109,13 @@ public class CommentService {
                 cm.put("replyToNickname", replyTo == null ? "" : replyTo.getNickname());
                 rlist.add(cm);
             }
+            ((Map<String, Object>) list.get(list.size() - 1)).put("replyCount", rlist.size());
             ((Map<String, Object>) list.get(list.size() - 1)).put("replies", rlist);
         }
 
         long totalAll = commentMapper.selectCount(new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getContentId, contentId));
+                .eq(Comment::getContentId, contentId)
+                .notIn(hasHidden, Comment::getUserId, hidden));
         Map<String, Object> data = new java.util.HashMap<>();
         data.put("total", totalAll);
         data.put("rootTotal", p.getTotal());

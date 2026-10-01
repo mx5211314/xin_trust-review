@@ -50,6 +50,10 @@
         <text class="label">清理缓存</text>
         <text class="value">{{ cacheSize }}</text>
       </view>
+      <view class="row tap" @tap="goBlocks">
+        <text class="label">黑名单管理</text>
+        <text class="arrow">›</text>
+      </view>
     </view>
 
     <!-- 关于 -->
@@ -139,6 +143,9 @@ export default {
         uni.setStorageSync('dp_open_edit', '1')
       } catch (e) { /* ignore */ }
       uni.switchTab({ url: '/pages/mine/mine' })
+    },
+    goBlocks() {
+      uni.navigateTo({ url: '/pages/blocks/blocks' })
     },
     toggleNotify(e) {
       this.notifyOn = e.detail.value

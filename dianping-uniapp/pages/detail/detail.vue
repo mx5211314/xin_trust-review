@@ -107,7 +107,7 @@
       <view class="comments-head">
         <text class="comments-title">评论 {{ commentTotal }}</text>
       </view>
-      <view v-for="c in comments" :key="c.commentId" class="comment-item">
+      <view v-for="c in comments" :key="c.commentId" class="comment-item" @longpress="onCommentLong(c)">
         <view class="cavatar">
           <text class="cavatar-text">{{ c.user ? c.user.nickname.slice(0, 1) : '客' }}</text>
         </view>
@@ -256,7 +256,9 @@ export default {
       favorited: false,
       favoriteCount: 0,
       favPanelShow: false,
-      folders: []
+      folders: [],
+      isBlockedAuthor: false,
+      reportReasons: ['色情低俗', '广告诈骗', '违法违规', '不实信息', '其他']
     }
   },
   computed: {
@@ -297,6 +299,10 @@ export default {
     shortName() {
       const a = this.content && this.content.author
       return a && a.nickname ? a.nickname.slice(0, 1) : '客'
+    },
+    authorId() {
+      const a = this.content && this.content.author
+      return a && a.userId ? a.userId : ''
     }
   },
   onLoad(query) {
@@ -322,6 +328,7 @@ export default {
           }
           this.loadComments()
           this.loadAuthorFollow()
+          this.loadBlockState()
         }
       } catch (e) {
         uni.showToast({ title: '内容不存在', icon: 'none' })
@@ -410,6 +417,43 @@ export default {
       const me = getUser()
       return !!(me && c.user && String(me.userId) === String(c.user.userId))
     },
+    /** 评论长按：删除（自己）/ 举报 */
+    onCommentLong(c) {
+      const items = []
+      if (this.isMyComment(c)) items.push('删除')
+      items.push('举报')
+      uni.showActionSheet({
+        itemList: items,
+        success: (res) => {
+          const label = items[res.tapIndex]
+          if (label === '删除') {
+            this.delComment(c)
+          } else if (label === '举报') {
+            this.reportComment(c.commentId)
+          }
+        }
+      })
+    },
+    /** 举报评论：选原因后提交 */
+    reportComment(commentId) {
+      uni.showActionSheet({
+        itemList: this.reportReasons,
+        success: async (res) => {
+          const reason = this.reportReasons[res.tapIndex]
+          try {
+            await request({
+              url: '/report',
+              method: 'POST',
+              data: { targetType: 'COMMENT', targetId: Number(commentId), reason },
+              silent: true
+            })
+            uni.showToast({ title: '举报已提交，感谢反馈', icon: 'none' })
+          } catch (e) {
+            if (e && e.code === 2003) uni.showToast({ title: '已举报，等待处理', icon: 'none' })
+          }
+        }
+      })
+    },
     delComment(c) {
       uni.showModal({
         title: '删除评论',
@@ -473,6 +517,20 @@ export default {
         const data = await request({ url: `/user/${a.userId}?page=1&pageSize=1` })
         this.authorFollowing = !!(data.profile && data.profile.following)
       } catch (e) { /* ignore */ }
+    },
+    /** 加载是否拉黑了作者 */
+    async loadBlockState() {
+      const a = this.content && this.content.author
+      if (!a || this.isMyContent) {
+        this.isBlockedAuthor = false
+        return
+      }
+      try {
+        const list = await request({ url: '/user/blocks', silent: true }) || []
+        this.isBlockedAuthor = list.some(b => String(b.userId) === String(a.userId))
+      } catch (e) {
+        this.isBlockedAuthor = false
+      }
     },
     async toggleFollowAuthor() {
       const a = this.content && this.content.author
@@ -558,21 +616,66 @@ export default {
       uni.navigateBack()
     },
     showMore() {
+      const items = ['复制链接', '分享给好友']
+      if (!this.isMyContent && this.authorId) {
+        items.push(this.isBlockedAuthor ? '取消拉黑' : '拉黑作者')
+      }
+      items.push('举报')
       uni.showActionSheet({
-        itemList: ['复制链接', '分享给好友', '举报'],
+        itemList: items,
         success: (res) => {
-          if (res.tapIndex === 0) {
+          const label = items[res.tapIndex]
+          if (label === '复制链接') {
             uni.setClipboardData({
               data: `本地点评 /pages/detail/detail?id=${this.id}`,
               success: () => uni.showToast({ title: '链接已复制', icon: 'none' })
             })
-          } else if (res.tapIndex === 1) {
+          } else if (label === '分享给好友') {
             this.shareToFriend()
-          } else {
-            uni.showToast({ title: '已收到举报，我们会尽快核实', icon: 'none' })
+          } else if (label === '拉黑作者') {
+            this.toggleBlockAuthor(true)
+          } else if (label === '取消拉黑') {
+            this.toggleBlockAuthor(false)
+          } else if (label === '举报') {
+            this.reportContent()
           }
         }
       })
+    },
+    /** 举报当前内容：选原因后提交 */
+    reportContent() {
+      uni.showActionSheet({
+        itemList: this.reportReasons,
+        success: async (res) => {
+          const reason = this.reportReasons[res.tapIndex]
+          try {
+            await request({
+              url: '/report',
+              method: 'POST',
+              data: { targetType: 'CONTENT', targetId: Number(this.id), reason },
+              silent: true
+            })
+            uni.showToast({ title: '举报已提交，感谢反馈', icon: 'none' })
+          } catch (e) {
+            if (e && e.code === 2003) uni.showToast({ title: '已举报，等待处理', icon: 'none' })
+          }
+        }
+      })
+    },
+    /** 拉黑/取消拉黑作者 */
+    async toggleBlockAuthor(block) {
+      if (!this.authorId) return
+      try {
+        if (block) {
+          await request({ url: `/user/${this.authorId}/block`, method: 'POST', silent: true })
+          this.isBlockedAuthor = true
+          uni.showToast({ title: '已拉黑，不再看到TA的内容', icon: 'none' })
+        } else {
+          await request({ url: `/user/${this.authorId}/block`, method: 'DELETE', silent: true })
+          this.isBlockedAuthor = false
+          uni.showToast({ title: '已解除拉黑', icon: 'none' })
+        }
+      } catch (e) { /* ignore */ }
     },
     shareToFriend() {
       const title = this.content ? this.content.title : '本地点评'

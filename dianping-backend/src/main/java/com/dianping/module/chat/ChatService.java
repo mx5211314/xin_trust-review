@@ -34,6 +34,7 @@ public class ChatService {
     private final UserMapper userMapper;
     private final NotifyService notifyService;
     private final com.dianping.common.RateLimitService rateLimitService;
+    private final com.dianping.module.interaction.BlockService blockService;
 
     /** 发私信 */
     public Map<String, Object> send(Long me, Long toUserId, String text) {
@@ -43,6 +44,10 @@ public class ChatService {
         User to = userMapper.selectById(toUserId);
         if (to == null) {
             throw new BizException(ResultCode.NOT_FOUND, "对方不存在");
+        }
+        // 拉黑隔离：双向——我拉黑了对方，或对方拉黑了我，均不可发私信
+        if (blockService.isBlocked(me, toUserId) || blockService.isBlocked(toUserId, me)) {
+            throw new BizException(ResultCode.FORBIDDEN, "对方已屏蔽，无法发送私信");
         }
         String t = text == null ? "" : text.trim();
         if (t.isEmpty()) {
@@ -103,12 +108,17 @@ public class ChatService {
         return data;
     }
 
-    /** 会话列表（私信 tab） */
+    /** 会话列表（私信 tab；排除拉黑对象，双向） */
     public Map<String, Object> conversations(Long me, int limit) {
+        com.dianping.module.interaction.BlockService bs = this.blockService;
+        java.util.Set<Long> hidden = bs.hiddenAuthorIds(me);
         List<Map<String, Object>> rows = messageMapper.conversations(me, limit);
         List<Map<String, Object>> list = new ArrayList<>();
         for (Map<String, Object> row : rows) {
             Long peerId = ((Number) row.get("peer_id")).longValue();
+            if (hidden.contains(peerId)) {
+                continue; // 拉黑隔离：不展示与被屏蔽者的会话
+            }
             Long lastId = ((Number) row.get("last_id")).longValue();
             User peer = userMapper.selectById(peerId);
             Message last = messageMapper.selectById(lastId);

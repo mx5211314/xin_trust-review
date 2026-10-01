@@ -142,6 +142,31 @@ CREATE TABLE IF NOT EXISTS `message` (
     KEY `idx_to_read` (`to_user_id`, `is_read`)
 ) COMMENT '私信';
 
+-- ---------- 拉黑（单向屏蔽，双向克制） ----------
+CREATE TABLE IF NOT EXISTS `block` (
+    `id`         BIGINT   NOT NULL COMMENT '雪花ID',
+    `user_id`    BIGINT   NOT NULL COMMENT '拉黑发起方',
+    `blocked_id` BIGINT   NOT NULL COMMENT '被拉黑方',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_block` (`user_id`, `blocked_id`),
+    KEY `idx_blocked` (`blocked_id`)
+) COMMENT '拉黑';
+
+-- ---------- 举报（内容/评论/用户；仅落库供后台审核） ----------
+CREATE TABLE IF NOT EXISTS `report` (
+    `id`          BIGINT       NOT NULL COMMENT '雪花ID',
+    `reporter_id` BIGINT       NOT NULL COMMENT '举报人',
+    `target_type` VARCHAR(20)  NOT NULL COMMENT 'CONTENT/COMMENT/USER',
+    `target_id`   BIGINT       NOT NULL COMMENT '举报对象 id',
+    `reason`      VARCHAR(200) NOT NULL DEFAULT '' COMMENT '举报原因',
+    `status`      VARCHAR(20)  NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/HANDLED/IGNORED',
+    `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_target` (`target_type`, `target_id`),
+    KEY `idx_status` (`status`)
+) COMMENT '举报';
+
 -- ---------- 已有库的增量补列（幂等；新库由上方建表语句直接包含）----------
 SET @e1 := (SELECT COUNT(*) FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='user' AND COLUMN_NAME='bio');
@@ -163,6 +188,17 @@ SET @e4 := (SELECT COUNT(*) FROM information_schema.TABLES
             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='favorite_folder');
 SET @d4 := IF(@e4=0, 'CREATE TABLE favorite_folder (id BIGINT NOT NULL, user_id BIGINT NOT NULL, name VARCHAR(30) NOT NULL DEFAULT ''我的收藏夹'', sort INT NOT NULL DEFAULT 0, create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY idx_user (user_id)) COMMENT=''收藏夹''', 'SELECT 1');
 PREPARE s4 FROM @d4; EXECUTE s4; DEALLOCATE PREPARE s4;
+
+-- ---------- 拉黑 / 举报 迁移 ----------
+SET @e5 := (SELECT COUNT(*) FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='block');
+SET @d5 := IF(@e5=0, 'CREATE TABLE block (id BIGINT NOT NULL, user_id BIGINT NOT NULL, blocked_id BIGINT NOT NULL, create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY uk_block (user_id, blocked_id), KEY idx_blocked (blocked_id)) COMMENT=''拉黑''', 'SELECT 1');
+PREPARE s5 FROM @d5; EXECUTE s5; DEALLOCATE PREPARE s5;
+
+SET @e6 := (SELECT COUNT(*) FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='report');
+SET @d6 := IF(@e6=0, 'CREATE TABLE report (id BIGINT NOT NULL, reporter_id BIGINT NOT NULL, target_type VARCHAR(20) NOT NULL, target_id BIGINT NOT NULL, reason VARCHAR(200) NOT NULL DEFAULT '''', status VARCHAR(20) NOT NULL DEFAULT ''PENDING'', create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), KEY idx_target (target_type, target_id), KEY idx_status (status)) COMMENT=''举报''', 'SELECT 1');
+PREPARE s6 FROM @d6; EXECUTE s6; DEALLOCATE PREPARE s6;
 
 -- ---------- 初始管理员（dev 环境验证码固定 8888）----------
 INSERT INTO `user` (`id`, `phone`, `nickname`, `role`)

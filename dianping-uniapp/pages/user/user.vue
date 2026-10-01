@@ -18,6 +18,9 @@
         <view class="chat-btn" @tap="goChat">
           <text class="chat-btn-text">私信</text>
         </view>
+        <view class="more-btn" @tap="openMore">
+          <text class="more-btn-text">···</text>
+        </view>
       </view>
     </view>
 
@@ -110,6 +113,7 @@ export default {
       totalLikes: 0,
       followers: 0,
       isFollowing: false,
+      isBlocked: false,
       page: 1,
       pageSize: 10,
       hasMore: true,
@@ -157,6 +161,7 @@ export default {
         this.followers = data.profile.followers || 0
         this.isFollowing = !!data.profile.following
         this.total = data.contents.total
+        if (!this.isMine) this.loadBlockState()
         this.totalLikes = (data.contents.list || []).reduce((s, c) => s + (c.likeCount || 0), this.totalLikes)
         this.list = append ? this.list.concat(data.contents.list) : data.contents.list
         this.hasMore = this.list.length < this.total
@@ -190,6 +195,58 @@ export default {
       uni.navigateTo({
         url: `/pages/chat/chat?userId=${this.userId}&nickname=${encodeURIComponent(name || '')}`
       })
+    },
+    /** 拉黑/举报 菜单 */
+    openMore() {
+      const items = [this.isBlocked ? '取消拉黑' : '拉黑TA', '举报TA']
+      uni.showActionSheet({
+        itemList: items,
+        success: (res) => {
+          if (items[res.tapIndex] === '拉黑TA') this.toggleBlock(true)
+          else if (items[res.tapIndex] === '取消拉黑') this.toggleBlock(false)
+          else this.reportUser()
+        }
+      })
+    },
+    async toggleBlock(block) {
+      try {
+        if (block) {
+          await request({ url: `/user/${this.userId}/block`, method: 'POST', silent: true })
+          this.isBlocked = true
+          uni.showToast({ title: '已拉黑，不再看到TA的内容', icon: 'none' })
+        } else {
+          await request({ url: `/user/${this.userId}/block`, method: 'DELETE', silent: true })
+          this.isBlocked = false
+          uni.showToast({ title: '已解除拉黑', icon: 'none' })
+        }
+      } catch (e) { /* ignore */ }
+    },
+    reportUser() {
+      const reasons = ['色情低俗', '广告诈骗', '违法违规', '不实信息', '其他']
+      uni.showActionSheet({
+        itemList: reasons,
+        success: async (res) => {
+          try {
+            await request({
+              url: '/report',
+              method: 'POST',
+              data: { targetType: 'USER', targetId: Number(this.userId), reason: reasons[res.tapIndex] },
+              silent: true
+            })
+            uni.showToast({ title: '举报已提交，感谢反馈', icon: 'none' })
+          } catch (e) {
+            if (e && e.code === 2003) uni.showToast({ title: '已举报，等待处理', icon: 'none' })
+          }
+        }
+      })
+    },
+    async loadBlockState() {
+      try {
+        const list = await request({ url: '/user/blocks', silent: true }) || []
+        this.isBlocked = list.some(b => String(b.userId) === String(this.userId))
+      } catch (e) {
+        this.isBlocked = false
+      }
     },
     goDetail(item) {
       uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
@@ -253,6 +310,22 @@ export default {
 .chat-btn-text {
   color: #1f2430;
   font-size: 28rpx;
+}
+.more-btn {
+  margin-left: 20rpx;
+  background: #f6f7f9;
+  border-radius: 40rpx;
+  width: 70rpx;
+  height: 70rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.more-btn-text {
+  color: #1f2430;
+  font-size: 36rpx;
+  letter-spacing: 2rpx;
+  margin-top: -6rpx;
 }
 .follow-btn {
   background: #ff2442;

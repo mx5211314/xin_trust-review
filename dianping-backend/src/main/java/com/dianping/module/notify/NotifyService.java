@@ -44,10 +44,16 @@ public class NotifyService {
 
     private final NotifyMapper notifyMapper;
     private final UserMapper userMapper;
+    private final com.dianping.module.interaction.BlockService blockService;
 
-    /** 写一条通知；给自己触发的写；actor=0 表示系统 */
+    /** 写一条通知；给自己触发的写；actor=0 表示系统；拉黑双向隔离——任一方拉黑对方则不写 */
     public void send(Long userId, String type, Long actorId, Long contentId, Long commentId, String text) {
         if (userId == null || (actorId != null && actorId.equals(userId))) {
+            return;
+        }
+        // 拉黑隔离：被通知人拉黑了触发人，或触发人拉黑了被通知人，均不产生通知（系统通知 actor=0 不受影响）
+        if (actorId != null && actorId > 0
+                && (blockService.isBlocked(userId, actorId) || blockService.isBlocked(actorId, userId))) {
             return;
         }
         Notify n = new Notify();

@@ -34,6 +34,7 @@ public class UserController {
     private final com.dianping.module.interaction.FollowService followService;
     private final com.dianping.module.notify.NotifyService notifyService;
     private final com.dianping.module.interaction.FavoriteService favoriteService;
+    private final com.dianping.module.interaction.BlockService blockService;
 
     /** GET /user/by-nickname?nick= —— 按昵称查用户（供 @提及 跳转用户主页） */
     @GetMapping("/by-nickname")
@@ -208,6 +209,26 @@ public class UserController {
         Long me = currentUserId();
         long id = favoriteService.createFolder(me, body == null ? null : body.get("name"));
         return R.ok(java.util.Collections.singletonMap("folderId", String.valueOf(id)));
+    }
+
+    /** POST /user/{id}/block —— 拉黑 */
+    @PostMapping("/{id}/block")
+    public R<Void> block(@PathVariable Long id) {
+        blockService.block(currentUserId(), id);
+        return R.ok();
+    }
+
+    /** DELETE /user/{id}/block —— 取消拉黑 */
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}/block")
+    public R<Void> unblock(@PathVariable Long id) {
+        blockService.unblock(currentUserId(), id);
+        return R.ok();
+    }
+
+    /** GET /user/blocks —— 我的黑名单 */
+    @GetMapping("/blocks")
+    public R<List<Map<String, Object>>> blocks() {
+        return R.ok(blockService.listBlocks(currentUserId()));
     }
 
     /** GET /user/{userId}?page=&pageSize= —— 用户主页 + TA 的点评列表 */

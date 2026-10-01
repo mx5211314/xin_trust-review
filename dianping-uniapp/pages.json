@@ -55,6 +55,10 @@
     {
       "path": "pages/collection/collection",
       "style": { "navigationBarTitleText": "合集" }
+    },
+    {
+      "path": "pages/blocks/blocks",
+      "style": { "navigationBarTitleText": "黑名单" }
     }
   ],
   "subPackages": [

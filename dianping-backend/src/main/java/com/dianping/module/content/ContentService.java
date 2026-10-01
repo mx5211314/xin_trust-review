@@ -51,6 +51,7 @@ public class ContentService {
     private final OssService ossService;
     private final org.springframework.data.redis.core.StringRedisTemplate redis;
     private final NotifyService notifyService;
+    private final com.dianping.module.interaction.BlockService blockService;
 
     /** 发布点评（契约：仅 REVIEWER/ADMIN，权限已由拦截器注解保证） */
     public Map<String, Object> create(Long userId, ContentCreateReq req) {
@@ -124,13 +125,14 @@ public class ContentService {
         return nicks;
     }
 
-    /** 信息流：仅 APPROVED，按地区可选过滤，时间倒序 */
+    /** 信息流：仅 APPROVED，按地区可选过滤，时间倒序（屏蔽双向拉黑用户） */
     public Map<String, Object> feed(Long me, int page, int pageSize, String regionCode) {
-        Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize),
-                new LambdaQueryWrapper<Content>()
-                        .eq(Content::getStatus, "APPROVED")
-                        .eq(regionCode != null && !regionCode.isBlank(), Content::getRegionCode, regionCode)
-                        .orderByDesc(Content::getCreateTime));
+        LambdaQueryWrapper<Content> w = new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "APPROVED")
+                .eq(regionCode != null && !regionCode.isBlank(), Content::getRegionCode, regionCode)
+                .orderByDesc(Content::getCreateTime);
+        excludeHidden(me, w);
+        Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize), w);
         return pageResult(me, p);
     }
 
@@ -202,15 +204,16 @@ public class ContentService {
         return data;
     }
 
-    /** 搜索：标题 / 店铺名 / 话题标签 模糊匹配（仅上架内容） */
+    /** 搜索：标题 / 店铺名 / 话题标签 模糊匹配（仅上架内容，屏蔽拉黑用户） */
     public Map<String, Object> search(Long me, String keyword, int page, int pageSize) {
-        Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize),
-                new LambdaQueryWrapper<Content>()
-                        .eq(Content::getStatus, "APPROVED")
-                        .and(w -> w.like(Content::getTitle, keyword)
-                                .or().like(Content::getPoiName, keyword)
-                                .or().like(Content::getTags, keyword))
-                        .orderByDesc(Content::getCreateTime));
+        LambdaQueryWrapper<Content> wq = new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "APPROVED")
+                .and(w -> w.like(Content::getTitle, keyword)
+                        .or().like(Content::getPoiName, keyword)
+                        .or().like(Content::getTags, keyword))
+                .orderByDesc(Content::getCreateTime);
+        excludeHidden(me, wq);
+        Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize), wq);
         return pageResult(me, p);
     }
 
@@ -314,11 +317,12 @@ public class ContentService {
 
     /** 指定用户集合的笔记流（关注 tab 用，时间倒序） */
     public Map<String, Object> contentsOfUsers(Long me, List<Long> userIds, int page, int pageSize) {
-        Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize),
-                new LambdaQueryWrapper<Content>()
-                        .eq(Content::getStatus, "APPROVED")
-                        .in(Content::getUserId, userIds)
-                        .orderByDesc(Content::getCreateTime));
+        LambdaQueryWrapper<Content> w = new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "APPROVED")
+                .in(Content::getUserId, userIds)
+                .orderByDesc(Content::getCreateTime);
+        excludeHidden(me, w);
+        Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize), w);
         return pageResult(me, p);
     }
 
@@ -374,6 +378,15 @@ public class ContentService {
         data.put("total", ap.getTotal());
         data.put("list", list);
         return data;
+    }
+
+    /** 拉黑隔离：从内容查询中排除"我拉的 + 拉我的"作者 */
+    private void excludeHidden(Long me, LambdaQueryWrapper<Content> w) {
+        if (me == null) return;
+        Set<Long> hidden = blockService.hiddenAuthorIds(me);
+        if (hidden != null && !hidden.isEmpty()) {
+            w.notIn(Content::getUserId, hidden);
+        }
     }
 
     // ---------- 内部 ----------

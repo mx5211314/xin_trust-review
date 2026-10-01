@@ -108,12 +108,14 @@ public class ContentController {
         return R.ok();
     }
 
-    /** GET /content/{id}/comments?page= —— 评论列表 */
+    /** GET /content/{id}/comments?page= —— 评论列表（含拉黑隔离） */
     @GetMapping("/{id}/comments")
     public R<Map<String, Object>> comments(@PathVariable Long id,
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "10") int pageSize) {
-        return R.ok(commentService.commentsOf(id, page, pageSize));
+        Long me = com.dianping.common.UserContext.userId();
+        Long meId = me != null ? me : 0L;
+        return R.ok(commentService.commentsOf(id, meId, page, pageSize));
     }
 
     /** POST /content/{id}/comments  body: {"text":"..."} —— 发布评论 */
