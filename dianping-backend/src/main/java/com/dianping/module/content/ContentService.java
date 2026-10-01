@@ -52,6 +52,7 @@ public class ContentService {
     private final org.springframework.data.redis.core.StringRedisTemplate redis;
     private final NotifyService notifyService;
     private final com.dianping.module.interaction.BlockService blockService;
+    private final com.dianping.module.comment.CommentMapper commentMapper;
 
     /** 发布点评（契约：仅 REVIEWER/ADMIN，权限已由拦截器注解保证） */
     public Map<String, Object> create(Long userId, ContentCreateReq req) {
@@ -386,6 +387,91 @@ public class ContentService {
         Set<Long> hidden = blockService.hiddenAuthorIds(me);
         if (hidden != null && !hidden.isEmpty()) {
             w.notIn(Content::getUserId, hidden);
+        }
+    }
+
+    /** 兴趣推荐流：互动标签加权打分（收藏x3/点赞x2/评论x2/自己发布标签x1）+ 热度与新近加成；无画像退化为时间流 */
+    public Map<String, Object> recommend(Long me, int page, int pageSize) {
+        // 1. 候选池：最近 200 条上架内容（排除自己 + 屏蔽作者）
+        LambdaQueryWrapper<Content> w = new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "APPROVED")
+                .orderByDesc(Content::getCreateTime);
+        if (me != null && me > 0) {
+            w.ne(Content::getUserId, me);
+        }
+        excludeHidden(me, w);
+        List<Content> candidates = contentMapper.selectList(w.last("LIMIT 200"));
+        Map<String, Object> data = new java.util.HashMap<>();
+        if (candidates.isEmpty()) {
+            data.put("total", 0);
+            data.put("list", List.of());
+            return data;
+        }
+
+        // 2. 兴趣画像：从互动行为提取标签权重（各取最近 100 条，防放大）
+        Map<String, Double> tagW = new java.util.HashMap<>();
+        if (me != null && me > 0) {
+            Map<Long, Double> contentW = new java.util.HashMap<>();
+            List<UserAction> acts = userActionMapper.selectList(new LambdaQueryWrapper<UserAction>()
+                    .eq(UserAction::getUserId, me)
+                    .in(UserAction::getType, UserAction.TYPE_LIKE, UserAction.TYPE_FAV)
+                    .orderByDesc(UserAction::getId)
+                    .last("LIMIT 100"));
+            for (UserAction a : acts) {
+                contentW.merge(a.getContentId(), a.getType() != null && a.getType() == UserAction.TYPE_FAV ? 3.0 : 2.0, Double::sum);
+            }
+            commentMapper.selectList(new LambdaQueryWrapper<com.dianping.module.comment.Comment>()
+                            .eq(com.dianping.module.comment.Comment::getUserId, me)
+                            .orderByDesc(com.dianping.module.comment.Comment::getId)
+                            .last("LIMIT 100"))
+                    .forEach(c -> contentW.merge(c.getContentId(), 2.0, Double::sum));
+            if (!contentW.isEmpty()) {
+                for (Content c : contentMapper.selectBatchIds(contentW.keySet())) {
+                    double base = contentW.getOrDefault(c.getId(), 0.0);
+                    for (String t : fromJson(c.getTags())) {
+                        addTagWeight(tagW, t, base);
+                    }
+                }
+            }
+            // 自己发布内容的标签也算兴趣（弱权重）
+            contentMapper.selectList(new LambdaQueryWrapper<Content>()
+                            .eq(Content::getUserId, me)
+                            .orderByDesc(Content::getId)
+                            .last("LIMIT 50"))
+                    .forEach(c -> {
+                        for (String t : fromJson(c.getTags())) {
+                            addTagWeight(tagW, t, 1.0);
+                        }
+                    });
+        }
+
+        // 3. 打分：Σ标签权重 + 热度(赞x0.1) + 新近度微加成
+        Map<Long, Double> scores = new java.util.HashMap<>();
+        for (int i = 0; i < candidates.size(); i++) {
+            Content c = candidates.get(i);
+            double s = 0;
+            for (String t : fromJson(c.getTags())) {
+                s += tagW.getOrDefault(t, 0.0);
+            }
+            s += (c.getLikeCount() == null ? 0 : c.getLikeCount()) * 0.1;
+            s += (candidates.size() - i) * 0.05;
+            scores.put(c.getId(), s);
+        }
+        List<Content> ordered = new java.util.ArrayList<>(candidates);
+        ordered.sort((a, b) -> Double.compare(scores.get(b.getId()), scores.get(a.getId())));
+
+        // 4. 内存分页
+        int total = ordered.size();
+        int from = Math.min(Math.max(page - 1, 0) * pageSize, total);
+        int to = Math.min(from + pageSize, total);
+        Page<Content> fake = new Page<>(page, pageSize, total);
+        fake.setRecords(ordered.subList(from, to));
+        return pageResult(me, fake);
+    }
+
+    private void addTagWeight(Map<String, Double> tagW, String tag, double weight) {
+        if (tag != null && !tag.isBlank()) {
+            tagW.merge(tag, weight, Double::sum);
         }
     }
 

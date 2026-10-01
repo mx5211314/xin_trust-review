@@ -4,6 +4,7 @@
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="seg">
         <text class="seg-item" :class="{ on: tab === 'follow' }" @tap="switchTab('follow')">关注</text>
+        <text class="seg-item" :class="{ on: tab === 'rec' }" @tap="switchTab('rec')">推荐</text>
         <text class="seg-item" :class="{ on: tab === 'find' }" @tap="switchTab('find')">发现</text>
         <text class="seg-item" :class="{ on: tab === 'city' }" @tap="switchTab('city')">同城</text>
       </view>
@@ -240,6 +241,10 @@ export default {
         if (this.tab === 'follow') {
           data = await request({
             url: `/content/follow-feed?page=${this.page}&pageSize=${this.pageSize}`
+          })
+        } else if (this.tab === 'rec') {
+          data = await request({
+            url: `/content/recommend?page=${this.page}&pageSize=${this.pageSize}`
           })
         } else {
           const region = this.tab === 'city' ? this.region : ''

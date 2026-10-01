@@ -65,6 +65,15 @@ public class ContentController {
         return R.ok(followService.followFeed(me, page, pageSize));
     }
 
+    /** GET /content/recommend —— 推荐 tab：兴趣标签加权推荐流（冷启动退化为时间流） */
+    @GetMapping("/recommend")
+    public R<Map<String, Object>> recommend(@RequestParam(defaultValue = "1") int page,
+                                            @RequestParam(defaultValue = "10") int pageSize) {
+        Long me = com.dianping.common.UserContext.userId();
+        Long meId = me != null ? me : 0L;
+        return R.ok(contentService.recommend(meId, page, pageSize));
+    }
+
     /** POST /comments/{commentId}/like —— 评论点赞（幂等：重复返回 2003） */
     @PostMapping("/comments/{commentId}/like")
     public R<Void> likeComment(@PathVariable Long commentId) {
