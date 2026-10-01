@@ -51,6 +51,10 @@
     {
       "path": "pages/settings/settings",
       "style": { "navigationBarTitleText": "设置" }
+    },
+    {
+      "path": "pages/collection/collection",
+      "style": { "navigationBarTitleText": "合集" }
     }
   ],
   "subPackages": [

@@ -223,6 +223,7 @@ export default {
           }
           this.localVideo = {
             path: res.tempFilePath,
+            thumb: res.thumbTempFilePath || '',
             name: '视频 ' + Math.round(res.duration) + 's',
             duration: Math.round(res.duration),
             uploading: false,
@@ -269,6 +270,7 @@ export default {
           images.push(img.key)
         }
         let videoKey = ''
+        let coverKey = ''
         let duration = 0
         if (this.type === 'video') {
           this.localVideo.uploading = true
@@ -276,12 +278,18 @@ export default {
           videoKey = up2.key
           this.localVideo.uploading = false
           duration = this.localVideo.duration
+          // 用 chooseVideo 返回的首帧缩略图作封面，消除信息流视频灰块（后端 coverKey 已支持）
+          if (this.localVideo.thumb) {
+            const upc = await uploadFile(this.localVideo.thumb, 'image')
+            coverKey = upc.key
+          }
         }
         const payload = {
           title: this.title.trim(),
           text: this.text.trim(),
           images: images.length ? images : undefined,
           videoKey: videoKey || undefined,
+          coverKey: coverKey || undefined,
           duration: duration || undefined,
           regionCode: REGIONS[this.regionIndex].code,
           tags: this.tags.length ? this.tags : undefined,

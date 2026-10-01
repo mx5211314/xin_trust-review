@@ -86,7 +86,10 @@
 
       <!-- 地点 -->
       <view class="poi-row" v-if="content.poiName">
-        <text class="poi">📍 {{ content.poiName }}</text>
+        <view class="poi tap" @tap="goPoi(content.poiName)">
+          <image class="poi-ico" src="/static/icons/location.png" />
+          <text class="poi-text">{{ content.poiName }}</text>
+        </view>
         <text class="region" v-if="content.regionCode">{{ regionName(content.regionCode) }}</text>
       </view>
       <text class="time">编辑于 {{ content.createTime }}</text>
@@ -316,7 +319,11 @@ export default {
       })
     },
     goTopic(tag) {
-      uni.navigateTo({ url: '/pages/search/search?keyword=' + encodeURIComponent(tag) })
+      uni.navigateTo({ url: '/pages/collection/collection?mode=topic&q=' + encodeURIComponent(tag) })
+    },
+    goPoi(name) {
+      if (!name) return
+      uni.navigateTo({ url: '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(name) })
     },
     async likeComment(c) {
       if (c.liked) {
@@ -631,6 +638,22 @@ export default {
   color: #ff2442;
   font-weight: 500;
   margin-right: 20rpx;
+}
+.poi.tap {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 16rpx;
+  background: #fff5f6;
+  border-radius: 999rpx;
+}
+.poi-ico {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 8rpx;
+}
+.poi-text {
+  color: #ff2442;
+  font-weight: 500;
 }
 .region {
   font-size: 24rpx;
