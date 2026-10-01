@@ -134,7 +134,11 @@ export default {
       }
     },
     goEditProfile() {
-      uni.navigateTo({ url: '/pages/mine/mine?edit=1' })
+      // mine 是 tabBar 页，navigateTo 不能跳 tab 页且 switchTab 不支持参数 → 用 storage 传标记
+      try {
+        uni.setStorageSync('dp_open_edit', '1')
+      } catch (e) { /* ignore */ }
+      uni.switchTab({ url: '/pages/mine/mine' })
     },
     toggleNotify(e) {
       this.notifyOn = e.detail.value

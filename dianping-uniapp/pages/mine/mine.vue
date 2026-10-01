@@ -207,12 +207,6 @@ export default {
       return this.list.filter((_, i) => i % 2 === 1)
     }
   },
-  onLoad(query) {
-    // 从设置页"编辑资料"跳来时自动打开编辑弹层
-    if (query && query.edit === '1') {
-      setTimeout(() => this.openEdit(), 300)
-    }
-  },
   onShow() {
     if (!getUser()) {
       uni.reLaunch({ url: '/pages/login/login' })
@@ -221,6 +215,13 @@ export default {
     this.user = getUser()
     this.page = 1
     this.fetch()
+    // 设置页"编辑资料"跳来（tab 页不能用 navigateTo 带参 → storage 标记）
+    try {
+      if (uni.getStorageSync('dp_open_edit') === '1') {
+        uni.removeStorageSync('dp_open_edit')
+        setTimeout(() => this.openEdit(), 300)
+      }
+    } catch (e) { /* ignore */ }
   },
   onReachBottom() {
     if (this.hasMore && !this.loading) {

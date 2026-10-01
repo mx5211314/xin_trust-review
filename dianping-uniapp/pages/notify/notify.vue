@@ -162,17 +162,14 @@ export default {
     }
   },
   methods: {
-    /** 进页面/切 tab 时把当前分类标记为已读并同步徽标 */
-    async markCurrentTabRead() {
-      const cat = this.tab === 'chat' ? '' : this.tab
-      if (!cat) return
+    /** 进消息页：清互动 + 通知全部未读（私信未读在进入对应聊天时清） */
+    async markAllRead() {
       try {
-        await request({ url: `/user/notify/read-all?category=${cat}`, method: 'POST', silent: true })
-        if (cat === 'announce') {
-          this.announces.forEach(a => { a.isRead = 1 })
-        } else {
-          this.list.forEach(n => { n.isRead = 1 })
-        }
+        await request({ url: '/user/notify/read-all', method: 'POST', silent: true })
+        this.list.forEach(n => { n.isRead = 1 })
+        this.announces.forEach(a => { a.isRead = 1 })
+        this.tabUnread.interact = 0
+        this.tabUnread.announce = 0
         this.refreshBadge()
         this.loadSummary()
       } catch (e) { /* ignore */ }
@@ -204,9 +201,6 @@ export default {
         this.loadChatUnread()
       } else if (t === 'announce') {
         this.loadAnnounces()
-      }
-      if (t !== 'chat') {
-        this.markCurrentTabRead()
       }
     },
     async loadAnnounces() {
