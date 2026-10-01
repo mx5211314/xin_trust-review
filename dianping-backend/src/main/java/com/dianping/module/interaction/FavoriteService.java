@@ -48,6 +48,13 @@ public class FavoriteService {
         if (contentMapper.selectById(contentId) == null) {
             throw new BizException(ResultCode.NOT_FOUND);
         }
+        // 校验收藏夹归属（folderId=0 为未分类，无需校验）——移动/新增两条路径都要过
+        if (folderId != 0) {
+            FavoriteFolder f = folderMapper.selectById(folderId);
+            if (f == null || !me.equals(f.getUserId())) {
+                throw new BizException(ResultCode.NOT_FOUND, "收藏夹不存在");
+            }
+        }
         UserAction existing = userActionMapper.selectOne(new LambdaQueryWrapper<UserAction>()
                 .eq(UserAction::getUserId, me)
                 .eq(UserAction::getContentId, contentId)
@@ -60,13 +67,6 @@ public class FavoriteService {
                 userActionMapper.updateById(existing);
             }
             return;
-        }
-        // 校验收藏夹归属（folderId=0 为未分类，无需校验）
-        if (folderId != 0) {
-            FavoriteFolder f = folderMapper.selectById(folderId);
-            if (f == null || !me.equals(f.getUserId())) {
-                throw new BizException(ResultCode.NOT_FOUND, "收藏夹不存在");
-            }
         }
         UserAction a = new UserAction();
         a.setUserId(me);
