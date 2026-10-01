@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <!-- 账号信息卡 -->
     <view class="card">
       <view class="row">
@@ -50,6 +50,10 @@
         <text class="label">清理缓存</text>
         <text class="value">{{ cacheSize }}</text>
       </view>
+      <view class="row tap" @tap="pickTheme">
+        <text class="label">深色模式</text>
+        <text class="value">{{ themeText }}</text>
+      </view>
       <view class="row tap" @tap="goBlocks">
         <text class="label">黑名单管理</text>
         <text class="arrow">›</text>
@@ -83,6 +87,7 @@
 <script>
 import { request } from '@/utils/request'
 import { getUser, logout, setUserInfo } from '@/utils/auth'
+import { getMode, setMode, sysDark } from '@/utils/theme'
 
 export default {
   data() {
@@ -91,10 +96,14 @@ export default {
       notifyOn: true,
       cacheSize: '0 KB',
       hideFollowing: false,
-      allowComment: true
+      allowComment: true,
+      themeMode: 'auto'
     }
   },
   computed: {
+    themeText() {
+      return this.themeMode === 'dark' ? '深色' : this.themeMode === 'light' ? '浅色' : '跟随系统'
+    },
     roleText() {
       const r = this.profile.role
       if (r === 'ADMIN') return '管理员'
@@ -113,6 +122,7 @@ export default {
     }
     this.loadProfile()
     this.calcCache()
+    this.themeMode = getMode()
     try {
       const v = uni.getStorageSync('dp_notify_on')
       this.notifyOn = v === '' ? true : !!v
@@ -146,6 +156,21 @@ export default {
     },
     goBlocks() {
       uni.navigateTo({ url: '/pages/blocks/blocks' })
+    },
+    /** 深色模式：浅色/深色/跟随系统，storage 持久化，返回各页 onShow 自动生效 */
+    pickTheme() {
+      const modes = ['light', 'dark', 'auto']
+      const labels = ['浅色', '深色', '跟随系统']
+      uni.showActionSheet({
+        itemList: labels,
+        success: (res) => {
+          const m = modes[res.tapIndex]
+          setMode(m)
+          this.themeMode = m
+          this.isDark = m === 'dark' || (m === 'auto' && sysDark())
+          uni.showToast({ title: '已设为' + labels[res.tapIndex], icon: 'none' })
+        }
+      })
     },
     toggleNotify(e) {
       this.notifyOn = e.detail.value
@@ -242,11 +267,11 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #f7f8fa;
+  background: var(--dp-bg);
   padding: 24rpx 0 60rpx;
 }
 .card {
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 20rpx;
   margin: 0 24rpx 24rpx;
   padding: 0 28rpx;
@@ -256,26 +281,26 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 30rpx 0;
-  border-bottom: 1rpx solid #f6f7f9;
+  border-bottom: 1rpx solid var(--dp-soft);
 }
 .row:last-child {
   border-bottom: none;
 }
 .label {
   font-size: 28rpx;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .value {
   font-size: 26rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .arrow {
   font-size: 32rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
 }
 .logout-wrap {
   margin: 40rpx 24rpx 0;
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 20rpx;
   padding: 32rpx 0;
   text-align: center;
@@ -289,6 +314,6 @@ export default {
   text-align: center;
   margin-top: 40rpx;
   font-size: 22rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
 }
 </style>

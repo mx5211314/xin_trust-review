@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <scroll-view
       class="msg-scroll"
       scroll-y
@@ -123,7 +123,7 @@ export default {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f7f8fa;
+  background: var(--dp-bg);
 }
 .msg-scroll {
   flex: 1;
@@ -144,7 +144,7 @@ export default {
   width: 68rpx;
   height: 68rpx;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--dp-card);
   border: 1rpx solid #ffe0e4;
   display: flex;
   align-items: center;
@@ -153,7 +153,7 @@ export default {
   margin-right: 16rpx;
 }
 .mine-avatar {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   border: none;
   margin-right: 0;
   margin-left: 16rpx;
@@ -164,7 +164,7 @@ export default {
 }
 .bubble {
   max-width: 62%;
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 6rpx 20rpx 20rpx 20rpx;
   padding: 20rpx 24rpx;
 }
@@ -174,7 +174,7 @@ export default {
 }
 .bubble-text {
   font-size: 28rpx;
-  color: #1f2430;
+  color: var(--dp-text);
   line-height: 1.5;
   word-break: break-all;
 }
@@ -187,25 +187,25 @@ export default {
 }
 .hint-text {
   font-size: 22rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
 }
 .input-bar {
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border-top: 1rpx solid #f1f3f5;
+  background: var(--dp-card);
+  border-top: 1rpx solid var(--dp-line);
   padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
 }
 .chat-input {
   flex: 1;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 32rpx;
   padding: 16rpx 28rpx;
   font-size: 28rpx;
   height: 44rpx;
 }
 .ph {
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .send {
   margin-left: 18rpx;
@@ -213,7 +213,7 @@ export default {
   border-radius: 28rpx;
 }
 .send.on {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
 }
 .send-text {
   font-size: 28rpx;

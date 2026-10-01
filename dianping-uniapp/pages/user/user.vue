@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <!-- 居中头部 -->
     <view class="head">
       <view class="avatar">
@@ -258,7 +258,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .head {
   display: flex;
@@ -270,7 +270,7 @@ export default {
   width: 150rpx;
   height: 150rpx;
   border-radius: 50%;
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,7 +299,7 @@ export default {
 }
 .chat-btn {
   margin-left: 20rpx;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 40rpx;
   padding: 0 58rpx;
   height: 70rpx;
@@ -308,12 +308,12 @@ export default {
   justify-content: center;
 }
 .chat-btn-text {
-  color: #1f2430;
+  color: var(--dp-text);
   font-size: 28rpx;
 }
 .more-btn {
   margin-left: 20rpx;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 40rpx;
   width: 70rpx;
   height: 70rpx;
@@ -322,7 +322,7 @@ export default {
   justify-content: center;
 }
 .more-btn-text {
-  color: #1f2430;
+  color: var(--dp-text);
   font-size: 36rpx;
   letter-spacing: 2rpx;
   margin-top: -6rpx;
@@ -337,21 +337,21 @@ export default {
   justify-content: center;
 }
 .follow-btn.on {
-  background: #f6f7f9;
+  background: var(--dp-soft);
 }
 .btn-text {
   color: #ffffff;
   font-size: 28rpx;
 }
 .btn-text.on {
-  color: #666666;
+  color: var(--dp-text2);
 }
 .stats {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24rpx 0;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .stat {
   text-align: center;
@@ -364,17 +364,17 @@ export default {
 }
 .stat-label {
   font-size: 22rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .stat-div {
   width: 1rpx;
   height: 50rpx;
-  background: #f1f3f5;
+  background: var(--dp-line);
 }
 .tabs {
   display: flex;
   justify-content: center;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .tab {
   padding: 22rpx 40rpx;
@@ -382,10 +382,10 @@ export default {
 }
 .tab-text {
   font-size: 28rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .tab-text.on {
-  color: #1f2430;
+  color: var(--dp-text);
   font-weight: 500;
 }
 .tab-line {
@@ -401,7 +401,7 @@ export default {
 .waterfall {
   display: flex;
   padding: 20rpx 16rpx;
-  background: #f7f8fa;
+  background: var(--dp-bg);
   min-height: 300rpx;
 }
 .col {
@@ -411,7 +411,7 @@ export default {
   margin-left: 16rpx;
 }
 .wcard {
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 14rpx;
   overflow: hidden;
   margin-bottom: 16rpx;
@@ -431,18 +431,18 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: #eceef1;
+  background: var(--dp-soft);
 }
 .cover-empty-text {
   font-size: 22rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .wtitle {
   display: block;
   padding: 12rpx 14rpx 0;
   font-size: 24rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
   line-height: 1.4;
 }
 .wfoot {
@@ -450,7 +450,7 @@ export default {
 }
 .wlike-num {
   font-size: 20rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .empty {
   text-align: center;

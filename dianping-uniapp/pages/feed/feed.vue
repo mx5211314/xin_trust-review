@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <!-- 自定义导航：发现/同城 + 搜索入口 -->
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="seg">
@@ -283,7 +283,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .topbar {
   position: fixed;
@@ -291,7 +291,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 10;
-  background: #ffffff;
+  background: var(--dp-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -304,12 +304,12 @@ export default {
 }
 .seg-item {
   font-size: 30rpx;
-  color: #999999;
+  color: var(--dp-text3);
   margin: 0 24rpx;
   position: relative;
 }
 .seg-item.on {
-  color: #1f2430;
+  color: var(--dp-text);
   font-weight: 500;
 }
 .seg-item.on::after {
@@ -353,13 +353,13 @@ export default {
 .sicon-ring {
   width: 24rpx;
   height: 24rpx;
-  border: 4rpx solid #1f2430;
+  border: 4rpx solid var(--dp-text);
   border-radius: 50%;
 }
 .sicon-handle {
   width: 14rpx;
   height: 4rpx;
-  background: #1f2430;
+  background: var(--dp-text);
   border-radius: 2rpx;
   transform: rotate(45deg);
   margin-top: -4rpx;
@@ -368,17 +368,17 @@ export default {
 .chips {
   white-space: nowrap;
   padding: 12rpx 24rpx 4rpx;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .chip {
   display: inline-block;
   padding: 10rpx 28rpx;
   border-radius: 999rpx;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   margin-right: 16rpx;
 }
 .chip.active {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
 }
 .chip-text {
   font-size: 24rpx;
@@ -399,7 +399,7 @@ export default {
   margin-left: 16rpx;
 }
 .wcard {
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 16rpx;
   overflow: hidden;
   margin-bottom: 16rpx;
@@ -418,11 +418,11 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #eceef1;
+  background: var(--dp-soft);
 }
 .cover-empty-text {
   font-size: 24rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .video-badge {
   position: absolute;
@@ -443,7 +443,7 @@ export default {
   display: block;
   font-size: 26rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
   line-height: 1.45;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -478,7 +478,7 @@ export default {
 .wnick {
   margin-left: 10rpx;
   font-size: 22rpx;
-  color: #999999;
+  color: var(--dp-text3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -508,7 +508,7 @@ export default {
   width: 36rpx;
   height: 36rpx;
   border-radius: 50%;
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -521,7 +521,7 @@ export default {
 }
 .wnick {
   font-size: 21rpx;
-  color: #999999;
+  color: var(--dp-text3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -535,7 +535,7 @@ export default {
 .wlike-num {
   margin-left: 6rpx;
   font-size: 22rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .sk-img {
   height: 300rpx;
@@ -559,7 +559,7 @@ export default {
 }
 .load-more-text {
   font-size: 24rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .card-hover {
   transform: scale(0.97);

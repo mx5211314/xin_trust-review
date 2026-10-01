@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <view class="deco deco-1"></view>
     <view class="deco deco-2"></view>
 
@@ -111,7 +111,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
   position: relative;
   overflow: hidden;
 }
@@ -122,7 +122,7 @@ export default {
 .deco-1 {
   width: 220rpx;
   height: 220rpx;
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   top: -60rpx;
   right: -60rpx;
 }
@@ -153,7 +153,7 @@ export default {
   width: 20rpx;
   height: 20rpx;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--dp-card);
   top: 56rpx;
 }
 .eye-l {
@@ -180,12 +180,12 @@ export default {
   margin-top: 36rpx;
   font-size: 42rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .slogan {
   margin-top: 14rpx;
   font-size: 24rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .form {
   margin-top: 90rpx;
@@ -193,14 +193,14 @@ export default {
   position: relative;
 }
 .input {
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 24rpx;
   padding: 26rpx 30rpx;
   font-size: 28rpx;
   margin-bottom: 24rpx;
 }
 .ph {
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .code-row {
   display: flex;
@@ -213,7 +213,7 @@ export default {
   width: 190rpx;
   height: 90rpx;
   border-radius: 24rpx;
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -232,7 +232,7 @@ export default {
   text-align: center;
   margin-top: 18rpx;
   font-size: 22rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .tip + .tip {
   margin-top: 8rpx;

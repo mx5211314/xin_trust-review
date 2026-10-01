@@ -1,0 +1,36 @@
+{
+  "light": {
+    "navBg": "#FFFFFF",
+    "navTxt": "black",
+    "pageBg": "#F7F8FA",
+    "tabBg": "#FFFFFF",
+    "tabColor": "#999999",
+    "tabSelected": "#1F2430",
+    "tabBorder": "white",
+    "tabHome": "static/tabbar/home.png",
+    "tabHomeOn": "static/tabbar/home-on.png",
+    "tabPlus": "static/tabbar/plus.png",
+    "tabPlusOn": "static/tabbar/plus-on.png",
+    "tabMsg": "static/tabbar/msg.png",
+    "tabMsgOn": "static/tabbar/msg-on.png",
+    "tabMy": "static/tabbar/my.png",
+    "tabMyOn": "static/tabbar/my-on.png"
+  },
+  "dark": {
+    "navBg": "#1E2023",
+    "navTxt": "white",
+    "pageBg": "#111214",
+    "tabBg": "#1E2023",
+    "tabColor": "#7A8087",
+    "tabSelected": "#F2F3F5",
+    "tabBorder": "black",
+    "tabHome": "static/tabbar/home-dark.png",
+    "tabHomeOn": "static/tabbar/home-on-dark.png",
+    "tabPlus": "static/tabbar/plus-dark.png",
+    "tabPlusOn": "static/tabbar/plus-on-dark.png",
+    "tabMsg": "static/tabbar/msg-dark.png",
+    "tabMsgOn": "static/tabbar/msg-on-dark.png",
+    "tabMy": "static/tabbar/my-dark.png",
+    "tabMyOn": "static/tabbar/my-on-dark.png"
+  }
+}

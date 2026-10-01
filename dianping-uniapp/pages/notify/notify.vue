@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <view class="topbar">
       <view class="tabs">
         <view class="tab" :class="{ on: tab === 'interact' }" @tap="switchTab('interact')">
@@ -334,14 +334,14 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 30rpx 32rpx 20rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .title {
   font-size: 34rpx;
@@ -356,7 +356,7 @@ export default {
 }
 .tab {
   font-size: 32rpx;
-  color: #999999;
+  color: var(--dp-text3);
   margin-right: 40rpx;
   position: relative;
   padding-bottom: 14rpx;
@@ -379,7 +379,7 @@ export default {
   font-size: 18rpx;
 }
 .tab.on {
-  color: #1f2430;
+  color: var(--dp-text);
   font-weight: 500;
 }
 .tab.on::after {
@@ -394,7 +394,7 @@ export default {
   background: #ff2442;
 }
 .chat-avatar {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
 }
 .chat-right {
   display: flex;
@@ -404,7 +404,7 @@ export default {
 }
 .ntime-right {
   font-size: 20rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
 }
 .chat-badge {
   margin-top: 8rpx;
@@ -418,7 +418,7 @@ export default {
 }
 .small {
   font-size: 22rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
   margin-top: 10rpx;
 }
 .sum-cards {
@@ -427,8 +427,8 @@ export default {
 }
 .sum-card {
   flex: 1;
-  background: #ffffff;
-  border: 1.5rpx solid #f1f3f5;
+  background: var(--dp-card);
+  border: 1.5rpx solid var(--dp-line);
   border-radius: 18rpx;
   padding: 26rpx 0;
   margin-right: 16rpx;
@@ -450,7 +450,7 @@ export default {
 }
 .sum-label {
   font-size: 22rpx;
-  color: #666666;
+  color: var(--dp-text2);
   margin-top: 8rpx;
 }
 .sum-badge {
@@ -478,7 +478,7 @@ export default {
 }
 .sub-filter-text {
   font-size: 22rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .sub-filter-clear {
   font-size: 22rpx;
@@ -503,7 +503,7 @@ export default {
   display: flex;
   align-items: flex-start;
   padding: 26rpx 32rpx;
-  border-bottom: 1rpx solid #f6f7f9;
+  border-bottom: 1rpx solid var(--dp-soft);
   position: relative;
 }
 .item.unread {
@@ -511,13 +511,13 @@ export default {
 }
 .item.unread .actor {
   font-weight: 600;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .icon {
   width: 72rpx;
   height: 72rpx;
   border-radius: 50%;
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -551,7 +551,7 @@ export default {
 .actor {
   font-size: 28rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
   margin-right: 8rpx;
 }
 .action {
@@ -561,7 +561,7 @@ export default {
 .ntext {
   display: block;
   font-size: 25rpx;
-  color: #666666;
+  color: var(--dp-text2);
   margin-top: 6rpx;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -570,7 +570,7 @@ export default {
 .ntime {
   display: block;
   font-size: 21rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
   margin-top: 6rpx;
 }
 .dot {

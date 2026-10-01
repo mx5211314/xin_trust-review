@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <!-- 头部品牌区 -->
     <view class="head">
       <view class="deco"></view>
@@ -468,7 +468,7 @@ export default {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--dp-card);
   margin-right: 26rpx;
   display: flex;
   align-items: center;
@@ -508,7 +508,7 @@ export default {
   color: rgba(255, 255, 255, 0.9);
 }
 .stats {
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 20rpx;
   margin: -34rpx 24rpx 0;
   display: flex;
@@ -525,23 +525,23 @@ export default {
   display: block;
   font-size: 36rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .stat-label {
   font-size: 22rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .stat-div {
   width: 1rpx;
   height: 50rpx;
-  background: #f1f3f5;
+  background: var(--dp-line);
 }
 .tabs {
   display: flex;
   justify-content: center;
-  background: #ffffff;
+  background: var(--dp-card);
   margin-top: 20rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .tab {
   padding: 22rpx 40rpx;
@@ -549,10 +549,10 @@ export default {
 }
 .tab-text {
   font-size: 28rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .tab-text.on {
-  color: #1f2430;
+  color: var(--dp-text);
   font-weight: 500;
 }
 .tab-line {
@@ -568,25 +568,25 @@ export default {
 .waterfall {
   display: flex;
   padding: 20rpx 16rpx;
-  background: #f7f8fa;
+  background: var(--dp-bg);
   min-height: 200rpx;
 }
 .folder-bar {
   white-space: nowrap;
-  background: #ffffff;
+  background: var(--dp-card);
   padding: 18rpx 20rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .folder-chip {
   display: inline-flex;
   align-items: center;
   padding: 12rpx 24rpx;
   margin-right: 16rpx;
-  background: #f5f6f8;
+  background: var(--dp-soft);
   border-radius: 999rpx;
 }
 .folder-chip.on {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
 }
 .folder-chip-text {
   font-size: 26rpx;
@@ -598,7 +598,7 @@ export default {
 }
 .folder-chip-count {
   font-size: 20rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
   margin-left: 10rpx;
 }
 .folder-chip.on .folder-chip-count {
@@ -606,11 +606,11 @@ export default {
 }
 .folder-add {
   background: transparent;
-  border: 1rpx dashed #d8dbe0;
+  border: 1rpx dashed var(--dp-text4);
 }
 .folder-add-text {
   font-size: 26rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .col {
   flex: 1;
@@ -619,7 +619,7 @@ export default {
   margin-left: 16rpx;
 }
 .wcard {
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 14rpx;
   overflow: hidden;
   margin-bottom: 16rpx;
@@ -644,18 +644,18 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: #eceef1;
+  background: var(--dp-soft);
 }
 .cover-empty-text {
   font-size: 22rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .wtitle {
   display: block;
   padding: 12rpx 14rpx 0;
   font-size: 25rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -667,10 +667,10 @@ export default {
 }
 .wlike-num {
   font-size: 20rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .menu {
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 20rpx;
   margin: 20rpx 24rpx;
   padding: 0 28rpx;
@@ -680,7 +680,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 30rpx 0;
-  border-bottom: 1rpx solid #f6f7f9;
+  border-bottom: 1rpx solid var(--dp-soft);
 }
 .menu-item:last-child {
   border-bottom: none;
@@ -691,13 +691,13 @@ export default {
 }
 .menu-text {
   font-size: 28rpx;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .menu-text.logout {
   color: #ff2442;
 }
 .menu-arrow {
-  color: #c2c8d0;
+  color: var(--dp-text4);
   font-size: 32rpx;
 }
 .badge {
@@ -715,7 +715,7 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 100rpx 0;
-  background: #f7f8fa;
+  background: var(--dp-bg);
 }
 .empty-emoji {
   font-size: 70rpx;
@@ -723,7 +723,7 @@ export default {
 }
 .small {
   font-size: 22rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
   margin-top: 10rpx;
 }
 .edit-mask {
@@ -739,7 +739,7 @@ export default {
 }
 .edit-panel {
   width: 100%;
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 32rpx 32rpx 0 0;
   padding: 40rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
   display: flex;
@@ -773,14 +773,14 @@ export default {
   font-size: 26rpx;
 }
 .edit-input {
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 16rpx;
   padding: 22rpx 26rpx;
   font-size: 28rpx;
   margin-bottom: 20rpx;
 }
 .ph {
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .edit-btns {
   display: flex;
@@ -795,8 +795,8 @@ export default {
   padding: 0;
 }
 .edit-btn.ghost {
-  background: #f6f7f9;
-  color: #666666;
+  background: var(--dp-soft);
+  color: var(--dp-text2);
   margin-right: 20rpx;
 }
 .edit-btn.primary {

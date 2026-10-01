@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <view v-for="u in list" :key="u.userId" class="user-item">
       <view class="avatar" @tap="goHome(u)">
         <text class="avatar-text">{{ (u.nickname || '客').slice(0, 1) }}</text>
@@ -82,19 +82,19 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .user-item {
   display: flex;
   align-items: center;
   padding: 24rpx 32rpx;
-  border-bottom: 1rpx solid #f6f7f9;
+  border-bottom: 1rpx solid var(--dp-soft);
 }
 .avatar {
   width: 88rpx;
   height: 88rpx;
   border-radius: 50%;
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -119,14 +119,14 @@ export default {
   margin-right: 12rpx;
 }
 .unfollow {
-  border: 1.5rpx solid #d8dbe0;
+  border: 1.5rpx solid var(--dp-text4);
   border-radius: 999rpx;
   padding: 10rpx 32rpx;
   flex-shrink: 0;
 }
 .unfollow-text {
   font-size: 24rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .empty {
   display: flex;
@@ -140,7 +140,7 @@ export default {
 }
 .small {
   font-size: 22rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
   margin-top: 10rpx;
 }
 .go-btn {

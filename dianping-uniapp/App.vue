@@ -7,14 +7,35 @@ export default {
 </script>
 
 <style>
+/* ---------- 主题令牌：浅色为默认，.theme-dark 覆盖（根节点由全局 mixin 注入） ---------- */
 page {
+  --dp-bg: #f7f8fa;        /* 页面背景 */
+  --dp-card: #ffffff;      /* 卡片/面板 */
+  --dp-soft: #f6f7f9;      /* 输入框/浅色块 */
+  --dp-text: #1f2430;      /* 主文字 */
+  --dp-text2: #666666;     /* 次文字 */
+  --dp-text3: #999999;     /* 弱文字 */
+  --dp-text4: #c2c8d0;     /* 极弱/占位 */
+  --dp-line: #f1f3f5;      /* 分割线 */
+  --dp-accent-soft: #ffe8ea; /* 品牌红浅底 */
   background-color: #f7f8fa;
   font-size: 28rpx;
   color: #1f2430;
 }
+.theme-dark {
+  --dp-bg: #111214;
+  --dp-card: #1e2023;
+  --dp-soft: #26282c;
+  --dp-text: #f2f3f5;
+  --dp-text2: #b0b6bf;
+  --dp-text3: #7a8087;
+  --dp-text4: #565c63;
+  --dp-line: #2a2d31;
+  --dp-accent-soft: #3a2226;
+}
 /* 品牌红主题（小红书式） */
 .card {
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 16rpx;
   margin: 16rpx 24rpx;
   padding: 24rpx;
@@ -35,7 +56,7 @@ page {
   font-size: 20rpx;
 }
 .tag-reviewer {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   color: #ff2442;
 }
 .tag-admin {
@@ -47,7 +68,7 @@ page {
   color: #a32d2d;
 }
 .muted {
-  color: #999999;
+  color: var(--dp-text3);
   font-size: 24rpx;
 }
 /* 骨架屏闪烁 */
@@ -56,6 +77,10 @@ page {
   background-size: 400% 100%;
   animation: sk 1.2s ease infinite;
 }
+.theme-dark .skeleton {
+  background: linear-gradient(90deg, #26282c 25%, #2e3136 37%, #26282c 63%);
+  background-size: 400% 100%;
+}
 @keyframes sk {
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
@@ -63,7 +88,7 @@ page {
 /* 点赞红心 */
 .like-icon {
   font-size: 34rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .like-icon.liked {
   color: #ff2442;

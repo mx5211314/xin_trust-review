@@ -5,7 +5,7 @@
       "style": {
         "navigationStyle": "custom",
         "enablePullDownRefresh": true,
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "@pageBg"
       }
     },
     {
@@ -72,41 +72,43 @@
     }
   ],
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#1F2430",
-    "backgroundColor": "#FFFFFF",
-    "borderStyle": "white",
+    "color": "@tabColor",
+    "selectedColor": "@tabSelected",
+    "backgroundColor": "@tabBg",
+    "borderStyle": "@tabBorder",
     "list": [
       {
         "pagePath": "pages/feed/feed",
         "text": "首页",
-        "iconPath": "static/tabbar/home.png",
-        "selectedIconPath": "static/tabbar/home-on.png"
+        "iconPath": "@tabHome",
+        "selectedIconPath": "@tabHomeOn"
       },
       {
         "pagePath": "pages/publish/publish",
         "text": "发布",
-        "iconPath": "static/tabbar/plus.png",
-        "selectedIconPath": "static/tabbar/plus-on.png"
+        "iconPath": "@tabPlus",
+        "selectedIconPath": "@tabPlusOn"
       },
       {
         "pagePath": "pages/notify/notify",
         "text": "消息",
-        "iconPath": "static/tabbar/msg.png",
-        "selectedIconPath": "static/tabbar/msg-on.png"
+        "iconPath": "@tabMsg",
+        "selectedIconPath": "@tabMsgOn"
       },
       {
         "pagePath": "pages/mine/mine",
         "text": "我的",
-        "iconPath": "static/tabbar/my.png",
-        "selectedIconPath": "static/tabbar/my-on.png"
+        "iconPath": "@tabMy",
+        "selectedIconPath": "@tabMyOn"
       }
     ]
   },
   "globalStyle": {
-    "navigationBarTextStyle": "black",
+    "darkmode": true,
+    "themeLocation": "theme.json",
+    "navigationBarTextStyle": "@navTxt",
     "navigationBarTitleText": "本地点评",
-    "navigationBarBackgroundColor": "#FFFFFF",
-    "backgroundColor": "#F7F8FA"
+    "navigationBarBackgroundColor": "@navBg",
+    "backgroundColor": "@pageBg"
   }
 }

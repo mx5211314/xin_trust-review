@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <!-- 顶部品牌区 -->
     <view class="head">
       <view class="head-deco"></view>
@@ -29,7 +29,7 @@
         </view>
       </view>
       <view class="step">
-        <view class="step-num" style="background: #1f2430"><text>3</text></view>
+        <view class="step-num" style="background: var(--dp-text)"><text>3</text></view>
         <view class="step-body">
           <text class="step-title">开始发布点评</text>
           <text class="step-desc">重新登录后发布入口即点亮</text>
@@ -59,10 +59,10 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .head {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   padding: 70rpx 0 50rpx;
   display: flex;
   flex-direction: column;
@@ -92,7 +92,7 @@ export default {
   width: 18rpx;
   height: 18rpx;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--dp-card);
   top: 48rpx;
 }
 .face-eye-l {
@@ -118,13 +118,13 @@ export default {
 .head-title {
   font-size: 38rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
   position: relative;
 }
 .head-sub {
   margin-top: 14rpx;
   font-size: 24rpx;
-  color: #999999;
+  color: var(--dp-text3);
   position: relative;
 }
 .steps {
@@ -133,7 +133,7 @@ export default {
 .step {
   display: flex;
   align-items: center;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 20rpx;
   padding: 30rpx 28rpx;
   margin-bottom: 20rpx;
@@ -158,12 +158,12 @@ export default {
 }
 .step-title {
   font-size: 28rpx;
-  color: #1f2430;
+  color: var(--dp-text);
   margin-bottom: 6rpx;
 }
 .step-desc {
   font-size: 22rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .contact-btn {
   margin: 30rpx 40rpx 0;
@@ -175,6 +175,6 @@ export default {
   text-align: center;
   margin-top: 36rpx;
   font-size: 22rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <view class="page" v-if="content">
+  <view class="page" :class="{'theme-dark': isDark}" v-if="content">
     <!-- 驳回提示（仅作者可见） -->
     <view v-if="isRejectedMine" class="reject-bar">
       <text class="reject-text">未通过审核：{{ content.rejectReason || '内容不符合规范' }}</text>
@@ -733,7 +733,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
   padding-bottom: 150rpx;
 }
 .reject-bar {
@@ -795,7 +795,7 @@ export default {
   justify-content: center;
 }
 .banner-empty-text {
-  color: #666666;
+  color: var(--dp-text2);
   font-size: 26rpx;
 }
 .body {
@@ -812,13 +812,13 @@ export default {
   display: flex;
   align-items: center;
   padding-bottom: 24rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .avatar {
   width: 64rpx;
   height: 64rpx;
   border-radius: 50%;
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   margin-right: 16rpx;
 }
 .avatar-ph {
@@ -832,7 +832,7 @@ export default {
 }
 .nickname {
   font-size: 28rpx;
-  color: #1f2430;
+  color: var(--dp-text);
   margin-right: 12rpx;
 }
 .text {
@@ -840,7 +840,7 @@ export default {
   margin-top: 26rpx;
   font-size: 30rpx;
   line-height: 1.75;
-  color: #333333;
+  color: var(--dp-text);
   white-space: pre-wrap;
 }
 .text .seg {
@@ -889,17 +889,17 @@ export default {
 }
 .region {
   font-size: 24rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .time {
   display: block;
   margin-top: 22rpx;
   font-size: 22rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .comments {
   margin-top: 30rpx;
-  border-top: 12rpx solid #f7f8fa;
+  border-top: 12rpx solid var(--dp-bg);
   padding: 24rpx 28rpx;
 }
 .comments-head {
@@ -912,13 +912,13 @@ export default {
 .comment-item {
   display: flex;
   padding: 24rpx 0;
-  border-bottom: 1rpx solid #f6f7f9;
+  border-bottom: 1rpx solid var(--dp-soft);
 }
 .cavatar {
   width: 64rpx;
   height: 64rpx;
   border-radius: 50%;
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   margin-right: 18rpx;
   display: flex;
   align-items: center;
@@ -949,11 +949,11 @@ export default {
 }
 .cnick {
   font-size: 25rpx;
-  color: #888888;
+  color: var(--dp-text3);
 }
 .ctime {
   font-size: 20rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
 }
 .cops {
   display: flex;
@@ -978,13 +978,13 @@ export default {
 }
 .clike-num {
   font-size: 20rpx;
-  color: #999999;
+  color: var(--dp-text3);
   margin-top: 2rpx;
   min-height: 20rpx;
 }
 .ctext {
   font-size: 28rpx;
-  color: #1f2430;
+  color: var(--dp-text);
   line-height: 1.5;
 }
 .empty {
@@ -996,8 +996,8 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: #ffffff;
-  border-top: 1rpx solid #f1f3f5;
+  background: var(--dp-card);
+  border-top: 1rpx solid var(--dp-line);
   display: flex;
   align-items: center;
   padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
@@ -1008,14 +1008,14 @@ export default {
   height: 64rpx;
 }
 .ph {
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .send-btn {
   padding: 12rpx 24rpx;
   margin-right: 10rpx;
 }
 .send-btn.on {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   border-radius: 24rpx;
 }
 .send-text {
@@ -1052,7 +1052,7 @@ export default {
 }
 .act-num {
   font-size: 20rpx;
-  color: #999999;
+  color: var(--dp-text3);
   margin-top: 2rpx;
 }
 .comment-item.reply {
@@ -1076,7 +1076,7 @@ export default {
 }
 .replies {
   margin-top: 16rpx;
-  background: #f7f8fa;
+  background: var(--dp-bg);
   border-radius: 12rpx;
   padding: 8rpx 20rpx;
 }
@@ -1084,7 +1084,7 @@ export default {
   display: flex;
   align-items: flex-start;
   padding: 18rpx 0;
-  border-bottom: 1rpx solid #eef0f2;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .reply-item:last-child {
   border-bottom: none;
@@ -1093,7 +1093,7 @@ export default {
   width: 48rpx;
   height: 48rpx;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--dp-card);
   border: 1rpx solid #ffe0e4;
   display: flex;
   align-items: center;
@@ -1111,19 +1111,19 @@ export default {
 }
 .rnick {
   font-size: 24rpx;
-  color: #888888;
+  color: var(--dp-text3);
 }
 .rtext {
   display: block;
   font-size: 26rpx;
-  color: #333333;
+  color: var(--dp-text);
   line-height: 1.5;
 }
 .input-wrap {
   flex: 1;
   display: flex;
   align-items: center;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 32rpx;
   padding: 0 20rpx;
   margin-right: 20rpx;
@@ -1133,7 +1133,7 @@ export default {
   width: 36rpx;
   height: 36rpx;
   border-radius: 50%;
-  background: #d8dbe0;
+  background: var(--dp-text4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1158,14 +1158,14 @@ export default {
   padding: 8rpx 26rpx;
 }
 .follow-mini.on {
-  border-color: #d8dbe0;
+  border-color: var(--dp-text4);
 }
 .follow-mini-text {
   font-size: 24rpx;
   color: #ff2442;
 }
 .follow-mini.on .follow-mini-text {
-  color: #999999;
+  color: var(--dp-text3);
 }
 .img-err-tip {
   position: absolute;
@@ -1175,7 +1175,7 @@ export default {
   text-align: center;
 }
 .img-err-text {
-  color: #999999;
+  color: var(--dp-text3);
   font-size: 24rpx;
 }
 .page-badge {
@@ -1211,7 +1211,7 @@ export default {
 }
 .fav-sheet {
   width: 100%;
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 32rpx 32rpx 0 0;
   padding: 20rpx 0 calc(20rpx + env(safe-area-inset-bottom));
   max-height: 70vh;
@@ -1223,16 +1223,16 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 16rpx 32rpx 20rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .fav-sheet-title {
   font-size: 30rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .fav-sheet-close {
   font-size: 30rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
   padding: 0 10rpx;
 }
 .fav-sheet-list {
@@ -1243,7 +1243,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 28rpx 32rpx;
-  border-bottom: 1rpx solid #f6f7f9;
+  border-bottom: 1rpx solid var(--dp-soft);
 }
 .fav-row-icon {
   font-size: 32rpx;
@@ -1252,11 +1252,11 @@ export default {
 .fav-row-name {
   flex: 1;
   font-size: 28rpx;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .fav-row-count {
   font-size: 24rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
   margin-left: 12rpx;
 }
 .fav-row-add .fav-row-name {
@@ -1265,7 +1265,7 @@ export default {
 .fav-cancel {
   padding: 24rpx 32rpx;
   text-align: center;
-  border-top: 1rpx solid #f1f3f5;
+  border-top: 1rpx solid var(--dp-line);
 }
 .fav-cancel-text {
   font-size: 28rpx;

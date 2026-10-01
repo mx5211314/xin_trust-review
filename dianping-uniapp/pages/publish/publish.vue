@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <!-- 自定义导航：取消 | 发笔记 | 发布 -->
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <text class="nav-cancel" @tap="goBack">取消</text>
@@ -376,7 +376,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .topbar {
   position: fixed;
@@ -384,24 +384,24 @@ export default {
   left: 0;
   right: 0;
   z-index: 10;
-  background: #ffffff;
+  background: var(--dp-card);
   display: flex;
   align-items: center;
   height: 54px;
   padding: 0 24rpx;
   box-sizing: content-box;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .nav-cancel {
   font-size: 28rpx;
-  color: #666666;
+  color: var(--dp-text2);
 }
 .nav-title {
   flex: 1;
   text-align: center;
   font-size: 30rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .nav-publish {
   background: #ff2442;
@@ -443,7 +443,7 @@ export default {
 .guide-text {
   display: block;
   font-size: 26rpx;
-  color: #999999;
+  color: var(--dp-text3);
   line-height: 1.7;
   margin-bottom: 40rpx;
   text-align: left;
@@ -451,7 +451,7 @@ export default {
 .step {
   display: flex;
   align-items: center;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 16rpx;
   padding: 24rpx 28rpx;
   margin-bottom: 16rpx;
@@ -471,7 +471,7 @@ export default {
 }
 .step-text {
   font-size: 26rpx;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .contact-btn {
   margin-top: 30rpx;
@@ -490,12 +490,12 @@ export default {
 }
 .divider {
   height: 1rpx;
-  background: #f1f3f5;
+  background: var(--dp-line);
   margin: 6rpx 0;
 }
 
 .input {
-  background: #ffffff;
+  background: var(--dp-card);
   padding: 26rpx 4rpx;
   font-size: 30rpx;
   border-radius: 0;
@@ -512,7 +512,7 @@ export default {
 }
 .type-tab {
   font-size: 28rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .type-tab.active {
   color: #ff2442;
@@ -524,14 +524,14 @@ export default {
   margin: 0 20rpx;
 }
 .textarea {
-  background: #ffffff;
+  background: var(--dp-card);
   padding: 24rpx 4rpx;
   font-size: 30rpx;
   width: auto;
   height: 260rpx;
 }
 .ph {
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .count-wrap {
   position: relative;
@@ -544,7 +544,7 @@ export default {
   right: 4rpx;
   top: 30rpx;
   font-size: 22rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
 }
 .count-textarea {
   top: auto;
@@ -562,7 +562,7 @@ export default {
   width: 200rpx;
   height: 200rpx;
   border-radius: 12rpx;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   margin: 0 16rpx 16rpx 0;
   position: relative;
   overflow: hidden;
@@ -612,13 +612,13 @@ export default {
   justify-content: center;
 }
 .add-plus {
-  color: #c2c8d0;
+  color: var(--dp-text4);
   font-size: 48rpx;
   line-height: 1;
 }
 .add-count {
   font-size: 20rpx;
-  color: #c2c8d0;
+  color: var(--dp-text4);
   margin-top: 8rpx;
 }
 .video-item {
@@ -659,7 +659,7 @@ export default {
 }
 .line-topic {
   font-size: 28rpx;
-  color: #999999;
+  color: var(--dp-text3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -669,7 +669,7 @@ export default {
   color: #ff2442;
 }
 .arrow {
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .poi-input {
   padding-left: 4rpx;
@@ -682,14 +682,14 @@ export default {
   padding: 8rpx 0 20rpx;
 }
 .tchip {
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 999rpx;
   padding: 12rpx 28rpx;
   margin: 0 16rpx 16rpx 0;
-  border: 1.5rpx solid #f6f7f9;
+  border: 1.5rpx solid var(--dp-soft);
 }
 .tchip.on {
-  background: #ffe8ea;
+  background: var(--dp-accent-soft);
   border-color: #ff2442;
 }
 .tchip-text {

@@ -1,5 +1,5 @@
 <template>
-  <view class="hub">
+  <view class="hub" :class="{'theme-dark': isDark}">
     <view class="hub-head">
       <text class="hub-title">{{ mode === 'topic' ? '#' + q : q }}</text>
       <text class="hub-sub">{{ total }} 篇内容</text>
@@ -172,13 +172,13 @@ export default {
 .hub-title {
   font-size: 40rpx;
   font-weight: 700;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .hub-sub {
   display: block;
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #999;
+  color: var(--dp-text3);
 }
 .waterfall {
   display: flex;
@@ -193,7 +193,7 @@ export default {
   min-width: 0;
 }
 .wcard {
-  background: #fff;
+  background: var(--dp-card);
   border-radius: 16rpx;
   overflow: hidden;
 }
@@ -287,7 +287,7 @@ export default {
 }
 .wnick {
   font-size: 22rpx;
-  color: #888;
+  color: var(--dp-text3);
   margin-left: 10rpx;
   max-width: 160rpx;
   overflow: hidden;
@@ -305,7 +305,7 @@ export default {
 }
 .wlike-num {
   font-size: 22rpx;
-  color: #999;
+  color: var(--dp-text3);
   margin-left: 6rpx;
 }
 .empty {

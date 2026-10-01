@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view class="page" :class="{'theme-dark': isDark}">
     <!-- 搜索框 + 取消 -->
     <view class="search-row">
       <view class="search-box" :class="{ active: keyword }">
@@ -301,7 +301,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .search-row {
   display: flex;
@@ -312,18 +312,18 @@ export default {
   flex: 1;
   display: flex;
   align-items: center;
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 36rpx;
   padding: 16rpx 24rpx;
 }
 .search-box.active {
   border: 1.5rpx solid #ff2442;
-  background: #ffffff;
+  background: var(--dp-card);
 }
 .s-ring {
   width: 24rpx;
   height: 24rpx;
-  border: 3rpx solid #999999;
+  border: 3rpx solid var(--dp-text3);
   border-radius: 50%;
   margin-right: 14rpx;
   flex-shrink: 0;
@@ -333,10 +333,10 @@ export default {
   font-size: 28rpx;
 }
 .ph {
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .clear {
-  color: #b9c0c9;
+  color: var(--dp-text4);
   font-size: 36rpx;
   padding: 0 8rpx;
 }
@@ -349,7 +349,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 6rpx 24rpx 14rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .tab {
   font-size: 28rpx;
@@ -359,7 +359,7 @@ export default {
   position: relative;
 }
 .tab.on {
-  color: #1f2430;
+  color: var(--dp-text);
   font-weight: 600;
 }
 .tab.on::after {
@@ -384,7 +384,7 @@ export default {
 }
 .sec-clear {
   font-size: 24rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .sec-title {
   display: block;
@@ -398,7 +398,7 @@ export default {
   padding: 0 24rpx;
 }
 .hot-item {
-  background: #f6f7f9;
+  background: var(--dp-soft);
   border-radius: 999rpx;
   padding: 14rpx 30rpx;
   margin: 0 16rpx 16rpx 0;
@@ -407,11 +407,11 @@ export default {
 }
 .hot-text {
   font-size: 26rpx;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .hot-sub {
   font-size: 20rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
   margin-left: 12rpx;
 }
 .waterfall {
@@ -425,7 +425,7 @@ export default {
   margin-left: 16rpx;
 }
 .wcard {
-  background: #ffffff;
+  background: var(--dp-card);
   border-radius: 14rpx;
   overflow: hidden;
   margin-bottom: 16rpx;
@@ -445,18 +445,18 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: #eceef1;
+  background: var(--dp-soft);
 }
 .cover-empty-text {
   font-size: 22rpx;
-  color: #b9c0c9;
+  color: var(--dp-text4);
 }
 .wtitle {
   display: block;
   padding: 12rpx 14rpx 0;
   font-size: 25rpx;
   font-weight: 500;
-  color: #1f2430;
+  color: var(--dp-text);
   line-height: 1.4;
 }
 .wfoot {
@@ -467,11 +467,11 @@ export default {
 }
 .wauthor {
   font-size: 21rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .wlike {
   font-size: 21rpx;
-  color: #999999;
+  color: var(--dp-text3);
 }
 .user-list {
   padding: 8rpx 24rpx;
@@ -480,7 +480,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 22rpx 8rpx;
-  border-bottom: 1rpx solid #f1f3f5;
+  border-bottom: 1rpx solid var(--dp-line);
 }
 .u-avatar {
   width: 72rpx;
@@ -493,7 +493,7 @@ export default {
   flex: 1;
   margin-left: 22rpx;
   font-size: 30rpx;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .u-go {
   font-size: 24rpx;
@@ -507,14 +507,14 @@ export default {
   padding: 24rpx 24rpx 12rpx;
   font-size: 28rpx;
   font-weight: 600;
-  color: #1f2430;
+  color: var(--dp-text);
 }
 .empty {
   text-align: center;
   padding: 100rpx 0;
 }
 .muted {
-  color: #b9c0c9;
+  color: var(--dp-text4);
   font-size: 26rpx;
 }
 </style>
