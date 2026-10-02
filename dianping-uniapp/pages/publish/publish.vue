@@ -84,6 +84,12 @@
       </view>
       <view class="divider"></view>
 
+      <!-- 3.5 @提及：点选插入 @某人（后端按昵称解析并通知） -->
+      <view class="mention-row" @tap="openMention">
+        <image class="mention-ic" src="/static/icons/at.png" mode="aspectFit" />
+        <text class="mention-tx">@ 提及好友（选人插入昵称）</text>
+      </view>
+
       <!-- 4. 正文（无边框） -->
       <view class="count-wrap">
         <textarea
@@ -170,6 +176,35 @@
           </view>
         </view>
       </view>
+
+      <!-- @提及用户搜索弹层 -->
+      <view v-if="mentionShow" class="mask" @tap="mentionShow = false">
+        <view class="sheet" @tap.stop>
+          <view class="sheet-head">
+            <text class="sheet-title">@ 提及谁</text>
+            <text class="sheet-close" @tap="mentionShow = false">×</text>
+          </view>
+          <view class="mention-search">
+            <input
+              v-model="mentionKw"
+              class="mention-input"
+              placeholder="输入昵称搜索"
+              placeholder-class="ph"
+              @input="searchMention"
+            />
+          </view>
+          <scroll-view scroll-y class="mention-list">
+            <view v-for="u in mentionUsers" :key="u.userId" class="mention-item" @tap="pickMention(u)">
+              <image v-if="u.avatar" class="mention-avatar" :src="u.avatar" mode="aspectFill" />
+              <view v-else class="mention-avatar ph"><text class="mention-avatar-text">{{ (u.nickname || '?').slice(0, 1) }}</text></view>
+              <text class="mention-name">{{ u.nickname }}</text>
+            </view>
+            <view v-if="mentionKw && !mentionUsers.length" class="mention-empty">
+              <text class="muted">没搜到用户</text>
+            </view>
+          </scroll-view>
+        </view>
+      </view>
       <view class="poi-row-wrap">
         <image class="ficon-img" src="/static/icons/shop.png" />
         <input
@@ -222,7 +257,10 @@ export default {
       editId: '',
       statusBarHeight: 20,
       draftId: null,
-      draftCount: 0
+      draftCount: 0,
+      mentionShow: false,
+      mentionKw: '',
+      mentionUsers: []
     }
   },
   onLoad(query) {
@@ -589,6 +627,32 @@ export default {
     goDrafts() {
       uni.navigateTo({ url: '/pages/draftbox/draftbox' })
     },
+    /** @提及：打开选人弹层 */
+    openMention() {
+      this.mentionKw = ''
+      this.mentionUsers = []
+      this.mentionShow = true
+    },
+    /** 昵称搜索（复用 /user/search） */
+    async searchMention() {
+      const kw = (this.mentionKw || '').trim()
+      if (!kw) { this.mentionUsers = []; return }
+      try {
+        this.mentionUsers = (await request({
+          url: `/user/search?keyword=${encodeURIComponent(kw)}&limit=20`,
+          silent: true
+        })) || []
+      } catch (e) {
+        this.mentionUsers = []
+      }
+    },
+    /** 选中：在正文末尾插入 @昵称 + 空格 */
+    pickMention(u) {
+      const name = u.nickname || ''
+      if (!name) return
+      this.text = (this.text || '') + '@' + name + ' '
+      this.mentionShow = false
+    },
     fmtNow() {
       const p = (n) => (n < 10 ? '0' + n : '' + n)
       const d = new Date()
@@ -671,6 +735,64 @@ export default {
 .draft-banner-arrow {
   font-size: 30rpx;
   color: var(--dp-text4);
+}
+.mention-row {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 4rpx 6rpx;
+  margin: 0 24rpx;
+}
+.mention-ic {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 14rpx;
+}
+.mention-tx {
+  font-size: 26rpx;
+  color: #ff2442;
+}
+.mention-search {
+  padding: 16rpx 24rpx;
+}
+.mention-input {
+  background: var(--dp-soft);
+  border-radius: 14rpx;
+  padding: 18rpx 22rpx;
+  font-size: 28rpx;
+}
+.mention-list {
+  max-height: 520rpx;
+}
+.mention-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  border-bottom: 1rpx solid var(--dp-soft);
+}
+.mention-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  margin-right: 18rpx;
+  flex-shrink: 0;
+}
+.mention-avatar.ph {
+  background: linear-gradient(135deg, #ffb199, #ff2442);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mention-avatar-text {
+  font-size: 28rpx;
+  color: #ffffff;
+}
+.mention-name {
+  font-size: 28rpx;
+  color: var(--dp-text);
+}
+.mention-empty {
+  text-align: center;
+  padding: 40rpx 0;
 }
 .guide {
   margin-top: 120rpx;
