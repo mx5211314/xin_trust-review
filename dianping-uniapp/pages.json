@@ -63,6 +63,14 @@
     {
       "path": "pages/blocks/blocks",
       "style": { "navigationBarTitleText": "黑名单" }
+    },
+    {
+      "path": "pages/folders/folders",
+      "style": { "navigationBarTitleText": "收藏夹" }
+    },
+    {
+      "path": "pages/browse/browse",
+      "style": { "navigationBarTitleText": "浏览记录", "enablePullDownRefresh": true }
     }
   ],
   "subPackages": [

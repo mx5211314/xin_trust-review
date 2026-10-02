@@ -164,6 +164,14 @@
         <text class="menu-text">用户管理（后台）</text>
         <text class="menu-arrow">›</text>
       </view>
+      <view class="menu-item" @tap="goFolders">
+        <text class="menu-text">收藏夹管理</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" @tap="goBrowse">
+        <text class="menu-text">浏览记录</text>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
 
     <!-- 编辑资料弹层 -->
@@ -248,6 +256,18 @@ export default {
       if (uni.getStorageSync('dp_open_edit') === '1') {
         uni.removeStorageSync('dp_open_edit')
         setTimeout(() => this.openEdit(), 300)
+      }
+      // 收藏夹管理页点某夹 → 进收藏 tab 并预选该夹
+      const openFolder = uni.getStorageSync('dp_open_folder')
+      if (openFolder) {
+        uni.removeStorageSync('dp_open_folder')
+        this.tab = 'fav'
+        this.curFolder = String(openFolder)
+        this.page = 1
+        this.hasMore = true
+        this.list = []
+        this.loadFolders()
+        this.fetch()
       }
     } catch (e) { /* ignore */ }
   },
@@ -470,6 +490,12 @@ export default {
     },
     goAnnounce() {
       uni.navigateTo({ url: '/pagesAdmin/announce/announce' })
+    },
+    goFolders() {
+      uni.navigateTo({ url: '/pages/folders/folders' })
+    },
+    goBrowse() {
+      uni.navigateTo({ url: '/pages/browse/browse' })
     },
     doLogout() {
       uni.showModal({
