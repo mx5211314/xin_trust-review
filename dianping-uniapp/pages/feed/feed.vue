@@ -32,6 +32,21 @@
       @close="citySheet = false"
     />
 
+    <!-- 口碑榜常驻卡（首页信任感核心资产） -->
+    <view class="rankbar" v-if="rank.length" @tap="goRank">
+      <view class="rank-head">
+        <text class="rank-title">本周口碑榜</text>
+        <text class="rank-more">完整榜 ›</text>
+      </view>
+      <view class="rank-row">
+        <view class="rank-item" v-for="(r, i) in rank" :key="r.shop">
+          <text class="rank-no">{{ i + 1 }}</text>
+          <text class="rank-name">{{ r.shop }}</text>
+          <text class="rank-sub">{{ r.likeCount }} 赞 · {{ r.contentCount }} 篇</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 双列瀑布流 -->
     <view class="waterfall" v-if="list.length">
       <view class="col">
@@ -46,6 +61,10 @@
             />
             <view v-else class="cover cover-empty">
               <text class="cover-empty-text">{{ item.coverError ? '图片加载失败' : '视频' }}</text>
+            </view>
+            <view v-if="item.author && (item.author.role === 'REVIEWER' || item.author.role === 'ADMIN')" class="trust-badge">
+              <image class="trust-star" src="/static/icons/star-red.png" mode="aspectFit" />
+              <text class="trust-text">认证</text>
             </view>
             <view v-if="item.videoUrl" class="video-badge">
               <text class="video-badge-text">视频</text>
@@ -90,6 +109,10 @@
             />
             <view v-else class="cover cover-empty">
               <text class="cover-empty-text">{{ item.coverError ? '图片加载失败' : '视频' }}</text>
+            </view>
+            <view v-if="item.author && (item.author.role === 'REVIEWER' || item.author.role === 'ADMIN')" class="trust-badge">
+              <image class="trust-star" src="/static/icons/star-red.png" mode="aspectFit" />
+              <text class="trust-text">认证</text>
             </view>
             <view v-if="item.videoUrl" class="video-badge">
               <text class="video-badge-text">视频</text>
@@ -173,6 +196,7 @@ export default {
       hasMore: true,
       loading: false,
       unread: 0,
+      rank: [],
       statusBarHeight: 20
     }
   },
@@ -200,6 +224,7 @@ export default {
     }
     this.refresh()
     this.loadUnread()
+    this.loadRank()
   },
   onPullDownRefresh() {
     this.refresh().finally(() => uni.stopPullDownRefresh())
@@ -269,6 +294,17 @@ export default {
     },
     goDetail(item) {
       uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
+    },
+    /** 口碑榜：已上架按店铺聚合（篇数+总赞），首页常驻 Top3 */
+    async loadRank() {
+      try {
+        this.rank = await request({ url: '/content/rank-shops?limit=3', silent: true }) || []
+      } catch (e) {
+        this.rank = []
+      }
+    },
+    goRank() {
+      uni.navigateTo({ url: '/pages/rank/rank' })
     },
     async refresh() {
       this.page = 1
@@ -631,6 +667,93 @@ export default {
 .sk-img {
   height: 300rpx;
   border-radius: 0;
+}
+/* 口碑榜卡 */
+.rankbar {
+  margin: 14rpx 16rpx 4rpx;
+  border-radius: 18rpx;
+  background: linear-gradient(135deg, #ff5468, #ff2442 55%, #e01836);
+  padding: 18rpx 20rpx;
+  position: relative;
+  overflow: hidden;
+}
+.rankbar::after {
+  content: "";
+  position: absolute;
+  right: -20rpx;
+  top: -24rpx;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+.rank-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rank-title {
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+.rank-more {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 20rpx;
+}
+.rank-row {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+.rank-item {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 12rpx;
+  padding: 12rpx 14rpx;
+}
+.rank-no {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 30rpx;
+  color: #fff;
+}
+.rank-name {
+  font-size: 22rpx;
+  color: #fff;
+  font-weight: 600;
+  margin-top: 4rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rank-sub {
+  font-size: 18rpx;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 2rpx;
+}
+/* 卡片右上认证标（作者为点评人/管理员时） */
+.trust-badge {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999rpx;
+  padding: 3rpx 10rpx;
+}
+.trust-star {
+  width: 18rpx;
+  height: 18rpx;
+}
+.trust-text {
+  font-size: 18rpx;
+  color: #ff2442;
+  font-weight: 700;
 }
 .sk-img.short {
   height: 220rpx;

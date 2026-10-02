@@ -57,6 +57,10 @@
       "style": { "navigationBarTitleText": "合集" }
     },
     {
+      "path": "pages/rank/rank",
+      "style": { "navigationBarTitleText": "口碑榜" }
+    },
+    {
       "path": "pages/blocks/blocks",
       "style": { "navigationBarTitleText": "黑名单" }
     }
