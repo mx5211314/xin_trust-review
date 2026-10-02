@@ -27,6 +27,8 @@
       :show="citySheet"
       :current="cityCode"
       @select="onCityPicked"
+      @pick-province="onCityPicked"
+      @locate="onLocated"
       @close="citySheet = false"
     />
 
@@ -161,6 +163,7 @@ export default {
     return {
       tab: 'find',
       cityCode: uni.getStorageSync('dp_city') || '130100',
+      cityLabel: '',
       citySheet: false,
       followedIds: [],
       list: [],
@@ -182,7 +185,7 @@ export default {
     },
     /** 搜索框前的城市名：来自本地选择或定位结果（storage 持久化） */
     cityText() {
-      return regionName(this.cityCode)
+      return this.cityLabel || regionName(this.cityCode)
     }
   },
   onLoad() {
@@ -226,10 +229,22 @@ export default {
     openCitySheet() {
       this.citySheet = true
     },
-    /** 城市弹层回调（定位命中或手动选择）：持久化 → 自动切同城 tab 按城市过滤 */
+    /** 城市弹层回调（手动选市/选全省）：持久化 → 自动切同城 tab 按前缀过滤 */
     onCityPicked(hit) {
       this.cityCode = hit.code
+      this.cityLabel = hit.isProvince ? hit.name : ''
       try { uni.setStorageSync('dp_city', hit.code) } catch (e) { /* 存储失败不影响本次会话 */ }
+      this.citySheet = false
+      if (this.tab !== 'city') this.tab = 'city'
+      this.refresh()
+    },
+    /** 定位回调：精确到区县——过滤码用 adcode，展示用"城市·区县" */
+    onLocated(loc) {
+      this.cityCode = loc.adcode || ''
+      this.cityLabel = loc.districtName && loc.districtName !== loc.cityName
+        ? loc.cityName + '·' + loc.districtName
+        : loc.cityName
+      try { uni.setStorageSync('dp_city', this.cityCode) } catch (e) { /* ignore */ }
       this.citySheet = false
       if (this.tab !== 'city') this.tab = 'city'
       this.refresh()

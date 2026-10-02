@@ -119,15 +119,19 @@
         >
           <text class="tchip-text" :class="{ on: tags.includes(t) }"># {{ t }}</text>
         </view>
+        <!-- 自定义话题：不限于预设标签 -->
+        <view class="tchip tchip-new" @tap="addCustomTag">
+          <text class="tchip-text tchip-new-tx">＋ 自定义</text>
+        </view>
       </view>
       <view class="divider"></view>
 
-      <!-- 7. 地区：定位（自动填店铺名前缀）或手动选城市 -->
+      <!-- 7. 地区：精确定位（区县级，自动弹附近店铺）或手动选省/市 -->
       <view class="line-row" @tap="onRegionTap">
         <view class="row-left">
           <image class="ficon-img" src="/static/icons/location.png" />
-          <text class="line-topic" :class="{ picked: regionIndex >= 0 }">
-            {{ regionIndex >= 0 ? regionNames[regionIndex] : '添加地区' }}
+          <text class="line-topic" :class="{ picked: regionLabel }">
+            {{ regionLabel || '添加地区' }}
           </text>
         </view>
         <text class="arrow">▾</text>
@@ -136,17 +140,40 @@
         :show="citySheetShow"
         :current="regionCode"
         @select="onCityPick"
+        @pick-province="onProvincePick"
+        @locate="onLocated"
         @close="citySheetShow = false"
       />
+
+      <!-- 附近店铺弹层：定位后按距离列出真实 POI，点选自动填店铺名 -->
+      <view v-if="poiSheetShow" class="mask" @tap="poiSheetShow = false">
+        <view class="sheet" @tap.stop>
+          <view class="sheet-head">
+            <text class="sheet-title">附近的店铺</text>
+            <text class="sheet-close" @tap="poiSheetShow = false">×</text>
+          </view>
+          <view v-for="p in nearPois" :key="p.title" class="poi-item" @tap="pickPoi(p)">
+            <text class="poi-item-title">{{ p.title }}</text>
+            <text class="poi-item-addr">{{ p.address }}</text>
+          </view>
+          <view v-if="!nearPois.length" class="poi-empty">
+            <text class="muted">附近没搜到店铺，请手动填写</text>
+          </view>
+        </view>
+      </view>
       <view class="poi-row-wrap">
         <image class="ficon-img" src="/static/icons/shop.png" />
         <input
           v-model="poiName"
           class="input poi-input"
           :class="{ filled: poiName }"
-          placeholder="店铺名（选填）"
+          placeholder="店铺名（选填，可点右侧定位选店）"
           placeholder-class="ph"
         />
+        <view class="poi-locate" @tap="openNearPois">
+          <image class="poi-locate-ic" src="/static/icons/location.png" mode="aspectFit" />
+          <text class="poi-locate-tx">附近</text>
+        </view>
       </view>
       <view style="height: 60rpx"></view>
     </view>
@@ -156,10 +183,10 @@
 <script>
 import { request } from '@/utils/request'
 import { uploadFile } from '@/utils/upload'
-import { REGIONS } from '@/utils/config'
+import { REGIONS, regionName } from '@/utils/config'
 import { getUser } from '@/utils/auth'
 import { askSubscribeOnce } from '@/utils/subscribe'
-import { locateCity } from '@/utils/location'
+import { locateDetail, nearbyPois } from '@/utils/location'
 import CitySheet from '@/components/city-sheet/city-sheet.vue'
 
 export default {
@@ -174,6 +201,9 @@ export default {
       localVideo: null,
       regionIndex: -1,
       citySheetShow: false,
+      located: null, // 精确定位结果 { code(区县adcode), label, lat, lng }，设置后优先于手动选
+      poiSheetShow: false,
+      nearPois: [],
       regionNames: REGIONS.map(r => r.name),
       allTags: ['唐山美食', '探店', '咖啡', '遛娃', '拍照', '老店'],
       tags: [],
@@ -189,6 +219,11 @@ export default {
     try {
       this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 20
     } catch (e) { /* 默认值兜底 */ }
+    // 合并本地自定义话题（上次自定义过的话题进候选，持久可用）
+    try {
+      const saved = uni.getStorageSync('dp_custom_tags') || []
+      for (const t of saved) if (!this.allTags.includes(t)) this.allTags.push(t)
+    } catch (e) { /* ignore */ }
     if (query && query.id) {
       this.editId = query.id
       this.loadForEdit()
@@ -205,12 +240,39 @@ export default {
     this.role = u ? u.role : 'USER'
   },
   computed: {
-    /** 当前选中城市 code（city-sheet 高亮用；模板访问不到 import 的 REGIONS，走这里） */
+    /** 提交用地区码：精确定位(区县adcode) > 手动选市/省 */
     regionCode() {
+      if (this.located) return this.located.code
       return this.regionIndex >= 0 ? REGIONS[this.regionIndex].code : ''
+    },
+    /** 地区行显示文本 */
+    regionLabel() {
+      if (this.located) return this.located.label
+      return this.regionIndex >= 0 ? this.regionNames[this.regionIndex] : ''
     }
   },
   methods: {
+    /** 自定义话题：弹输入框（可输入任意话题），加入候选并选中，持久化到本地话题池 */
+    addCustomTag() {
+      uni.showModal({
+        title: '自定义话题',
+        editable: true,
+        placeholderText: '输入话题名（不带#，最多12字）',
+        success: (res) => {
+          if (!res.confirm) return
+          const t = (res.content || '').trim().replace(/^#+/, '').slice(0, 12)
+          if (!t) return
+          if (!this.allTags.includes(t)) {
+            this.allTags.push(t)
+            try {
+              const saved = uni.getStorageSync('dp_custom_tags') || []
+              if (!saved.includes(t)) uni.setStorageSync('dp_custom_tags', saved.concat(t))
+            } catch (e) { /* 存储失败不影响本次使用 */ }
+          }
+          if (!this.tags.includes(t) && this.tags.length < 5) this.tags.push(t)
+        }
+      })
+    },
     toggleTag(t) {
       const i = this.tags.indexOf(t)
       if (i >= 0) {
@@ -261,18 +323,43 @@ export default {
     removeVideo() {
       this.localVideo = null
     },
-    /** 地区行点击：优先定位（自动带出城市+店铺名前缀），或打开城市选择弹层 */
+    /**
+     * 编辑模式：拉详情回填文本字段（编辑不支持改图/视频，见 edit-tip 提示）。
+     * 注意：onLoad 调用了此方法但此前从未定义——编辑功能一直处于损坏状态，本次补齐。
+     */
+    async loadForEdit() {
+      try {
+        const c = await request({ url: `/content/${this.editId}` })
+        this.title = c.title || ''
+        this.text = c.text || ''
+        this.tags = Array.isArray(c.tags) ? c.tags : []
+        if (c.poiName) this.poiName = c.poiName
+        if (c.videoUrl) this.type = 'video'
+        if (c.regionCode) {
+          // 市级码直接匹配手动选择；区县级 adcode（定位发布）回显为 located
+          const idx = REGIONS.findIndex(r => r.code === c.regionCode)
+          if (idx >= 0) {
+            this.regionIndex = idx
+            this.located = null
+          } else {
+            const cityName = regionName(c.regionCode.slice(0, 4) + '00')
+            this.located = { code: c.regionCode, label: cityName || c.regionCode, lat: 0, lng: 0 }
+            this.regionIndex = -1
+          }
+        }
+      } catch (e) { /* request 已统一 toast */ }
+    },
+    /** 地区行点击：优先精确定位（区县级+自动弹附近店铺），或打开地区选择弹层 */
     onRegionTap() {
       uni.showActionSheet({
-        itemList: ['定位当前城市', '手动选择城市'],
+        itemList: ['定位当前位置（精确）', '手动选择地区'],
         success: (res) => {
           if (res.tapIndex === 0) {
             uni.showLoading({ title: '定位中…' })
-            locateCity()
-              .then((hit) => {
+            locateDetail()
+              .then((loc) => {
                 uni.hideLoading()
-                this.applyCity(hit)
-                uni.showToast({ title: '已定位到 ' + hit.name, icon: 'none', duration: 1200 })
+                this.applyLocated(loc)
               })
               .catch((e) => {
                 uni.hideLoading()
@@ -285,16 +372,56 @@ export default {
       })
     },
     /**
-     * 应用城市：填地区；店铺名为空时自动填「城市·」前缀
-     * （poiName 统一"城市·店名"格式，与 demo 数据/卡片展示一致，点评人接着补店名即可）
+     * 应用精确定位：地区填到区县（adcode），并自动弹出附近店铺列表供点选填店铺名。
+     * 搜索不到店铺时静默，店铺名手动填。
      */
-    applyCity(city) {
-      this.regionIndex = REGIONS.findIndex(r => r.code === city.code)
-      if (!this.poiName) this.poiName = city.name + '·'
+    applyLocated(loc) {
+      const label = loc.districtName && loc.districtName !== loc.cityName
+        ? loc.cityName + '·' + loc.districtName
+        : loc.cityName
+      this.located = { code: loc.adcode || '', label: label, lat: loc.lat, lng: loc.lng }
+      this.regionIndex = -1
+      uni.showToast({ title: '已定位 ' + label, icon: 'none', duration: 1000 })
+      this.openNearPois()
+    },
+    /** 附近店铺：定位坐标 → 腾讯 place API 按距离搜"美食"类 POI → 弹层点选 */
+    openNearPois() {
+      if (!this.located || !this.located.lat) {
+        uni.showToast({ title: '请先定位，再选择附近店铺', icon: 'none' })
+        return
+      }
+      uni.showLoading({ title: '搜索附近店铺…' })
+      nearbyPois(this.located.lat, this.located.lng, 1000, '美食')
+        .then((pois) => {
+          uni.hideLoading()
+          this.nearPois = pois
+          this.poiSheetShow = true
+        })
+        .catch((e) => {
+          uni.hideLoading()
+          uni.showToast({ title: e.message || '附近店铺搜索失败', icon: 'none', duration: 2000 })
+        })
+    },
+    pickPoi(p) {
+      this.poiName = p.title
+      this.poiSheetShow = false
+      // POI 的 adcode 比定位点更精确，顺手校准地区码
+      if (p.adcode && this.located) this.located.code = p.adcode
     },
     onCityPick(city) {
       this.citySheetShow = false
-      this.applyCity(city)
+      this.located = null
+      this.regionIndex = REGIONS.findIndex(r => r.code === city.code)
+    },
+    onProvincePick(prov) {
+      this.citySheetShow = false
+      // 选省：提交省级码，同城/地区过滤走前缀匹配（可召回全省内容）
+      this.located = { code: prov.code, label: prov.name + '（全省）', lat: 0, lng: 0 }
+      this.regionIndex = -1
+    },
+    onLocated(loc) {
+      this.citySheetShow = false
+      this.applyLocated(loc)
     },
     copyAdminPhone() {
       uni.setClipboardData({
@@ -308,7 +435,7 @@ export default {
     validate() {
       if (!this.title.trim()) return '标题不能为空'
       if (!this.text.trim()) return '正文不能为空'
-      if (this.regionIndex < 0) return '请选择地区'
+      if (this.regionIndex < 0 && !this.located) return '请选择地区'
       if (!this.editId && this.type === 'image' && this.localImages.length === 0) return '至少选一张图片'
       if (!this.editId && this.type === 'video' && !this.localVideo) return '请选择视频'
       return ''
@@ -349,7 +476,7 @@ export default {
           videoKey: videoKey || undefined,
           coverKey: coverKey || undefined,
           duration: duration || undefined,
-          regionCode: REGIONS[this.regionIndex].code,
+          regionCode: this.regionCode,
           tags: this.tags.length ? this.tags : undefined,
           poiName: this.poiName.trim() || undefined
         }
@@ -740,6 +867,89 @@ export default {
 .poi-input.filled {
   color: #ff2442;
   font-weight: 500;
+}
+/* "附近"入口：定位选附近店铺 */
+.poi-locate {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  flex-shrink: 0;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: var(--dp-accent-soft);
+}
+.poi-locate-ic {
+  width: 24rpx;
+  height: 24rpx;
+}
+.poi-locate-tx {
+  font-size: 22rpx;
+  color: #ff2442;
+  font-weight: 500;
+}
+/* 自定义话题 chip（虚线） */
+.tchip-new {
+  border: 1.5rpx dashed var(--dp-text4);
+  background: transparent;
+}
+.tchip-new-tx {
+  color: var(--dp-text3);
+}
+/* 附近店铺弹层 */
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 60;
+}
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 61;
+  background: var(--dp-card);
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 30rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+.sheet-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--dp-text);
+}
+.sheet-close {
+  font-size: 44rpx;
+  line-height: 44rpx;
+  color: var(--dp-text4);
+  padding: 0 10rpx;
+}
+.poi-item {
+  display: flex;
+  flex-direction: column;
+  padding: 20rpx 4rpx;
+  border-bottom: 1rpx solid var(--dp-soft);
+}
+.poi-item-title {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--dp-text);
+}
+.poi-item-addr {
+  font-size: 21rpx;
+  color: var(--dp-text4);
+  margin-top: 4rpx;
+}
+.poi-empty {
+  padding: 50rpx 0;
+  text-align: center;
 }
 .topic-chips {
   display: flex;

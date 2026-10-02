@@ -16,21 +16,38 @@ export const BASE_URL = 'http://192.168.1.113:18080'
 // #endif
 
 /** 地区列表（demo 用河北 11 市，按需增删） */
-export const REGIONS = [
-  { code: '130100', name: '石家庄' },
-  { code: '130200', name: '唐山' },
-  { code: '130300', name: '秦皇岛' },
-  { code: '130400', name: '邯郸' },
-  { code: '130500', name: '邢台' },
-  { code: '130600', name: '保定' },
-  { code: '130700', name: '张家口' },
-  { code: '130800', name: '承德' },
-  { code: '130900', name: '沧州' },
-  { code: '131000', name: '廊坊' },
-  { code: '131100', name: '衡水' }
+/**
+ * 省市区数据（可扩展）：以后加省份往 PROVINCES 里加一项即可。
+ * code 规则：省级=2位（如'13'），市级=6位；同城/地区过滤用前缀匹配（likeRight），
+ * 因此选省=按省前缀召回全省内容，选市=按市前缀召回（含区县发布的笔记）。
+ */
+export const PROVINCES = [
+  {
+    code: '13',
+    name: '河北省',
+    cities: [
+      { code: '130100', name: '石家庄' },
+      { code: '130200', name: '唐山' },
+      { code: '130300', name: '秦皇岛' },
+      { code: '130400', name: '邯郸' },
+      { code: '130500', name: '邢台' },
+      { code: '130600', name: '保定' },
+      { code: '130700', name: '张家口' },
+      { code: '130800', name: '承德' },
+      { code: '130900', name: '沧州' },
+      { code: '131000', name: '廊坊' },
+      { code: '131100', name: '衡水' }
+    ]
+  }
 ]
 
+/** 平铺城市列表（兼容旧引用：publish 的手动选择等） */
+export const REGIONS = PROVINCES.flatMap(p => p.cities)
+
 export function regionName(code) {
+  if (!code) return ''
+  const p = PROVINCES.find(x => x.code === code)
+  if (p) return p.name
   const r = REGIONS.find(item => item.code === code)
   return r ? r.name : code
 }

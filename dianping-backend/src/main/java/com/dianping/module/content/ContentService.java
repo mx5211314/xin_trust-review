@@ -130,7 +130,8 @@ public class ContentService {
     public Map<String, Object> feed(Long me, int page, int pageSize, String regionCode) {
         LambdaQueryWrapper<Content> w = new LambdaQueryWrapper<Content>()
                 .eq(Content::getStatus, "APPROVED")
-                .eq(regionCode != null && !regionCode.isBlank(), Content::getRegionCode, regionCode)
+                // 前缀匹配：传省级码('13')召回全省，传市级码('130200')召回该市（含区县级 adcode 发布的笔记）
+                .likeRight(regionCode != null && !regionCode.isBlank(), Content::getRegionCode, regionCode)
                 .orderByDesc(Content::getCreateTime);
         excludeHidden(me, w);
         Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize), w);
