@@ -107,6 +107,34 @@
         <text class="region" v-if="content.regionCode">{{ regionName(content.regionCode) }}</text>
       </view>
       <text class="time">编辑于 {{ content.createTime }}</text>
+
+      <!-- 同店铺其他点评（按 poiName 关联，单篇→店铺入口） -->
+      <view class="rel" v-if="related.length">
+        <view class="rel-head">
+          <text class="rel-title">同店铺其他点评</text>
+          <text class="rel-more" @tap="goPoi(content.poiName)">{{ related.length }} 篇 ›</text>
+        </view>
+        <scroll-view class="rel-scroll" scroll-x="true" :show-scrollbar="false">
+          <view
+            class="rel-card"
+            v-for="(r, i) in related"
+            :key="r.contentId"
+            @tap="goRelated(r)"
+          >
+            <image
+              v-if="!r.coverError && (r.coverUrl || (r.images && r.images.length))"
+              class="rel-cover"
+              :src="r.coverUrl || r.images[0]"
+              mode="aspectFill"
+              @error="r.coverError = true"
+            />
+            <view v-else class="rel-cover rel-cover-empty">
+              <text class="rel-cover-text">{{ r.coverError ? '图片失败' : '视频' }}</text>
+            </view>
+            <text class="rel-rt">{{ r.title }}</text>
+          </view>
+        </scroll-view>
+      </view>
     </view>
 
     <!-- 评论区 -->
@@ -265,6 +293,7 @@ export default {
       favPanelShow: false,
       folders: [],
       isBlockedAuthor: false,
+      related: [],
       reportReasons: ['色情低俗', '广告诈骗', '违法违规', '不实信息', '其他']
     }
   },
@@ -338,6 +367,7 @@ export default {
           this.loadComments()
           this.loadAuthorFollow()
           this.loadBlockState()
+          this.loadRelated()
         }
       } catch (e) {
         uni.showToast({ title: '内容不存在', icon: 'none' })
@@ -707,6 +737,27 @@ export default {
         })
       }
     },
+    /** 同店铺推荐：按 poiName 拉其他篇（排除当前） */
+    async loadRelated() {
+      if (!this.content || !this.content.poiName) {
+        this.related = []
+        return
+      }
+      try {
+        this.related = await request({
+          url: `/content/related?poiName=${encodeURIComponent(this.content.poiName)}&exclude=${this.id}&limit=8`,
+          silent: true
+        }) || []
+      } catch (e) {
+        this.related = []
+      }
+    },
+    /** 跳同店推荐篇（已在该页则原地刷新） */
+    goRelated(r) {
+      if (!r) return
+      if (String(r.contentId) === String(this.id)) return
+      uni.navigateTo({ url: '/pages/detail/detail?id=' + r.contentId })
+    },
     async doLike() {
       const c = this.content
       if (c.liked) {
@@ -729,7 +780,13 @@ export default {
     }
   },
   onShareAppMessage() {
-    return { title: this.content ? this.content.title : '本地点评' }
+    const c = this.content
+    const cover = c ? (c.coverUrl || (c.images && c.images.length ? c.images[0] : '')) : ''
+    return {
+      title: c ? c.title : '本地点评',
+      path: '/pages/detail/detail?id=' + this.id,
+      imageUrl: cover
+    }
   }
 }
 </script>
@@ -905,6 +962,65 @@ export default {
 .region {
   font-size: 24rpx;
   color: var(--dp-text3);
+}
+/* 同店铺其他点评（横滑） */
+.rel {
+  margin-top: 30rpx;
+  border-top: 1rpx solid var(--dp-line);
+  padding-top: 24rpx;
+}
+.rel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18rpx;
+}
+.rel-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--dp-text);
+}
+.rel-more {
+  font-size: 22rpx;
+  color: #ff2442;
+}
+.rel-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+.rel-card {
+  display: inline-block;
+  width: 220rpx;
+  margin-right: 18rpx;
+  vertical-align: top;
+}
+.rel-card:last-child {
+  margin-right: 0;
+}
+.rel-cover {
+  width: 220rpx;
+  height: 220rpx;
+  border-radius: 14rpx;
+  display: block;
+  background: var(--dp-soft);
+}
+.rel-cover-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rel-cover-text {
+  font-size: 22rpx;
+  color: var(--dp-text4);
+}
+.rel-rt {
+  display: block;
+  font-size: 23rpx;
+  color: var(--dp-text);
+  margin-top: 10rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .time {
   display: block;
