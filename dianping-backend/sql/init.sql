@@ -222,6 +222,12 @@ SET @e8 := (SELECT COUNT(*) FROM information_schema.TABLES
 SET @d8 := IF(@e8=0, 'CREATE TABLE subscribe_grant (id BIGINT NOT NULL, user_id BIGINT NOT NULL, template_key VARCHAR(30) NOT NULL, grant_count INT NOT NULL DEFAULT 0, update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY uk_user_tmpl (user_id, template_key)) COMMENT=''订阅消息授权额度''', 'SELECT 1');
 PREPARE s8 FROM @d8; EXECUTE s8; DEALLOCATE PREPARE s8;
 
+-- ---------- 关注话题迁移：user.followed_topics ----------
+SET @e9 := (SELECT COUNT(*) FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='user' AND COLUMN_NAME='followed_topics');
+SET @d9 := IF(@e9=0, 'ALTER TABLE `user` ADD COLUMN followed_topics VARCHAR(500) NOT NULL DEFAULT '''' COMMENT ''关注的话题，JSON数组'' AFTER status', 'SELECT 1');
+PREPARE s9 FROM @d9; EXECUTE s9; DEALLOCATE PREPARE s9;
+
 -- ---------- 初始管理员（dev 环境验证码固定 8888）----------
 INSERT INTO `user` (`id`, `phone`, `nickname`, `role`)
 VALUES (1, '13800000000', '管理员', 'ADMIN')

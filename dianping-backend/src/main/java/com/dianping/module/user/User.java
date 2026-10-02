@@ -24,6 +24,8 @@ public class User {
     private String status;
     /** 微信小程序 openid（微信登录/订阅消息用，未接入微信登录前为空） */
     private String openid;
+    /** 关注的话题（JSON 数组字符串），关注话题功能用 */
+    private String followedTopics;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     @TableLogic

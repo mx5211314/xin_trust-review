@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -261,6 +262,42 @@ public class UserController {
         return R.ok(blockService.listBlocks(currentUserId()));
     }
 
+    /** GET /user/followed-topics —— 我关注的话题列表 */
+    @GetMapping("/followed-topics")
+    public R<List<String>> followedTopics() {
+        User u = userMapper.selectById(currentUserId());
+        return R.ok(parseTopics(u == null ? null : u.getFollowedTopics()));
+    }
+
+    /** POST /user/follow-topic {topic} —— 关注话题 */
+    @PostMapping("/follow-topic")
+    public R<Void> followTopic(@org.springframework.web.bind.annotation.RequestBody java.util.Map<String, String> body) {
+        String t = body == null ? null : body.get("topic");
+        if (t == null || t.trim().isEmpty()) return R.ok();
+        t = t.trim().replaceAll("^#+", "").replaceAll("#$", "");
+        User u = userMapper.selectById(currentUserId());
+        List<String> topics = parseTopics(u.getFollowedTopics());
+        if (!topics.contains(t) && topics.size() < 50) {
+            topics.add(t);
+            u.setFollowedTopics(toJson(topics));
+            userMapper.updateById(u);
+        }
+        return R.ok();
+    }
+
+    /** DELETE /user/follow-topic/{topic} —— 取消关注（topic 经 URL 编码） */
+    @org.springframework.web.bind.annotation.DeleteMapping("/follow-topic/{topic}")
+    public R<Void> unfollowTopic(@PathVariable String topic) {
+        String t = java.net.URLDecoder.decode(topic, java.nio.charset.StandardCharsets.UTF_8);
+        User u = userMapper.selectById(currentUserId());
+        List<String> topics = parseTopics(u.getFollowedTopics());
+        if (topics.remove(t)) {
+            u.setFollowedTopics(toJson(topics));
+            userMapper.updateById(u);
+        }
+        return R.ok();
+    }
+
     /** GET /user/{userId}?page=&pageSize= —— 用户主页 + TA 的点评列表 */
     @GetMapping("/{userId}")
     public R<Map<String, Object>> profile(@PathVariable Long userId,
@@ -294,5 +331,25 @@ public class UserController {
             throw new BizException(ResultCode.UNAUTHORIZED);
         }
         return id;
+    }
+
+    /** 解析关注话题 JSON 数组（容错：空/非法返回空列表） */
+    private List<String> parseTopics(String raw) {
+        if (raw == null || raw.isBlank()) return new ArrayList<>();
+        try {
+            String[] arr = new com.fasterxml.jackson.databind.ObjectMapper().readValue(raw, String[].class);
+            return new ArrayList<>(java.util.List.of(arr));
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    /** 序列化为 JSON 数组字符串 */
+    private String toJson(List<String> topics) {
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(topics);
+        } catch (Exception e) {
+            return "[]";
+        }
     }
 }
