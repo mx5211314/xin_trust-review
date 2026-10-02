@@ -3,6 +3,9 @@
     <view class="hub-head">
       <text class="hub-title">{{ mode === 'topic' ? '#' + q : q }}</text>
       <text class="hub-sub">{{ total }} 篇内容</text>
+      <view v-if="mode === 'topic'" class="follow-btn" :class="{ on: isFollowingTopic }" @tap="toggleFollowTopic">
+        <text class="follow-btn-text">{{ isFollowingTopic ? '已关注' : '关注话题' }}</text>
+      </view>
     </view>
 
     <view v-if="loading && !list.length" class="waterfall">
@@ -102,6 +105,7 @@
 
 <script>
 import { request } from '@/utils/request'
+import { getUser } from '@/utils/auth'
 
 export default {
   data() {
@@ -116,13 +120,15 @@ export default {
       pageSize: 10,
       total: 0,
       loading: false,
-      finished: false
+      finished: false,
+      isFollowingTopic: false
     }
   },
   onLoad(query) {
     this.mode = query.mode === 'shop' ? 'shop' : 'topic'
     this.q = decodeURIComponent(query.q || '')
     uni.setNavigationBarTitle({ title: this.mode === 'topic' ? '话题' : '店铺' })
+    if (this.mode === 'topic' && getUser()) this.loadFollowState()
     this.load(true)
   },
   onReachBottom() {
@@ -164,6 +170,32 @@ export default {
     },
     goDetail(item) {
       uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
+    },
+    /** 话题模式：是否关注了当前话题（后端 followed_topics） */
+    async loadFollowState() {
+      try {
+        const list = await request({ url: '/user/followed-topics', silent: true }) || []
+        this.isFollowingTopic = list.indexOf(this.q) >= 0
+      } catch (e) {
+        this.isFollowingTopic = false
+      }
+    },
+    async toggleFollowTopic() {
+      if (!getUser()) {
+        uni.showToast({ title: '请先登录', icon: 'none' })
+        return
+      }
+      try {
+        if (this.isFollowingTopic) {
+          await request({ url: `/user/follow-topic/${encodeURIComponent(this.q)}`, method: 'DELETE' })
+          this.isFollowingTopic = false
+          uni.showToast({ title: '已取消关注', icon: 'none' })
+        } else {
+          await request({ url: '/user/follow-topic', method: 'POST', data: { topic: this.q } })
+          this.isFollowingTopic = true
+          uni.showToast({ title: '已关注', icon: 'none' })
+        }
+      } catch (e) { /* toast 已提示 */ }
     },
     shortName(author) {
       if (!author || !author.nickname) return '匿'
@@ -211,6 +243,24 @@ export default {
   color: rgba(255, 255, 255, 0.82);
   position: relative;
   z-index: 1;
+}
+.follow-btn {
+  position: absolute;
+  top: 34rpx;
+  right: 28rpx;
+  z-index: 2;
+  padding: 10rpx 28rpx;
+  border-radius: 999rpx;
+  background: #ff2442;
+  border: 1rpx solid #ff2442;
+}
+.follow-btn.on {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.follow-btn-text {
+  font-size: 24rpx;
+  color: #ffffff;
 }
 .waterfall {
   display: flex;

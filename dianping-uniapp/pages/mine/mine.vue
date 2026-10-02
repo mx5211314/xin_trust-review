@@ -176,6 +176,10 @@
         <text class="menu-text">草稿箱</text>
         <text class="menu-arrow">›</text>
       </view>
+      <view class="menu-item" @tap="goTopics">
+        <text class="menu-text">关注的话题</text>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
 
     <!-- 编辑资料弹层 -->
@@ -503,6 +507,9 @@ export default {
     },
     goDraftbox() {
       uni.navigateTo({ url: '/pages/draftbox/draftbox' })
+    },
+    goTopics() {
+      uni.navigateTo({ url: '/pages/topics/topics' })
     },
     doLogout() {
       uni.showModal({

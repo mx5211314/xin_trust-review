@@ -75,6 +75,10 @@
     {
       "path": "pages/draftbox/draftbox",
       "style": { "navigationBarTitleText": "草稿箱" }
+    },
+    {
+      "path": "pages/topics/topics",
+      "style": { "navigationBarTitleText": "关注的话题" }
     }
   ],
   "subPackages": [
