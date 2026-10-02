@@ -1,46 +1,49 @@
 <template>
   <view class="page" :class="{'theme-dark': isDark}">
-    <view class="deco deco-1"></view>
-    <view class="deco deco-2"></view>
-
-    <!-- 好评脸 logo：红圆 + 微笑 + 星形右眼 -->
-    <view class="logo-wrap">
-      <view class="logo">
-        <view class="eye eye-l"></view>
-        <text class="star">★</text>
-        <view class="mouth"></view>
+    <!-- 品牌区：红渐变 + 波点纹理 + 白脸好评脸 -->
+    <view class="hero">
+      <view class="hero-dots"></view>
+      <view class="logo-wrap">
+        <view class="logo">
+          <view class="eye eye-l"></view>
+          <text class="star">★</text>
+          <view class="mouth"></view>
+        </view>
+        <text class="app-name">本地点评</text>
+        <text class="slogan">每一条点评，都来自可信的人</text>
       </view>
-      <text class="app-name">本地点评</text>
-      <text class="slogan">每一条点评，都来自可信的人</text>
     </view>
 
-    <view class="form">
-      <input
-        v-model="phone"
-        class="input"
-        type="number"
-        maxlength="11"
-        placeholder="手机号"
-        placeholder-class="ph"
-      />
-      <view class="code-row">
+    <!-- 表单浮卡：压在品牌区上形成层次 -->
+    <view class="form-card">
+      <view class="form">
         <input
-          v-model="code"
-          class="input code-input"
+          v-model="phone"
+          class="input"
           type="number"
-          maxlength="6"
-          placeholder="验证码"
+          maxlength="11"
+          placeholder="手机号"
           placeholder-class="ph"
         />
-        <view class="code-btn" @tap="getSms">
-          <text class="code-btn-text">{{ smsText }}</text>
+        <view class="code-row">
+          <input
+            v-model="code"
+            class="input code-input"
+            type="number"
+            maxlength="6"
+            placeholder="验证码"
+            placeholder-class="ph"
+          />
+          <view class="code-btn" @tap="getSms">
+            <text class="code-btn-text">{{ smsText }}</text>
+          </view>
         </view>
+        <button class="btn-primary login-btn" :class="{ disabled: !canSubmit }" @tap="doLogin">
+          登 录
+        </button>
+        <text class="tip">新用户验证通过后自动注册</text>
+        <text class="tip">普通用户可浏览 · 点评人可发布</text>
       </view>
-      <button class="btn-primary login-btn" :class="{ disabled: !canSubmit }" @tap="doLogin">
-        登 录
-      </button>
-      <text class="tip">新用户验证通过后自动注册</text>
-      <text class="tip">普通用户可浏览 · 点评人可发布</text>
     </view>
   </view>
 </template>
@@ -115,45 +118,40 @@ export default {
   position: relative;
   overflow: hidden;
 }
-.deco {
+/* 品牌区：红渐变 + 波点纹理，白脸 logo 反转聚焦 */
+.hero {
+  background: linear-gradient(160deg, #ff4d64, #ff2442 45%, #d91c38);
+  padding: 150rpx 0 130rpx;
+  position: relative;
+  overflow: hidden;
+}
+.hero-dots {
   position: absolute;
-  border-radius: 50%;
-}
-.deco-1 {
-  width: 220rpx;
-  height: 220rpx;
-  background: var(--dp-accent-soft);
-  top: -60rpx;
-  right: -60rpx;
-}
-.deco-2 {
-  width: 130rpx;
-  height: 130rpx;
-  background: #fff1e6;
-  top: 220rpx;
-  left: -50rpx;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 3rpx, transparent 3rpx);
+  background-size: 36rpx 36rpx;
 }
 .logo-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 170rpx;
   position: relative;
 }
-/* 好评脸：红圆 + 两眼（右眼是星）+ 微笑弧 */
+/* 好评脸：白圆反转 + 红眼（右眼是星）+ 红微笑弧 */
 .logo {
   width: 170rpx;
   height: 170rpx;
   border-radius: 50%;
-  background: #ff2442;
+  background: #ffffff;
   position: relative;
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.18);
 }
 .eye {
   position: absolute;
   width: 20rpx;
   height: 20rpx;
   border-radius: 50%;
-  background: var(--dp-card);
+  background: #ff2442;
   top: 56rpx;
 }
 .eye-l {
@@ -163,7 +161,7 @@ export default {
   position: absolute;
   right: 34rpx;
   top: 44rpx;
-  color: #ffffff;
+  color: #ff2442;
   font-size: 40rpx;
   line-height: 40rpx;
 }
@@ -173,23 +171,32 @@ export default {
   right: 45rpx;
   bottom: 34rpx;
   height: 34rpx;
-  border-bottom: 10rpx solid #ffffff;
+  border-bottom: 10rpx solid #ff2442;
   border-radius: 0 0 70rpx 70rpx;
 }
 .app-name {
   margin-top: 36rpx;
   font-size: 42rpx;
-  font-weight: 500;
-  color: var(--dp-text);
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 8rpx;
 }
 .slogan {
   margin-top: 14rpx;
   font-size: 24rpx;
-  color: var(--dp-text3);
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 3rpx;
+}
+/* 表单浮卡 */
+.form-card {
+  margin: -80rpx 44rpx 0;
+  background: var(--dp-card);
+  border-radius: 28rpx;
+  padding: 44rpx 40rpx 36rpx;
+  box-shadow: 0 16rpx 48rpx rgba(31, 36, 48, 0.1);
+  position: relative;
 }
 .form {
-  margin-top: 90rpx;
-  padding: 0 60rpx;
   position: relative;
 }
 .input {
@@ -226,6 +233,8 @@ export default {
   margin-top: 44rpx;
   height: 96rpx;
   line-height: 96rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 10rpx 28rpx rgba(255, 36, 66, 0.32);
 }
 .tip {
   display: block;

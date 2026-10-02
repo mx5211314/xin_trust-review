@@ -176,21 +176,41 @@ export default {
 <style scoped>
 .hub {
   min-height: 100vh;
-  background: #f5f5f7;
+  background: var(--dp-bg);
 }
 .hub-head {
-  padding: 28rpx 28rpx 12rpx;
+  padding: 34rpx 28rpx 30rpx;
+  background: linear-gradient(160deg, #2c3e50, #4a6274 75%, #5e8c61 130%);
+  position: relative;
+  overflow: hidden;
+}
+/* 巨号 # 水印锚点（低成本高记忆，原型09） */
+.hub-head::after {
+  content: '#';
+  position: absolute;
+  right: 4rpx;
+  bottom: -70rpx;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 240rpx;
+  color: rgba(255, 255, 255, 0.12);
+  line-height: 1;
 }
 .hub-title {
-  font-size: 40rpx;
+  font-size: 44rpx;
   font-weight: 700;
-  color: var(--dp-text);
+  color: #ffffff;
+  position: relative;
+  z-index: 1;
+  word-break: break-all;
 }
 .hub-sub {
   display: block;
-  margin-top: 8rpx;
+  margin-top: 10rpx;
   font-size: 24rpx;
-  color: var(--dp-text3);
+  color: rgba(255, 255, 255, 0.82);
+  position: relative;
+  z-index: 1;
 }
 .waterfall {
   display: flex;

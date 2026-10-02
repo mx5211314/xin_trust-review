@@ -88,11 +88,14 @@
       </view>
       <view class="divider"></view>
 
-      <!-- 5. 类型切换（轻量小标签） -->
+      <!-- 5. 类型切换（分段钮，原型05） -->
       <view class="type-row">
-        <text class="type-tab" :class="{ active: type === 'image' }" @tap="type = 'image'">图文</text>
-        <text class="type-sep">|</text>
-        <text class="type-tab" :class="{ active: type === 'video' }" @tap="type = 'video'">视频</text>
+        <view class="type-tab" :class="{ active: type === 'image' }" @tap="type = 'image'">
+          <text class="type-tab-tx">图文</text>
+        </view>
+        <view class="type-tab" :class="{ active: type === 'video' }" @tap="type = 'video'">
+          <text class="type-tab-tx">视频</text>
+        </view>
       </view>
       <view class="divider"></view>
 
@@ -136,6 +139,7 @@
         <input
           v-model="poiName"
           class="input poi-input"
+          :class="{ filled: poiName }"
           placeholder="店铺名（选填）"
           placeholder-class="ph"
         />
@@ -511,20 +515,27 @@ export default {
 .type-row {
   display: flex;
   align-items: center;
+  gap: 18rpx;
   padding: 22rpx 4rpx;
 }
 .type-tab {
-  font-size: 28rpx;
+  flex: 1;
+  text-align: center;
+  border: 1rpx solid var(--dp-line);
+  border-radius: 12rpx;
+  padding: 14rpx 0;
+}
+.type-tab-tx {
+  font-size: 26rpx;
   color: var(--dp-text3);
 }
 .type-tab.active {
-  color: #ff2442;
-  font-weight: 500;
+  border-color: #ff2442;
+  background: var(--dp-accent-soft);
 }
-.type-sep {
-  font-size: 24rpx;
-  color: #e5e7eb;
-  margin: 0 20rpx;
+.type-tab.active .type-tab-tx {
+  color: #ff2442;
+  font-weight: 600;
 }
 .textarea {
   background: var(--dp-card);
@@ -678,6 +689,11 @@ export default {
   padding-left: 4rpx;
   padding-top: 0;
   padding-bottom: 24rpx;
+}
+/* 已填店铺名红色显示（原型05：已选 POI 强调） */
+.poi-input.filled {
+  color: #ff2442;
+  font-weight: 500;
 }
 .topic-chips {
   display: flex;
