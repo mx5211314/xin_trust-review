@@ -41,8 +41,21 @@
             <text class="hot-text">{{ w }}</text>
           </view>
         </view>
-        <text class="sec-title">猜你想搜</text>
-        <view class="hot-wrap">
+        <view class="sec-head">
+          <text class="sec-title">热搜榜</text>
+          <text class="sec-note">按近期点评热度</text>
+        </view>
+        <view v-if="hotTags.length" class="rank-card">
+          <view v-for="(t, i) in hotTags.slice(0, 8)" :key="i" class="hrow" @tap="tapTag(t.tag)">
+            <text class="hno" :class="{ r1: i === 0, r2: i === 1, r3: i === 2 }">{{ i + 1 }}</text>
+            <view class="htx-wrap">
+              <text class="htx">{{ t.tag }}</text>
+              <text v-if="i < 2" class="htag">热</text>
+            </view>
+            <text class="hsc">{{ hotCount(t.count) }}</text>
+          </view>
+        </view>
+        <view v-else class="hot-wrap">
           <view v-for="(w, i) in hotWords" :key="i" class="hot-item" @tap="tapHot(w)">
             <text class="hot-text">{{ w }}</text>
           </view>
@@ -211,6 +224,11 @@ export default {
     tapHot(w) {
       this.keyword = w
       this.doSearch()
+    },
+    /** 热度值格式化：128 -> "128"，23456 -> "2.3w" */
+    hotCount(n) {
+      const v = Number(n) || 0
+      return v >= 10000 ? (v / 10000).toFixed(1).replace(/\.0$/, '') + 'w' : String(v)
     },
     switchTab(t) {
       this.tab = t
@@ -399,6 +417,78 @@ export default {
 .sec-clear {
   font-size: 24rpx;
   color: var(--dp-text3);
+}
+.sec-note {
+  font-size: 20rpx;
+  color: var(--dp-text4);
+}
+/* 热搜榜列表卡：排名 1-3 红橙大字 + 热度值（对标大众点评热搜分层） */
+.rank-card {
+  background: var(--dp-card);
+  border-radius: 20rpx;
+  margin: 4rpx 24rpx 12rpx;
+  padding: 6rpx 26rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
+}
+.hrow {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--dp-soft);
+}
+.hrow:last-child {
+  border-bottom: none;
+}
+.hno {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  width: 44rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--dp-text4);
+  flex-shrink: 0;
+}
+.hno.r1 {
+  color: #ff2442;
+  font-size: 34rpx;
+}
+.hno.r2 {
+  color: #ff6b42;
+  font-size: 31rpx;
+}
+.hno.r3 {
+  color: #ff9f43;
+  font-size: 29rpx;
+}
+.htx-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.htx {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--dp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.htag {
+  font-size: 18rpx;
+  color: #ff2442;
+  border: 1rpx solid rgba(255, 36, 66, 0.4);
+  border-radius: 6rpx;
+  padding: 0 8rpx;
+  margin-left: 10rpx;
+  flex-shrink: 0;
+}
+.hsc {
+  font-size: 20rpx;
+  color: var(--dp-text4);
+  flex-shrink: 0;
 }
 .sec-title {
   display: block;
