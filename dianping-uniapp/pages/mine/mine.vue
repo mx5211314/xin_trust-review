@@ -4,13 +4,22 @@
     <view class="head">
       <view class="deco"></view>
       <view class="head-row">
-        <view class="avatar">
-          <text class="avatar-text">{{ shortName }}</text>
+        <view class="avatar-wrap" @tap="changeAvatar">
+          <view class="avatar">
+            <image v-if="user && user.avatar" class="avatar-img" :src="user.avatar" mode="aspectFill" />
+            <text v-else class="avatar-text">{{ shortName }}</text>
+          </view>
+          <view class="cam-badge">
+            <image class="cam-img" src="/static/icons/camera.png" mode="aspectFit" />
+          </view>
         </view>
         <view class="head-info">
           <view class="name-row">
             <text class="nickname">{{ user ? user.nickname : '-' }}</text>
-            <text v-if="user && user.role === 'REVIEWER'" class="tag tag-reviewer">点评人</text>
+            <view v-if="user && user.role === 'REVIEWER'" class="tag tag-reviewer">
+              <image class="tag-star" src="/static/icons/star-red.png" mode="aspectFit" />
+              <text>点评人</text>
+            </view>
             <text v-else-if="user && user.role === 'ADMIN'" class="tag tag-admin">管理员</text>
           </view>
           <text class="muted head-muted">点评号：{{ dianpingNo }}</text>
@@ -181,7 +190,7 @@
 
 <script>
 import { request } from '@/utils/request'
-import { getUser, logout, isAdmin } from '@/utils/auth'
+import { getUser, setUserInfo, logout, isAdmin } from '@/utils/auth'
 import { uploadFile } from '@/utils/upload'
 
 export default {
@@ -249,6 +258,39 @@ export default {
     }
   },
   methods: {
+    /** 点击头像：更换头像（选图 → 传 OSS → PUT /user/profile → 同步本地 → 刷新） */
+    changeAvatar() {
+      uni.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        success: async (res) => {
+          const temp = res.tempFilePaths && res.tempFilePaths[0]
+          if (!temp) return
+          uni.showLoading({ title: '上传中…' })
+          try {
+            const up = await uploadFile(temp, 'image')
+            await request({
+              url: '/user/profile',
+              method: 'PUT',
+              data: {
+                nickname: (this.user && this.user.nickname) || '',
+                avatar: up.key,
+                bio: (this.user && this.user.bio) || ''
+              }
+            })
+            // 同步本地登录态，下次进入头像不丢
+            const u = getUser() || {}
+            setUserInfo(Object.assign({}, u, { avatar: up.url || u.avatar }))
+            uni.hideLoading()
+            uni.showToast({ title: '头像已更新', icon: 'success' })
+            this.page = 1
+            this.fetch()
+          } catch (e) {
+            uni.hideLoading()
+          }
+        }
+      })
+    },
     async fetch(append) {
       this.loading = true
       try {
@@ -464,6 +506,10 @@ export default {
   align-items: center;
   position: relative;
 }
+.avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
 .avatar {
   width: 120rpx;
   height: 120rpx;
@@ -474,6 +520,32 @@ export default {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: visible;
+}
+.avatar-img {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  display: block;
+}
+/* 相机角标：提示可点击更换头像 */
+.cam-badge {
+  position: absolute;
+  right: 20rpx;
+  bottom: 0;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: rgba(31, 36, 48, 0.72);
+  border: 3rpx solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.cam-img {
+  width: 24rpx;
+  height: 24rpx;
 }
 .avatar-text {
   font-size: 52rpx;

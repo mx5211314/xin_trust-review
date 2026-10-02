@@ -3,7 +3,8 @@
     <!-- 居中头部 -->
     <view class="head">
       <view class="avatar">
-        <text class="avatar-text">{{ shortName }}</text>
+        <image v-if="profile && profile.avatar" class="avatar-img" :src="profile.avatar" mode="aspectFill" />
+        <text v-else class="avatar-text">{{ shortName }}</text>
       </view>
       <text class="nickname">{{ profile ? profile.nickname : '-' }}</text>
       <view class="badge-row">
@@ -124,6 +125,13 @@ export default {
     }
   },
   computed: {
+    /** 瀑布流左右列（建页时漏了这个 computed，导致他人主页列表永远空白） */
+    leftList() {
+      return this.list.filter((_, i) => i % 2 === 0)
+    },
+    rightList() {
+      return this.list.filter((_, i) => i % 2 === 1)
+    },
     isReviewerRole() {
       return this.profile && (this.profile.role === 'REVIEWER' || this.profile.role === 'ADMIN')
     },
@@ -154,6 +162,9 @@ export default {
   },
   methods: {
     noop() { /* 占位 */ },
+    goDetail(item) {
+      uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
+    },
     async fetch(append) {
       this.loading = true
       try {
@@ -286,6 +297,12 @@ export default {
   font-size: 60rpx;
   color: #ffffff;
   font-weight: 500;
+}
+.avatar-img {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 50%;
+  display: block;
 }
 .nickname {
   font-size: 36rpx;
