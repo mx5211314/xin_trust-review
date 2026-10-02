@@ -48,7 +48,7 @@
     <view v-if="tab === 'announce'">
       <view v-for="a in announces" :key="a.notifyId" class="item" :class="{ unread: !a.isRead }" @tap="tapAnnounce(a)">
         <view class="icon announce-icon">
-          <text class="icon-text">📢</text>
+          <image class="icon-img" src="/static/icons/announce.png" mode="aspectFit" />
         </view>
         <view class="body">
           <view class="line1">
@@ -488,12 +488,12 @@ export default {
   color: #ff2442;
 }
 .announce-icon {
-  background: #fff7e8;
+  background: #ffeef1;
 }
 .announce-tag {
   font-size: 20rpx;
-  color: #b8860b;
-  background: #fff7e8;
+  color: #ff2442;
+  background: #ffeef1;
   border-radius: 6rpx;
   padding: 2rpx 10rpx;
   margin-left: 10rpx;
@@ -531,7 +531,7 @@ export default {
   background: #e6f4ef;
 }
 .icon-AUDIT_PASS, .icon-AUDIT_REJECT {
-  background: #eeedfe;
+  background: #f2f3f5;
 }
 .icon-img {
   width: 40rpx;
@@ -539,9 +539,6 @@ export default {
 }
 .icon-FOLLOW .icon-text {
   color: #0e7c66;
-}
-.icon-AUDIT_PASS .icon-text, .icon-AUDIT_REJECT .icon-text {
-  color: #3c3489;
 }
 .body {
   flex: 1;

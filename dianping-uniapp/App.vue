@@ -60,8 +60,8 @@ page {
   color: #ff2442;
 }
 .tag-admin {
-  background: #eeedfe;
-  color: #3c3489;
+  background: #1f2430;
+  color: #ffffff;
 }
 .tag-banned {
   background: #fcebeb;
