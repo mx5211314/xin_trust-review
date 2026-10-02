@@ -49,6 +49,13 @@ public class AdminController {
         return R.ok(contentService.adminVoPage(status, page, pageSize));
     }
 
+    /** GET /admin/stats —— 后台统计头（待审/今日通过/今日驳回/驳回率） */
+    @GetMapping("/stats")
+    @RequireRole({"ADMIN"})
+    public R<Map<String, Object>> stats() {
+        return R.ok(adminService.adminStats());
+    }
+
     /** GET /admin/content/{id} —— 后台看单条详情（任意状态） */
     @GetMapping("/content/{id}")
     @RequireRole({"ADMIN"})

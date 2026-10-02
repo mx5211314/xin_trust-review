@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import com.dianping.module.content.ContentService;
 import com.dianping.module.notify.NotifyService;
 
@@ -51,6 +52,27 @@ public class AdminService {
         Content c = mustGet(id);
         c.setStatus("TAKEN_DOWN");
         contentMapper.updateById(c);
+    }
+
+    /** 后台统计头：待审 / 今日通过 / 今日驳回 / 驳回率（管理台重构用） */
+    public Map<String, Object> adminStats() {
+        long pending = contentMapper.selectCount(new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "PENDING"));
+        java.time.LocalDateTime start = java.time.LocalDate.now().atStartOfDay();
+        long todayPassed = contentMapper.selectCount(new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "APPROVED")
+                .ge(Content::getAuditTime, start));
+        long todayRejected = contentMapper.selectCount(new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "REJECTED")
+                .ge(Content::getAuditTime, start));
+        long decided = todayPassed + todayRejected;
+        double rate = decided == 0 ? 0 : (todayRejected * 100.0 / decided);
+        Map<String, Object> m = new java.util.HashMap<>();
+        m.put("pending", pending);
+        m.put("todayPassed", todayPassed);
+        m.put("todayRejected", todayRejected);
+        m.put("rejectRate", Math.round(rate * 10) / 10.0);
+        return m;
     }
 
     public Object userList(String keyword, int page, int pageSize) {

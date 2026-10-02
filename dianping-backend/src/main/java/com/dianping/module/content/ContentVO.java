@@ -26,7 +26,9 @@ public record ContentVO(
         Boolean liked,
         Boolean favorited,
         String createTime,
-        Author author) {
+        Author author,
+        /** 浏览时间（仅 /user/browse 列表填充，正常流为空串） */
+        String viewTime) {
 
     public record Author(String userId, String nickname, String avatar, String role) {
     }

@@ -218,6 +218,29 @@ public class UserController {
         return R.ok(java.util.Collections.singletonMap("folderId", String.valueOf(id)));
     }
 
+    /** PATCH /favorite/folder/{folderId} {name} —— 重命名收藏夹 */
+    @org.springframework.web.bind.annotation.PatchMapping("/favorite/folder/{folderId}")
+    public R<Void> renameFolder(@PathVariable Long folderId,
+                                @org.springframework.web.bind.annotation.RequestBody java.util.Map<String, String> body) {
+        favoriteService.renameFolder(currentUserId(), folderId, body == null ? null : body.get("name"));
+        return R.ok();
+    }
+
+    /** DELETE /favorite/folder/{folderId} —— 删除收藏夹（夹内收藏回落"未分类"，不删笔记） */
+    @org.springframework.web.bind.annotation.DeleteMapping("/favorite/folder/{folderId}")
+    public R<Void> deleteFolder(@PathVariable Long folderId) {
+        favoriteService.deleteFolder(currentUserId(), folderId);
+        return R.ok();
+    }
+
+    /** GET /user/browse?page=&pageSize= —— 我的浏览记录（覆盖式去重，按最近浏览倒序） */
+    @GetMapping("/browse")
+    public R<Map<String, Object>> browse(@RequestParam(defaultValue = "1") int page,
+                                         @RequestParam(defaultValue = "20") int pageSize) {
+        Long me = currentUserId();
+        return R.ok(contentService.browseList(me, page, pageSize));
+    }
+
     /** POST /user/{id}/block —— 拉黑 */
     @PostMapping("/{id}/block")
     public R<Void> block(@PathVariable Long id) {

@@ -110,6 +110,20 @@ public class ContentController {
         return R.ok(contentService.hotShops(limit));
     }
 
+    /** GET /content/rank-shops?limit= —— 口碑榜：已上架内容按店铺(poiName)聚合篇数+总赞数，按赞数倒序 */
+    @GetMapping("/rank-shops")
+    public R<List<Map<String, Object>>> rankShops(@RequestParam(defaultValue = "20") int limit) {
+        return R.ok(contentService.rankShops(limit));
+    }
+
+    /** GET /content/related?poiName=&exclude=&limit= —— 同店铺其他点评（详情页横滑推荐） */
+    @GetMapping("/related")
+    public R<List<ContentVO>> related(@RequestParam String poiName,
+                                      @RequestParam(required = false) Long exclude,
+                                      @RequestParam(defaultValue = "6") int limit) {
+        return R.ok(contentService.relatedByPoi(poiName, exclude, limit));
+    }
+
     /** POST /content/{id}/view —— 浏览计数上报 */
     @PostMapping("/{id}/view")
     public R<Void> view(@PathVariable Long id) {

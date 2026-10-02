@@ -118,6 +118,35 @@ public class FavoriteService {
         return f.getId();
     }
 
+    /** 重命名收藏夹（校验归属；空名忽略） */
+    public void renameFolder(Long me, long folderId, String name) {
+        FavoriteFolder f = folderMapper.selectById(folderId);
+        if (f == null || !me.equals(f.getUserId())) {
+            throw new BizException(ResultCode.NOT_FOUND, "收藏夹不存在");
+        }
+        String n = (name == null ? "" : name.trim());
+        if (n.isEmpty()) return;
+        if (n.length() > 20) n = n.substring(0, 20);
+        f.setName(n);
+        folderMapper.updateById(f);
+    }
+
+    /** 删除收藏夹：夹内收藏回落"未分类"(folderId=0)，不删笔记 */
+    public void deleteFolder(Long me, long folderId) {
+        FavoriteFolder f = folderMapper.selectById(folderId);
+        if (f == null || !me.equals(f.getUserId())) {
+            throw new BizException(ResultCode.NOT_FOUND, "收藏夹不存在");
+        }
+        folderMapper.deleteById(folderId);
+        // 该夹收藏回落未分类（仅 type=FAV 且 folderId 命中）
+        UserAction upd = new UserAction();
+        upd.setFolderId(0L);
+        userActionMapper.update(upd, new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<UserAction>()
+                .eq("user_id", me)
+                .eq("type", UserAction.TYPE_FAV)
+                .eq("folder_id", folderId));
+    }
+
     /** 我的收藏夹列表（含每个夹的收藏数 + 未分类聚合） */
     public List<Map<String, Object>> listFolders(Long me) {
         long uncategorized = userActionMapper.selectCount(new LambdaQueryWrapper<UserAction>()

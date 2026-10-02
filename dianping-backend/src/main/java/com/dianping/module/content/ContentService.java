@@ -198,7 +198,7 @@ public class ContentService {
                         .eq(status != null && !status.isBlank(), Content::getStatus, status)
                         .orderByDesc(Content::getCreateTime));
         List<ContentVO> vos = p.getRecords().stream()
-                .map(c -> toVo(c, null, false, true, false, 0, 0))
+                .map(c -> toVo(c, null, false, true, false, 0, 0, ""))
                 .toList();
         Map<String, Object> data = new java.util.HashMap<>();
         data.put("total", p.getTotal());
@@ -328,9 +328,101 @@ public class ContentService {
         return pageResult(me, p);
     }
 
-    /** 浏览计数 +1（详情页打开时上报） */
+    /** 浏览计数 +1（详情页打开时上报）；登录态下同时记一条覆盖式浏览记录（供"浏览记录"时间线） */
     public void addView(Long id) {
         contentMapper.incrView(id);
+        Long me = com.dianping.common.UserContext.userId();
+        if (me != null) {
+            recordBrowse(me, id);
+        }
+    }
+
+    /** 浏览记录：每个 (用户,内容) 仅保留最新一条（覆盖式），用于时间线去重 + 置顶最近浏览 */
+    private void recordBrowse(Long me, Long contentId) {
+        userActionMapper.delete(new LambdaQueryWrapper<UserAction>()
+                .eq(UserAction::getUserId, me)
+                .eq(UserAction::getContentId, contentId)
+                .eq(UserAction::getType, UserAction.TYPE_VIEW));
+        UserAction a = new UserAction();
+        a.setUserId(me);
+        a.setContentId(contentId);
+        a.setType(UserAction.TYPE_VIEW);
+        userActionMapper.insert(a);
+    }
+
+    /** 浏览记录列表：按最近浏览时间倒序；VO 复用，附 viewTime */
+    public Map<String, Object> browseList(Long me, int page, int pageSize) {
+        Page<UserAction> ap = userActionMapper.selectPage(new Page<>(page, pageSize),
+                new LambdaQueryWrapper<UserAction>()
+                        .eq(UserAction::getUserId, me)
+                        .eq(UserAction::getType, UserAction.TYPE_VIEW)
+                        .orderByDesc(UserAction::getId));
+        List<Long> ids = ap.getRecords().stream().map(UserAction::getContentId).toList();
+        Map<String, Object> data = new java.util.HashMap<>();
+        if (ids.isEmpty()) {
+            data.put("total", 0);
+            data.put("list", java.util.List.of());
+            return data;
+        }
+        Map<Long, String> viewTime = ap.getRecords().stream().collect(Collectors.toMap(
+                UserAction::getContentId,
+                ua -> ua.getCreateTime() == null ? "" : ua.getCreateTime().format(FMT)));
+        List<ContentVO> list = voListByIds(me, ids, viewTime);
+        data.put("total", ap.getTotal());
+        data.put("list", list);
+        return data;
+    }
+
+    /** 同店铺其他点评：按 poiName 匹配（排除当前篇），按点赞数倒序（原型：单篇→店铺入口） */
+    public List<ContentVO> relatedByPoi(String poiName, Long excludeId, int limit) {
+        if (poiName == null || poiName.isBlank()) {
+            return java.util.List.of();
+        }
+        List<Content> list = contentMapper.selectList(new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "APPROVED")
+                .eq(Content::getPoiName, poiName)
+                .ne(excludeId != null, Content::getId, excludeId)
+                .orderByDesc(Content::getLikeCount)
+                .last("LIMIT " + Math.max(1, Math.min(limit, 20))));
+        List<Long> userIds = list.stream().map(Content::getUserId).distinct().toList();
+        Map<Long, User> users = userIds.isEmpty() ? java.util.Map.of()
+                : userMapper.selectBatchIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+        return list.stream()
+                .map(c -> toVo(c, users.get(c.getUserId()), false, false, false, 0, 0, ""))
+                .toList();
+    }
+
+    /** 口碑榜：已上架内容按 poiName 聚合（篇数 + 总赞数），按总赞数倒序 */
+    public List<java.util.Map<String, Object>> rankShops(int limit) {
+        List<Content> recents = contentMapper.selectList(new LambdaQueryWrapper<Content>()
+                .eq(Content::getStatus, "APPROVED")
+                .isNotNull(Content::getPoiName)
+                .ne(Content::getPoiName, "")
+                .orderByDesc(Content::getCreateTime)
+                .last("LIMIT 1000"));
+        java.util.Map<String, long[]> agg = new java.util.HashMap<>();
+        for (Content c : recents) {
+            String p = c.getPoiName();
+            if (p == null || p.isBlank()) continue;
+            long[] a = agg.computeIfAbsent(p, k -> new long[2]); // [篇数, 总赞数]
+            a[0] += 1;
+            a[1] += (c.getLikeCount() == null ? 0 : c.getLikeCount());
+        }
+        return agg.entrySet().stream()
+                .sorted((x, y) -> {
+                    int cmp = Long.compare(y.getValue()[1], x.getValue()[1]);
+                    if (cmp != 0) return cmp;
+                    return Long.compare(y.getValue()[0], x.getValue()[0]);
+                })
+                .limit(Math.max(1, Math.min(limit, 50)))
+                .map(e -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("shop", e.getKey());
+                    m.put("contentCount", e.getValue()[0]);
+                    m.put("likeCount", e.getValue()[1]);
+                    return m;
+                }).collect(java.util.stream.Collectors.toList());
     }
 
     /** 我的数据三卡：发布数 / 获赞 / 浏览量 */
@@ -345,6 +437,11 @@ public class ContentService {
 
     /** 按 id 列表组装 VO（保持传入顺序，只保留已上架；供收藏/赞过等列表复用） */
     public List<ContentVO> voListByIds(Long me, List<Long> ids) {
+        return voListByIds(me, ids, java.util.Map.of());
+    }
+
+    /** 重载：带入 viewTime 映射（浏览记录专用） */
+    private List<ContentVO> voListByIds(Long me, List<Long> ids, Map<Long, String> viewTimes) {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
@@ -358,7 +455,8 @@ public class ContentService {
                 : userMapper.selectBatchIds(userIds).stream()
                         .collect(Collectors.toMap(User::getId, Function.identity()));
         return ordered.stream()
-                .map(c -> toVo(c, users.get(c.getUserId()), true, false, false, 0, 0))
+                .map(c -> toVo(c, users.get(c.getUserId()), true, false, false, 0, 0,
+                        viewTimes.getOrDefault(c.getId(), "")))
                 .toList();
     }
 
@@ -488,7 +586,7 @@ public class ContentService {
                         .collect(Collectors.toMap(User::getId, Function.identity()));
 
         List<ContentVO> list = records.stream()
-                .map(c -> toVo(c, users.get(c.getUserId()), likedSet.contains(c.getId()), false, false, 0, 0))
+                .map(c -> toVo(c, users.get(c.getUserId()), likedSet.contains(c.getId()), false, false, 0, 0, ""))
                 .toList();
 
         Map<String, Object> data = new java.util.HashMap<>();
@@ -499,7 +597,8 @@ public class ContentService {
 
     /** 带作者信息的 VO 转换（列表/详情共用） */
     private ContentVO toVo(Content c, User author, boolean liked, boolean withDetail,
-                           boolean favorited, long favoriteCount, long commentCount) {
+                           boolean favorited, long favoriteCount, long commentCount,
+                           String viewTime) {
         List<String> imageKeys = fromJson(c.getImages());
         List<String> imageUrls = imageKeys.stream().map(ossService::publicUrl).toList();
         ContentVO.Author a = author == null ? null
@@ -525,7 +624,8 @@ public class ContentService {
                 liked,
                 favorited,
                 c.getCreateTime() == null ? "" : c.getCreateTime().format(FMT),
-                a);
+                a,
+                viewTime);
     }
 
     /** 单条转换：自己查作者 + 查"我是否点过赞/收藏过" + 评论/收藏计数（详情专用） */
@@ -541,7 +641,7 @@ public class ContentService {
                 .eq(UserAction::getContentId, c.getId())
                 .eq(UserAction::getType, UserAction.TYPE_FAV)) > 0;
         long cmtCount = commentService.countOf(c.getId());
-        return toVo(c, author, likedSet.contains(c.getId()), true, favorited, favCount, cmtCount);
+        return toVo(c, author, likedSet.contains(c.getId()), true, favorited, favCount, cmtCount, "");
     }
 
     /** 批量查"我是否点过赞"（user_action 唯一索引，快） */

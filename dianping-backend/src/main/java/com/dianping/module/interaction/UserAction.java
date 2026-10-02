@@ -22,4 +22,6 @@ public class UserAction {
 
     public static final int TYPE_LIKE = 1;
     public static final int TYPE_FAV = 2;
+    /** 3 = 浏览（进入详情页即记一条，覆盖式去重，供"浏览记录"时间线） */
+    public static final int TYPE_VIEW = 3;
 }
