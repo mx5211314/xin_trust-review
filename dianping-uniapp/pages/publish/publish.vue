@@ -4,11 +4,20 @@
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <text class="nav-cancel" @tap="goBack">取消</text>
       <text class="nav-title">{{ editId ? '编辑笔记' : '发笔记' }}</text>
+      <view v-if="!editId" class="nav-draft" @tap="saveDraftToList">
+        <text class="nav-draft-text">存草稿</text>
+      </view>
       <view class="nav-publish" :class="{ dim: submitting }" @tap="submit">
         <text class="nav-publish-text">{{ submitting ? '…' : '发布' }}</text>
       </view>
     </view>
     <view :style="{ height: statusBarHeight + 54 + 'px' }"></view>
+
+    <!-- 草稿箱入口条（新建模式、有草稿时） -->
+    <view v-if="!editId && draftCount > 0" class="draft-banner" @tap="goDrafts">
+      <text class="draft-banner-text">草稿箱有 {{ draftCount }} 条未发布，点击继续</text>
+      <text class="draft-banner-arrow">›</text>
+    </view>
 
     <!-- 普通用户：引导 -->
     <view v-if="role === 'USER'" class="guide">
@@ -212,7 +221,8 @@ export default {
       submitting: false,
       editId: '',
       statusBarHeight: 20,
-      draftKey: 'dp_publish_draft'
+      draftId: null,
+      draftCount: 0
     }
   },
   onLoad(query) {
@@ -227,9 +237,10 @@ export default {
     if (query && query.id) {
       this.editId = query.id
       this.loadForEdit()
-    } else {
-      this.offerRestoreDraft()
+    } else if (query && query.draftId) {
+      this.loadDraft(Number(query.draftId))
     }
+    // 新会话的 draftId 在 onShow 中分配（tab 页 onLoad 仅首次触发）
   },
   onHide() {
     // 离开页面自动存草稿（仅新建模式、且有内容时）
@@ -238,6 +249,23 @@ export default {
   onShow() {
     const u = getUser()
     this.role = u ? u.role : 'USER'
+    if (!this.editId) {
+      // 草稿箱「继续编辑」跳转（tab 页不能 navigateTo 带参 → storage 标记）
+      let fromDraft = null
+      try {
+        fromDraft = uni.getStorageSync('dp_edit_draft')
+        if (fromDraft) uni.removeStorageSync('dp_edit_draft')
+      } catch (e) { /* ignore */ }
+      if (fromDraft) {
+        this.loadDraft(Number(fromDraft))
+        return
+      }
+      // 本会话草稿 id（离开时自动 upsert 进草稿箱）
+      if (!this.draftId) this.draftId = Date.now()
+      try {
+        this.draftCount = (uni.getStorageSync('dp_drafts') || []).length
+      } catch (e) { this.draftCount = 0 }
+    }
   },
   computed: {
     /** 提交用地区码：精确定位(区县adcode) > 手动选市/省 */
@@ -490,7 +518,7 @@ export default {
         uni.showToast({ title: this.editId ? '已保存，审核通过后公开' : '已提交，审核通过后公开', icon: 'success' })
         setTimeout(() => {
           this.reset()
-          try { uni.removeStorageSync(this.draftKey) } catch (e) { /* ignore */ }
+          this.removeDraft()
           uni.switchTab({ url: '/pages/feed/feed' })
         }, 900)
       } catch (e) {
@@ -502,44 +530,69 @@ export default {
     hasContent() {
       return !!(this.title.trim() || this.text.trim() || this.localImages.length || this.localVideo || this.tags.length || this.poiName.trim())
     },
+    /** 离开页面自动存草稿：upsert 进 dp_drafts 列表（多草稿） */
     saveDraft() {
-      if (!this.hasContent()) return
-      try {
-        uni.setStorageSync(this.draftKey, JSON.stringify({
-          title: this.title,
-          text: this.text,
-          regionIndex: this.regionIndex,
-          tags: this.tags,
-          poiName: this.poiName,
-          type: this.type
-        }))
-      } catch (e) { /* ignore */ }
+      if (this.editId || !this.hasContent() || !this.draftId) return
+      this.upsertDraft(this.draftId)
     },
-    offerRestoreDraft() {
-      let raw
-      try { raw = uni.getStorageSync(this.draftKey) } catch (e) { return }
-      if (!raw) return
-      let d
-      try { d = JSON.parse(raw) } catch (e) { return }
-      if (!(d.title || d.text || (d.tags && d.tags.length) || d.poiName)) return
-      uni.showModal({
-        title: '恢复草稿',
-        content: '检测到上次未发布的草稿，是否继续编辑？（图片需重新选择）',
-        confirmText: '恢复',
-        cancelText: '放弃',
-        success: (res) => {
-          if (res.confirm) {
-            this.title = d.title || ''
-            this.text = d.text || ''
-            this.regionIndex = typeof d.regionIndex === 'number' ? d.regionIndex : -1
-            this.tags = Array.isArray(d.tags) ? d.tags : []
-            this.poiName = d.poiName || ''
-            if (d.type === 'video' || d.type === 'image') this.type = d.type
-          } else {
-            try { uni.removeStorageSync(this.draftKey) } catch (e) { /* ignore */ }
-          }
-        }
-      })
+    /** 顶部「存草稿」按钮：立即存入并提示 */
+    saveDraftToList() {
+      if (this.editId) return
+      if (!this.hasContent()) return uni.showToast({ title: '还没有内容可存', icon: 'none' })
+      if (!this.draftId) this.draftId = Date.now()
+      this.upsertDraft(this.draftId)
+      try { this.draftCount = (uni.getStorageSync('dp_drafts') || []).length } catch (e) { /* ignore */ }
+      uni.showToast({ title: '已存入草稿箱', icon: 'success' })
+    },
+    /** 写入/更新一条草稿（key=id，新草稿置顶） */
+    upsertDraft(id) {
+      const entry = {
+        id,
+        title: this.title,
+        text: this.text,
+        regionIndex: this.regionIndex,
+        tags: this.tags,
+        poiName: this.poiName,
+        type: this.type,
+        savedAt: this.fmtNow()
+      }
+      let list = []
+      try { list = uni.getStorageSync('dp_drafts') || [] } catch (e) { list = [] }
+      const i = list.findIndex(d => d.id === id)
+      if (i >= 0) list[i] = entry
+      else list.unshift(entry)
+      try { uni.setStorageSync('dp_drafts', list) } catch (e) { /* ignore */ }
+    },
+    /** 从草稿箱载入（图片/视频不存，需重选） */
+    loadDraft(id) {
+      let list = []
+      try { list = uni.getStorageSync('dp_drafts') || [] } catch (e) { list = [] }
+      const d = list.find(x => x.id === id)
+      if (!d) { this.draftId = Date.now(); return }
+      this.draftId = id
+      this.title = d.title || ''
+      this.text = d.text || ''
+      this.regionIndex = typeof d.regionIndex === 'number' ? d.regionIndex : -1
+      this.tags = Array.isArray(d.tags) ? d.tags : []
+      this.poiName = d.poiName || ''
+      if (d.type === 'video' || d.type === 'image') this.type = d.type
+    },
+    /** 发布/放弃后移除该草稿 */
+    removeDraft() {
+      if (!this.draftId) return
+      let list = []
+      try { list = uni.getStorageSync('dp_drafts') || [] } catch (e) { list = [] }
+      const next = list.filter(d => d.id !== this.draftId)
+      try { uni.setStorageSync('dp_drafts', next) } catch (e) { /* ignore */ }
+      this.draftId = null
+    },
+    goDrafts() {
+      uni.navigateTo({ url: '/pages/draftbox/draftbox' })
+    },
+    fmtNow() {
+      const p = (n) => (n < 10 ? '0' + n : '' + n)
+      const d = new Date()
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
     },
     reset() {
       this.title = ''
@@ -594,6 +647,30 @@ export default {
 .nav-publish-text {
   color: #ffffff;
   font-size: 26rpx;
+}
+.nav-draft {
+  padding: 10rpx 20rpx;
+}
+.nav-draft-text {
+  color: var(--dp-text2);
+  font-size: 26rpx;
+}
+.draft-banner {
+  margin: 16rpx 24rpx 0;
+  background: var(--dp-soft);
+  border-radius: 14rpx;
+  padding: 22rpx 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.draft-banner-text {
+  font-size: 26rpx;
+  color: var(--dp-text2);
+}
+.draft-banner-arrow {
+  font-size: 30rpx;
+  color: var(--dp-text4);
 }
 .guide {
   margin-top: 120rpx;

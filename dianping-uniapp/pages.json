@@ -71,6 +71,10 @@
     {
       "path": "pages/browse/browse",
       "style": { "navigationBarTitleText": "浏览记录", "enablePullDownRefresh": true }
+    },
+    {
+      "path": "pages/draftbox/draftbox",
+      "style": { "navigationBarTitleText": "草稿箱" }
     }
   ],
   "subPackages": [

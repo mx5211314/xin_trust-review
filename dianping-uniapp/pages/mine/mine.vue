@@ -172,6 +172,10 @@
         <text class="menu-text">浏览记录</text>
         <text class="menu-arrow">›</text>
       </view>
+      <view class="menu-item" @tap="goDraftbox">
+        <text class="menu-text">草稿箱</text>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
 
     <!-- 编辑资料弹层 -->
@@ -496,6 +500,9 @@ export default {
     },
     goBrowse() {
       uni.navigateTo({ url: '/pages/browse/browse' })
+    },
+    goDraftbox() {
+      uni.navigateTo({ url: '/pages/draftbox/draftbox' })
     },
     doLogout() {
       uni.showModal({
