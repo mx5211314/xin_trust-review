@@ -373,7 +373,7 @@ export default {
 }
 .meta-poi {
   font-size: 24rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   margin-right: 16rpx;
 }
 .meta-author {

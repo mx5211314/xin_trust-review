@@ -352,7 +352,7 @@ export default {
 }
 .readall {
   font-size: 24rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .tabs {
   display: flex;
@@ -485,14 +485,14 @@ export default {
 }
 .sub-filter-clear {
   font-size: 22rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .announce-icon {
   background: #ffeef1;
 }
 .announce-tag {
   font-size: 20rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   background: #ffeef1;
   border-radius: 6rpx;
   padding: 2rpx 10rpx;

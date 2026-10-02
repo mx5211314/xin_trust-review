@@ -214,7 +214,7 @@ export default {
 }
 .act {
   font-size: 26rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   padding: 8rpx 16rpx;
 }
 .act.danger {
@@ -250,7 +250,7 @@ export default {
 }
 .add-text {
   font-size: 28rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 500;
 }
 </style>

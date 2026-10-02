@@ -237,7 +237,7 @@ export default {
 }
 .poi {
   font-size: 22rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   max-width: 380rpx;
   overflow: hidden;
   white-space: nowrap;

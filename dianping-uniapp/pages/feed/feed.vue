@@ -482,7 +482,7 @@ export default {
 }
 .wpoi-tx {
   font-size: 21rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   margin-left: 6rpx;
   white-space: nowrap;
   overflow: hidden;
@@ -752,7 +752,7 @@ export default {
 }
 .trust-text {
   font-size: 18rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 700;
 }
 .sk-img.short {

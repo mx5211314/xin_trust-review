@@ -18,6 +18,13 @@ page {
   --dp-text4: #c2c8d0;     /* 极弱/占位 */
   --dp-line: #f1f3f5;      /* 分割线 */
   --dp-accent-soft: #ffe8ea; /* 品牌红浅底 */
+  /* ---- 品牌双色分工（设计系统 v3）----
+     --dp-brand-deep  正文/交互用；浅色纸底 AA 4.87:1
+     --dp-brand       品牌原色；仅限大字号(≥18px)/暗底/图形，浅色纸底仅 3.52:1
+     ⚠ 禁止用 --dp-brand 写小于 18px 的正文（小字不达 WCAG AA） */
+  --dp-brand-deep: #d81228;
+  --dp-brand: #ff2442;
+  --dp-jade: #1f6f5c;      /* 可信认证 / 上升趋势 */
   background-color: #f7f8fa;
   font-size: 28rpx;
   color: #1f2430;
@@ -32,6 +39,8 @@ page {
   --dp-text4: #565c63;
   --dp-line: #2a2d31;
   --dp-accent-soft: #3a2226;
+  --dp-brand-deep: #ff5a6e;  /* 暗底提亮，6.22:1 */
+  --dp-jade: #4fbf9e;
 }
 /* 品牌红主题（小红书式） */
 .card {
@@ -41,7 +50,8 @@ page {
   padding: 24rpx;
 }
 .btn-primary {
-  background: #ff2442;
+  /* 白字按钮：底色必须用加深版，原色 #ff2442 配白字仅 3.76:1 不达 AA（加深版 5.20:1） */
+  background: var(--dp-brand-deep);
   color: #ffffff;
   border-radius: 44rpx;
   font-size: 30rpx;

@@ -307,7 +307,7 @@ export default {
 }
 .logout {
   font-size: 28rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .footer-tip {
   display: block;

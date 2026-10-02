@@ -900,7 +900,7 @@ export default {
 }
 .avatar-text {
   font-size: 28rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .nickname {
   font-size: 28rpx;
@@ -939,7 +939,7 @@ export default {
 }
 .poi {
   font-size: 28rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 500;
   margin-right: 20rpx;
 }
@@ -982,7 +982,7 @@ export default {
 }
 .rel-more {
   font-size: 22rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .rel-scroll {
   white-space: nowrap;
@@ -1058,7 +1058,7 @@ export default {
 }
 .cavatar-text {
   font-size: 26rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .cbody {
   flex: 1;
@@ -1202,7 +1202,7 @@ export default {
 }
 .cdel {
   font-size: 22rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   margin-right: 16rpx;
 }
 .replies {
@@ -1234,7 +1234,7 @@ export default {
 }
 .ravatar-text {
   font-size: 22rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .rbody {
   flex: 1;
@@ -1293,7 +1293,7 @@ export default {
 }
 .follow-mini-text {
   font-size: 24rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .follow-mini.on .follow-mini-text {
   color: var(--dp-text3);
@@ -1327,7 +1327,7 @@ export default {
 }
 .more-comments-text {
   font-size: 26rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .fav-mask {
   position: fixed;
@@ -1400,6 +1400,6 @@ export default {
 }
 .fav-cancel-text {
   font-size: 28rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 </style>

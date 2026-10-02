@@ -346,7 +346,7 @@ export default {
 }
 .wpoi-tx {
   font-size: 21rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   margin-left: 6rpx;
   white-space: nowrap;
   overflow: hidden;
@@ -387,7 +387,7 @@ export default {
 }
 .wavatar-text {
   font-size: 20rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .wnick {
   font-size: 22rpx;

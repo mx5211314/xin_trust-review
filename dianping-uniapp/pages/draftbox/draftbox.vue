@@ -160,7 +160,7 @@ export default {
 }
 .tag-type {
   font-size: 20rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   background: var(--dp-accent-soft);
   border-radius: 6rpx;
   padding: 4rpx 12rpx;
@@ -195,7 +195,7 @@ export default {
 }
 .act {
   font-size: 26rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   padding: 8rpx 20rpx;
 }
 .act.danger {

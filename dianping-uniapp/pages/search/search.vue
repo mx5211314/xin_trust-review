@@ -375,7 +375,7 @@ export default {
 .cancel {
   margin-left: 20rpx;
   font-size: 28rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .tabs {
   display: flex;
@@ -478,7 +478,7 @@ export default {
 }
 .htag {
   font-size: 18rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   border: 1rpx solid rgba(255, 36, 66, 0.4);
   border-radius: 6rpx;
   padding: 0 8rpx;
@@ -582,7 +582,7 @@ export default {
 }
 .wpoi-tx {
   font-size: 21rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   margin-left: 6rpx;
   white-space: nowrap;
   overflow: hidden;
@@ -632,7 +632,7 @@ export default {
 }
 .u-go {
   font-size: 24rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .cloud-sec {
   padding: 16rpx 0;

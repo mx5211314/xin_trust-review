@@ -160,7 +160,7 @@ export default {
 }
 .msg-avatar-text {
   font-size: 26rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .bubble {
   max-width: 62%;
@@ -217,7 +217,7 @@ export default {
 }
 .send-text {
   font-size: 28rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 500;
 }
 </style>

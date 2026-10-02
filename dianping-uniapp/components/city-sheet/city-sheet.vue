@@ -159,11 +159,11 @@ export default {
   margin-left: 12rpx;
   font-size: 27rpx;
   font-weight: 600;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .loc-arr {
   font-size: 26rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   opacity: 0.6;
 }
 .body-row {
@@ -204,7 +204,7 @@ export default {
 .prov-all-tx {
   font-size: 25rpx;
   font-weight: 600;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .city-grid {
   display: flex;

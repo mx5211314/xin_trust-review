@@ -1,0 +1,184 @@
+/* ============================================================
+   城市切片 URBAN SLICE · 落地令牌 v3
+   城市切片设计系统 · 暖纸暖墨 · 发丝线 · 篆刻红
+   ------------------------------------------------------------
+   命名说明（执行纪律，务必遵守）：
+   --dp-brand-deep  正文/交互用（AA 4.87:1 on 浅色纸）
+   --dp-brand       品牌原色，仅限大字号(≥18px)、暗底、图形
+   ⚠ 禁止用 --dp-brand 写小于 18px 的正文，原色对纸色仅 3.52:1
+   ============================================================ */
+
+page {
+  /* ---- 纸与墨（暖中性） ---- */
+  --dp-bg:          #FAF7F2;   /* 纸白：页面底色 */
+  --dp-card:        #FFFFFF;   /* 抬升面：弹层/浮条 */
+  --dp-soft:        #F3EDE3;   /* 次级面：输入框/浅块 */
+  --dp-text:        #1A1614;   /* 暖墨：主文字 */
+  --dp-text2:       #574F48;   /* 次文字 */
+  --dp-text3:       #8B8178;   /* 弱文字/元信息 */
+  --dp-text4:       #B5ABA1;   /* 占位符 */
+  --dp-line:        #E4DCD1;   /* 发丝线：分组主手段 */
+  --dp-line-2:      #D2C7B8;   /* 强分割线 */
+
+  /* ---- 品牌红：双色分工（关键） ---- */
+  --dp-brand-deep:  #D81228;   /* 交互主色·正文·榜单首位（AA 4.87:1） */
+  --dp-brand:       #FF2442;   /* 原色·仅大字号/暗底/图形（3.52:1） */
+  --dp-accent-soft: #FCEAE7;   /* 品牌浅底 */
+
+  /* ---- 功能色 ---- */
+  --dp-jade:        #1F6F5C;   /* 可信认证·上升趋势（AA 5.64:1） */
+  --dp-jade-soft:   #E4F0EC;
+  --dp-gold:        #8A5F23;   /* 榜单辅助 */
+
+  /* ---- 字体栈 ----
+     拉丁/数字：Fraunces 未自托管时回落 Georgia（编辑感仍保）
+     中文：系统宋体优先，零包体成本 */
+  --f-display: 'Fraunces', Georgia, 'Songti SC', 'STSong', serif;
+  --f-serif:   'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', Georgia, serif;
+  --f-sans:    'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --f-mono:    'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  /* ---- 4pt 空间刻度（rpx：1px≈2rpx） ---- */
+  --sp-1: 8rpx;   --sp-2: 16rpx;  --sp-3: 24rpx;  --sp-4: 32rpx;
+  --sp-5: 48rpx;  --sp-6: 64rpx;  --sp-7: 96rpx;  --sp-8: 128rpx;
+
+  /* ---- 圆角：克制，小圆角为主 ---- */
+  --r-sm: 8rpx; --r-md: 16rpx; --r-lg: 28rpx; --r-pill: 999rpx;
+
+  /* ---- 动效：四档时长，指数缓动，禁回弹 ---- */
+  --t-fast: 120ms; --t-base: 240ms; --t-slow: 420ms;
+  --e-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --e-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+
+  background-color: #FAF7F2;
+  font-size: 28rpx;
+  color: #1A1614;
+  font-family: var(--f-sans);
+}
+
+.theme-dark {
+  --dp-bg:          #14110E;
+  --dp-card:        #221D19;
+  --dp-soft:        #2A2420;
+  --dp-text:        #F5F0E9;
+  --dp-text2:       #BDB3A8;
+  --dp-text3:       #8A8076;
+  --dp-text4:       #635A52;
+  --dp-line:        #2E2823;
+  --dp-line-2:      #3F3730;
+  --dp-brand-deep:  #FF5A6E;   /* 暗底加深提亮（6.22:1） */
+  --dp-brand:       #FF2442;
+  --dp-accent-soft: #2B1614;
+  --dp-jade:        #4FBF9E;
+  --dp-jade-soft:   #1C2E29;
+  --dp-gold:        #D9A54F;
+}
+
+/* ---------- 基础组件 ---------- */
+
+/* 主按钮：交互色用 --dp-brand-deep（非原色） */
+.btn-primary {
+  background: var(--dp-brand-deep);
+  color: #ffffff;
+  border-radius: var(--r-pill);
+  font-size: 30rpx;
+  transition: transform var(--t-fast) var(--e-quart), opacity var(--t-fast) var(--e-quart);
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary.disabled { opacity: 0.5; }
+
+/* 卡片：暖白 + 发丝线，不用重阴影 */
+.card {
+  background: var(--dp-card);
+  border-radius: var(--r-md);
+  margin: var(--sp-3) var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--dp-line);
+}
+
+/* 发丝线行：卡片分组替代品 */
+.hair-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--dp-line);
+}
+.hair-row:last-child { border-bottom: 0; }
+
+/* 标签 */
+.tag {
+  display: inline-block;
+  padding: 4rpx 18rpx;
+  border-radius: var(--r-pill);
+  font-size: 22rpx;
+}
+.tag-reviewer {
+  background: var(--dp-accent-soft);
+  color: var(--dp-brand-deep);
+  display: inline-flex;
+  align-items: center;
+}
+.tag-star {
+  width: 24rpx; height: 24rpx;
+  margin-right: 6rpx; flex-shrink: 0;
+}
+.tag-admin { background: var(--dp-text); color: var(--dp-card); }
+.tag-banned { background: #fcebeb; color: #a32d2d; }
+.tag-jade { background: var(--dp-jade-soft); color: var(--dp-jade); }
+
+/* 榜单巨型衬线数字：必须 lining-nums 消除基线跳动 */
+.rank-no {
+  font-family: var(--f-display);
+  font-weight: 500;
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  font-variant-numeric: lining-nums;
+  color: var(--dp-text4);
+}
+.rank-no.first { color: var(--dp-brand-deep); }
+
+/* 标题：宋体族，保留编辑感 */
+.sec-title {
+  font-family: var(--f-serif);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--dp-text);
+}
+
+/* 元信息：等宽 + 放大字距，小字才不糊 */
+.meta {
+  font-family: var(--f-mono);
+  font-size: 20rpx;
+  letter-spacing: 0.08em;
+  color: var(--dp-text3);
+  font-variant-numeric: tabular-nums;
+}
+
+.muted { color: var(--dp-text3); font-size: 24rpx; }
+
+/* ---------- 骨架屏 ---------- */
+.skeleton {
+  background: linear-gradient(90deg, #F3EDE3 25%, #EAE2D6 37%, #F3EDE3 63%);
+  background-size: 400% 100%;
+  animation: sk 1.2s ease infinite;
+}
+.theme-dark .skeleton {
+  background: linear-gradient(90deg, #2A2420 25%, #332C27 37%, #2A2420 63%);
+  background-size: 400% 100%;
+}
+@keyframes sk {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ---------- 点赞红心：交互色用 brand-deep ---------- */
+.like-icon { font-size: 34rpx; color: var(--dp-text3); transition: color var(--t-fast) var(--e-quart), transform var(--t-fast) var(--e-quart); }
+.like-icon.liked { color: var(--dp-brand-deep); animation: pop var(--t-slow) var(--e-expo); }
+@keyframes pop {
+  0% { transform: scale(1); }
+  18% { transform: scale(1.28); }
+  32% { transform: scale(0.95); }
+  46% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}

@@ -749,7 +749,7 @@ export default {
 }
 .mention-tx {
   font-size: 26rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .mention-search {
   padding: 16rpx 24rpx;
@@ -1083,7 +1083,7 @@ export default {
 }
 .poi-locate-tx {
   font-size: 22rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 500;
 }
 /* 自定义话题 chip（虚线） */
