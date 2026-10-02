@@ -122,18 +122,22 @@
       </view>
       <view class="divider"></view>
 
-      <!-- 7. 地点 -->
-      <picker :range="regionNames" @change="onRegionChange">
-        <view class="line-row">
-          <view class="row-left">
-            <image class="ficon-img" src="/static/icons/location.png" />
-            <text class="line-topic" :class="{ picked: regionIndex >= 0 }">
-              {{ regionIndex >= 0 ? regionNames[regionIndex] : '添加地区' }}
-            </text>
-          </view>
-          <text class="arrow">▾</text>
+      <!-- 7. 地区：定位（自动填店铺名前缀）或手动选城市 -->
+      <view class="line-row" @tap="onRegionTap">
+        <view class="row-left">
+          <image class="ficon-img" src="/static/icons/location.png" />
+          <text class="line-topic" :class="{ picked: regionIndex >= 0 }">
+            {{ regionIndex >= 0 ? regionNames[regionIndex] : '添加地区' }}
+          </text>
         </view>
-      </picker>
+        <text class="arrow">▾</text>
+      </view>
+      <city-sheet
+        :show="citySheetShow"
+        :current="regionCode"
+        @select="onCityPick"
+        @close="citySheetShow = false"
+      />
       <view class="poi-row-wrap">
         <image class="ficon-img" src="/static/icons/shop.png" />
         <input
@@ -155,8 +159,11 @@ import { uploadFile } from '@/utils/upload'
 import { REGIONS } from '@/utils/config'
 import { getUser } from '@/utils/auth'
 import { askSubscribeOnce } from '@/utils/subscribe'
+import { locateCity } from '@/utils/location'
+import CitySheet from '@/components/city-sheet/city-sheet.vue'
 
 export default {
+  components: { CitySheet },
   data() {
     return {
       role: 'USER',
@@ -166,6 +173,7 @@ export default {
       localImages: [],
       localVideo: null,
       regionIndex: -1,
+      citySheetShow: false,
       regionNames: REGIONS.map(r => r.name),
       allTags: ['唐山美食', '探店', '咖啡', '遛娃', '拍照', '老店'],
       tags: [],
@@ -195,6 +203,12 @@ export default {
   onShow() {
     const u = getUser()
     this.role = u ? u.role : 'USER'
+  },
+  computed: {
+    /** 当前选中城市 code（city-sheet 高亮用；模板访问不到 import 的 REGIONS，走这里） */
+    regionCode() {
+      return this.regionIndex >= 0 ? REGIONS[this.regionIndex].code : ''
+    }
   },
   methods: {
     toggleTag(t) {
@@ -247,8 +261,40 @@ export default {
     removeVideo() {
       this.localVideo = null
     },
-    onRegionChange(e) {
-      this.regionIndex = Number(e.detail.value)
+    /** 地区行点击：优先定位（自动带出城市+店铺名前缀），或打开城市选择弹层 */
+    onRegionTap() {
+      uni.showActionSheet({
+        itemList: ['定位当前城市', '手动选择城市'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            uni.showLoading({ title: '定位中…' })
+            locateCity()
+              .then((hit) => {
+                uni.hideLoading()
+                this.applyCity(hit)
+                uni.showToast({ title: '已定位到 ' + hit.name, icon: 'none', duration: 1200 })
+              })
+              .catch((e) => {
+                uni.hideLoading()
+                uni.showToast({ title: e.message || '定位失败，请手动选择', icon: 'none', duration: 2200 })
+              })
+          } else {
+            this.citySheetShow = true
+          }
+        }
+      })
+    },
+    /**
+     * 应用城市：填地区；店铺名为空时自动填「城市·」前缀
+     * （poiName 统一"城市·店名"格式，与 demo 数据/卡片展示一致，点评人接着补店名即可）
+     */
+    applyCity(city) {
+      this.regionIndex = REGIONS.findIndex(r => r.code === city.code)
+      if (!this.poiName) this.poiName = city.name + '·'
+    },
+    onCityPick(city) {
+      this.citySheetShow = false
+      this.applyCity(city)
     },
     copyAdminPhone() {
       uni.setClipboardData({

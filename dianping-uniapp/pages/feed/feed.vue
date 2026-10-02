@@ -22,32 +22,13 @@
     </view>
     <view :style="{ height: statusBarHeight + 96 + 'px' }"></view>
 
-    <!-- 城市选择弹层（点位置区域弹出：定位 + 城市网格） -->
-    <view v-if="citySheet" class="mask" @tap="citySheet = false">
-      <view class="sheet" @tap.stop>
-        <view class="sheet-head">
-          <text class="sheet-title">选择城市</text>
-          <text class="sheet-close" @tap="citySheet = false">×</text>
-        </view>
-        <view class="loc-row" @tap="locate">
-          <image class="loc-ic" src="/static/icons/location.png" mode="aspectFit" />
-          <text class="loc-tx">{{ locating ? '定位中…' : '定位当前城市' }}</text>
-          <text class="loc-arr">›</text>
-        </view>
-        <view class="city-grid">
-          <view
-            v-for="r in regions"
-            :key="r.code"
-            class="city-item"
-            :class="{ on: cityCode === r.code }"
-            @tap="setCity(r.code)"
-          >
-            <text class="city-tx" :class="{ on: cityCode === r.code }">{{ r.name }}</text>
-          </view>
-        </view>
-        <view style="height: env(safe-area-inset-bottom)"></view>
-      </view>
-    </view>
+    <!-- 城市选择弹层（公共组件：定位 + 城市网格） -->
+    <city-sheet
+      :show="citySheet"
+      :current="cityCode"
+      @select="onCityPicked"
+      @close="citySheet = false"
+    />
 
     <!-- 双列瀑布流 -->
     <view class="waterfall" v-if="list.length">
@@ -170,17 +151,17 @@
 
 <script>
 import { request } from '@/utils/request'
-import { REGIONS, regionName, TENCENT_LBS_KEY } from '@/utils/config'
+import { regionName } from '@/utils/config'
 import { isLogin } from '@/utils/auth'
+import CitySheet from '@/components/city-sheet/city-sheet.vue'
 
 export default {
+  components: { CitySheet },
   data() {
     return {
-      regions: REGIONS,
       tab: 'find',
       cityCode: uni.getStorageSync('dp_city') || '130100',
       citySheet: false,
-      locating: false,
       followedIds: [],
       list: [],
       page: 1,
@@ -241,62 +222,17 @@ export default {
       this.tab = t
       this.refresh()
     },
-    /** 打开城市选择弹层（点左上角位置区域） */
+    /** 打开城市选择弹层（点左上角位置区域，同城 tab 专属） */
     openCitySheet() {
       this.citySheet = true
     },
-    /** 选择城市：持久化 → 关弹层 → 自动切同城 tab 按城市过滤（美团心智） */
-    setCity(code) {
-      this.cityCode = code
-      try { uni.setStorageSync('dp_city', code) } catch (e) { /* 存储失败不影响本次会话 */ }
+    /** 城市弹层回调（定位命中或手动选择）：持久化 → 自动切同城 tab 按城市过滤 */
+    onCityPicked(hit) {
+      this.cityCode = hit.code
+      try { uni.setStorageSync('dp_city', hit.code) } catch (e) { /* 存储失败不影响本次会话 */ }
       this.citySheet = false
       if (this.tab !== 'city') this.tab = 'city'
       this.refresh()
-    },
-    /**
-     * 定位当前城市：getLocation 拿经纬度 → 腾讯逆地理编码出城市名 → 匹配 REGIONS。
-     * 未配置 TENCENT_LBS_KEY 时降级为提示手动选择；失败同理。
-     */
-    locate() {
-      if (this.locating) return
-      if (!TENCENT_LBS_KEY) {
-        uni.showToast({ title: '未配置地图Key，请在列表中选择城市', icon: 'none', duration: 2500 })
-        return
-      }
-      this.locating = true
-      uni.getLocation({
-        type: 'wgs84',
-        success: (res) => {
-          uni.request({
-            url: 'https://apis.map.qq.com/ws/geocoder/v1/',
-            data: {
-              location: res.latitude + ',' + res.longitude,
-              key: TENCENT_LBS_KEY,
-              get_poi: 0
-            },
-            success: (r) => {
-              const city = r.data && r.data.status === 0 && r.data.result
-                ? r.data.result.address_component.city : ''
-              const hit = REGIONS.find(x => city && (city.indexOf(x.name) === 0 || x.name.indexOf(city.replace('市', '')) === 0))
-              this.locating = false
-              if (hit) {
-                this.setCity(hit.code)
-                uni.showToast({ title: '已定位到 ' + hit.name, icon: 'none', duration: 1200 })
-              } else {
-                uni.showToast({ title: '定位到 unsupported 城市，请手动选择', icon: 'none', duration: 2200 })
-              }
-            },
-            fail: () => {
-              this.locating = false
-              uni.showToast({ title: '定位失败，请手动选择城市', icon: 'none' })
-            }
-          })
-        },
-        fail: () => {
-          this.locating = false
-          uni.showToast({ title: '未授权定位，请在列表中选择城市', icon: 'none', duration: 2200 })
-        }
-      })
     },
     goSearch() {
       uni.navigateTo({ url: '/pages/search/search' })
@@ -527,88 +463,6 @@ export default {
   height: 6rpx;
   border-radius: 3rpx;
   background: #ff2442;
-}
-/* 城市选择弹层（点左上角位置区域弹出） */
-.mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  z-index: 60;
-}
-.sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 61;
-  background: var(--dp-card);
-  border-radius: 28rpx 28rpx 0 0;
-  padding: 30rpx 28rpx 24rpx;
-}
-.sheet-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22rpx;
-}
-.sheet-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: var(--dp-text);
-}
-.sheet-close {
-  font-size: 44rpx;
-  line-height: 44rpx;
-  color: var(--dp-text4);
-  padding: 0 10rpx;
-}
-.loc-row {
-  display: flex;
-  align-items: center;
-  background: var(--dp-accent-soft);
-  border-radius: 16rpx;
-  padding: 22rpx 24rpx;
-}
-.loc-ic {
-  width: 30rpx;
-  height: 30rpx;
-}
-.loc-tx {
-  flex: 1;
-  margin-left: 12rpx;
-  font-size: 27rpx;
-  font-weight: 600;
-  color: #ff2442;
-}
-.loc-arr {
-  font-size: 26rpx;
-  color: #ff2442;
-  opacity: 0.6;
-}
-.city-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18rpx;
-  margin-top: 26rpx;
-}
-.city-item {
-  width: calc((100% - 36rpx) / 3);
-  text-align: center;
-  padding: 18rpx 0;
-  background: var(--dp-soft);
-  border-radius: 12rpx;
-  box-sizing: border-box;
-}
-.city-tx {
-  font-size: 26rpx;
-  color: var(--dp-text);
-}
-.city-item.on {
-  background: #ff2442;
-}
-.city-tx.on {
-  color: #ffffff;
-  font-weight: 600;
 }
 .waterfall {
   display: flex;
