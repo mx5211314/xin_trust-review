@@ -62,7 +62,10 @@
           <text class="avatar-text">{{ shortName }}</text>
         </view>
         <text class="nickname">{{ content.author ? content.author.nickname : '匿名' }}</text>
-        <text v-if="isReviewerAuthor" class="tag tag-reviewer">点评人</text>
+        <view v-if="isReviewerAuthor" class="tag tag-reviewer">
+          <image class="tag-star" src="/static/icons/star-red.png" mode="aspectFit" />
+          <text>{{ content.author.role === 'ADMIN' ? '管理员' : '点评人' }}</text>
+        </view>
         <view
           v-if="!isMyContent"
           class="follow-mini"
@@ -289,7 +292,9 @@ export default {
       )
     },
     isReviewerAuthor() {
-      return this.content && this.content.author
+      // 真判断：只有点评人/管理员挂徽标（原为恒真占位，普通用户也会显示"点评人"）
+      const r = this.content && this.content.author && this.content.author.role
+      return r === 'REVIEWER' || r === 'ADMIN'
     },
     isMyContent() {
       const me = getUser()

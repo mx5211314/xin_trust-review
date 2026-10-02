@@ -7,10 +7,13 @@
       </view>
       <text class="nickname">{{ profile ? profile.nickname : '-' }}</text>
       <view class="badge-row">
-        <text v-if="isReviewerRole" class="tag tag-reviewer">点评人</text>
+        <view v-if="isReviewerRole" class="tag tag-reviewer">
+          <image class="tag-star" src="/static/icons/star-red.png" mode="aspectFit" />
+          <text>{{ profile.role === 'ADMIN' ? '管理员' : '点评人' }}</text>
+        </view>
         <text v-if="isBanned" class="tag tag-banned">已封禁</text>
       </view>
-      <text class="muted bio">{{ profile && profile.role ? regionText : '' }}</text>
+      <text class="muted bio">{{ profile ? (profile.bio || regionText) : '' }}</text>
       <view v-if="!isMine" class="btn-row">
         <view class="follow-btn" :class="{ on: isFollowing }" @tap="toggleFollow">
           <text class="btn-text" :class="{ on: isFollowing }">{{ isFollowing ? '已关注' : '+ 关注' }}</text>
@@ -265,20 +268,23 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 50rpx 0 30rpx;
+  background: linear-gradient(180deg, #ffe4e9, #fff1f3 60%, rgba(255, 255, 255, 0));
 }
 .avatar {
   width: 150rpx;
   height: 150rpx;
   border-radius: 50%;
-  background: var(--dp-accent-soft);
+  background: linear-gradient(135deg, #ffb199, #ff2442);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 24rpx;
+  border: 4rpx solid #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(255, 36, 66, 0.18);
 }
 .avatar-text {
   font-size: 60rpx;
-  color: #ff2442;
+  color: #ffffff;
   font-weight: 500;
 }
 .nickname {
@@ -359,8 +365,10 @@ export default {
 }
 .stat-num {
   display: block;
-  font-size: 34rpx;
-  font-weight: 500;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 38rpx;
+  font-weight: 700;
 }
 .stat-label {
   font-size: 22rpx;

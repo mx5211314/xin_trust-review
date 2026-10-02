@@ -502,7 +502,8 @@ public class ContentService {
         List<String> imageKeys = fromJson(c.getImages());
         List<String> imageUrls = imageKeys.stream().map(ossService::publicUrl).toList();
         ContentVO.Author a = author == null ? null
-                : new ContentVO.Author(String.valueOf(author.getId()), author.getNickname(), author.getAvatar());
+                : new ContentVO.Author(String.valueOf(author.getId()), author.getNickname(),
+                        author.getAvatar(), author.getRole());
         return new ContentVO(
                 String.valueOf(c.getId()),
                 c.getTitle(),

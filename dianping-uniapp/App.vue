@@ -58,6 +58,14 @@ page {
 .tag-reviewer {
   background: var(--dp-accent-soft);
   color: #ff2442;
+  display: inline-flex;
+  align-items: center;
+}
+.tag-star {
+  width: 22rpx;
+  height: 22rpx;
+  margin-right: 6rpx;
+  flex-shrink: 0;
 }
 .tag-admin {
   background: #1f2430;

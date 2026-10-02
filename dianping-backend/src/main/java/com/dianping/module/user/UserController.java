@@ -247,6 +247,7 @@ public class UserController {
         profile.put("role", u.getRole());
         profile.put("status", u.getStatus());
         profile.put("phoneMasked", maskPhone(u.getPhone()));
+        profile.put("bio", u.getBio() == null ? "" : u.getBio());
         profile.put("followers", followService.followersCount(u.getId()));
         Long meId0 = currentUserId();
         profile.put("following", followService.isFollowing(meId0, u.getId()));

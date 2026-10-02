@@ -28,6 +28,6 @@ public record ContentVO(
         String createTime,
         Author author) {
 
-    public record Author(String userId, String nickname, String avatar) {
+    public record Author(String userId, String nickname, String avatar, String role) {
     }
 }

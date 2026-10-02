@@ -17,7 +17,7 @@
           <text v-if="user && user.bio" class="muted head-muted">{{ user.bio }}</text>
         </view>
         <view class="head-icons" @tap="goSettings">
-          <text class="icon-text">⚙</text>
+          <image class="gear-img" src="/static/icons/gear.png" mode="aspectFit" />
         </view>
       </view>
     </view>
@@ -445,7 +445,7 @@ export default {
   padding-bottom: 40rpx;
 }
 .head {
-  background: #ff2442;
+  background: linear-gradient(165deg, #ffe4e9, #fff1f3 55%, #ffffff);
   padding: 40rpx 32rpx 60rpx;
   position: relative;
   overflow: hidden;
@@ -457,7 +457,7 @@ export default {
   width: 240rpx;
   height: 240rpx;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 36, 66, 0.07);
 }
 .head-row {
   display: flex;
@@ -468,7 +468,7 @@ export default {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  background: var(--dp-card);
+  background: linear-gradient(135deg, #ffb199, #ff2442);
   margin-right: 26rpx;
   display: flex;
   align-items: center;
@@ -477,7 +477,7 @@ export default {
 }
 .avatar-text {
   font-size: 52rpx;
-  color: #ff2442;
+  color: #ffffff;
   font-weight: 500;
 }
 .head-info {
@@ -491,21 +491,21 @@ export default {
 }
 .nickname {
   font-size: 36rpx;
-  font-weight: 500;
-  color: #ffffff;
+  font-weight: 600;
+  color: var(--dp-text);
   margin-right: 16rpx;
 }
 .head-muted {
   display: block;
-  color: rgba(255, 255, 255, 0.75) !important;
+  color: var(--dp-text3) !important;
   font-size: 22rpx;
 }
 .head-icons {
   padding: 10rpx;
 }
-.icon-text {
-  font-size: 36rpx;
-  color: rgba(255, 255, 255, 0.9);
+.gear-img {
+  width: 40rpx;
+  height: 40rpx;
 }
 .stats {
   background: var(--dp-card);
@@ -523,8 +523,10 @@ export default {
 }
 .stat-num {
   display: block;
-  font-size: 36rpx;
-  font-weight: 500;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 40rpx;
+  font-weight: 700;
   color: var(--dp-text);
 }
 .stat-label {
