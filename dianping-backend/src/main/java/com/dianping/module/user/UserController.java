@@ -115,6 +115,13 @@ public class UserController {
         return R.ok(followService.followingList(currentUserId(), page, pageSize));
     }
 
+    /** GET /user/fans?page= —— 关注我的粉丝列表（含互关标记） */
+    @GetMapping("/fans")
+    public R<Map<String, Object>> fans(@RequestParam(defaultValue = "1") int page,
+                                       @RequestParam(defaultValue = "20") int pageSize) {
+        return R.ok(followService.fansList(currentUserId(), page, pageSize));
+    }
+
     /** GET /user/notify —— 消息列表 */
     @GetMapping("/notify")
     public R<Map<String, Object>> notify(@RequestParam(required = false) String category,

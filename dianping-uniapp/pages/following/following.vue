@@ -1,5 +1,17 @@
 <template>
   <view class="page" :class="{'theme-dark': isDark}">
+    <!-- 关注 / 粉丝 双 tab -->
+    <view class="tabs">
+      <view class="tab" @tap="switchTab('follow')">
+        <text class="tab-tx" :class="{ on: tab === 'follow' }">关注</text>
+        <view v-if="tab === 'follow'" class="tab-line"></view>
+      </view>
+      <view class="tab" @tap="switchTab('fans')">
+        <text class="tab-tx" :class="{ on: tab === 'fans' }">粉丝</text>
+        <view v-if="tab === 'fans'" class="tab-line"></view>
+      </view>
+    </view>
+
     <view v-for="u in list" :key="u.userId" class="user-item">
       <view class="avatar" @tap="goHome(u)">
         <text class="avatar-text">{{ (u.nickname || '客').slice(0, 1) }}</text>
@@ -11,15 +23,21 @@
           <text v-else-if="u.role === 'ADMIN'" class="tag tag-admin">管理员</text>
         </view>
       </view>
-      <view class="unfollow" @tap="unfollow(u)">
-        <text class="unfollow-text">已关注</text>
+      <!-- 关注 tab：取消关注；粉丝 tab：回关/互相关注 -->
+      <view v-if="tab === 'follow'" class="pill" @tap="unfollow(u)">
+        <text class="pill-tx">已关注</text>
+      </view>
+      <view v-else-if="u.mutual" class="pill" @tap="unfollow(u)">
+        <text class="pill-tx">互相关注</text>
+      </view>
+      <view v-else class="pill pill-on" @tap="followBack(u)">
+        <text class="pill-tx-on">回关</text>
       </view>
     </view>
 
     <view v-if="!loading && !list.length" class="empty">
-      <text class="empty-emoji">🔍</text>
-      <text class="muted">还没有关注任何人</text>
-      <text class="muted small">去首页发现值得信赖的点评人吧</text>
+      <text class="muted">{{ emptyText }}</text>
+      <text class="muted small">{{ emptySub }}</text>
       <button class="btn-primary go-btn" @tap="goFeed">去逛逛</button>
     </view>
   </view>
@@ -32,8 +50,22 @@ import { getUser } from '@/utils/auth'
 export default {
   data() {
     return {
+      tab: 'follow',
       list: [],
       loading: false
+    }
+  },
+  computed: {
+    emptyText() {
+      return this.tab === 'follow' ? '还没有关注任何人' : '还没有粉丝'
+    },
+    emptySub() {
+      return this.tab === 'follow' ? '去首页发现值得信赖的点评人吧' : '多发笔记、多互动，粉丝会多起来的'
+    }
+  },
+  onLoad(query) {
+    if (query && (query.tab === 'fans' || query.tab === 'follow')) {
+      this.tab = query.tab
     }
   },
   onShow() {
@@ -44,10 +76,19 @@ export default {
     this.fetch()
   },
   methods: {
+    switchTab(t) {
+      if (this.tab === t) return
+      this.tab = t
+      this.list = []
+      this.fetch()
+    },
     async fetch() {
       this.loading = true
       try {
-        const data = await request({ url: '/user/following?page=1&pageSize=50' })
+        const url = this.tab === 'follow'
+          ? '/user/following?page=1&pageSize=50'
+          : '/user/fans?page=1&pageSize=50'
+        const data = await request({ url })
         this.list = data.list || []
       } catch (e) {
         this.list = []
@@ -66,11 +107,24 @@ export default {
           if (!res.confirm) return
           try {
             await request({ url: `/user/${u.userId}/follow`, method: 'DELETE', silent: true })
-            this.list = this.list.filter(x => x.userId !== u.userId)
+            this.fetch()
             uni.showToast({ title: '已取消关注', icon: 'none' })
           } catch (e) { /* ignore */ }
         }
       })
+    },
+    /** 回关：成功后刷新列表变"互相关注" */
+    async followBack(u) {
+      try {
+        await request({ url: `/user/${u.userId}/follow`, method: 'POST', silent: true })
+        u.mutual = true
+        uni.showToast({ title: '已回关', icon: 'none', duration: 900 })
+      } catch (e) {
+        if (e.code === 2003) {
+          u.mutual = true
+          uni.showToast({ title: '已互相关注', icon: 'none', duration: 900 })
+        }
+      }
     },
     goFeed() {
       uni.switchTab({ url: '/pages/feed/feed' })
@@ -84,6 +138,35 @@ export default {
   min-height: 100vh;
   background: var(--dp-card);
 }
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 60rpx;
+  padding: 20rpx 0 16rpx;
+  border-bottom: 1rpx solid var(--dp-soft);
+}
+.tab {
+  position: relative;
+  padding-bottom: 8rpx;
+}
+.tab-tx {
+  font-size: 30rpx;
+  color: var(--dp-text3);
+}
+.tab-tx.on {
+  color: var(--dp-text);
+  font-weight: 600;
+}
+.tab-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 40rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  background: #ff2442;
+}
 .user-item {
   display: flex;
   align-items: center;
@@ -94,7 +177,7 @@ export default {
   width: 88rpx;
   height: 88rpx;
   border-radius: 50%;
-  background: var(--dp-accent-soft);
+  background: linear-gradient(135deg, #ffb199, #ff2442);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,7 +186,7 @@ export default {
 }
 .avatar-text {
   font-size: 34rpx;
-  color: #ff2442;
+  color: #ffffff;
 }
 .info {
   flex: 1;
@@ -118,15 +201,24 @@ export default {
   font-weight: 500;
   margin-right: 12rpx;
 }
-.unfollow {
+.pill {
   border: 1.5rpx solid var(--dp-text4);
   border-radius: 999rpx;
   padding: 10rpx 32rpx;
   flex-shrink: 0;
 }
-.unfollow-text {
+.pill-tx {
   font-size: 24rpx;
   color: var(--dp-text3);
+}
+.pill-on {
+  background: #ff2442;
+  border-color: #ff2442;
+}
+.pill-tx-on {
+  font-size: 24rpx;
+  color: #ffffff;
+  font-weight: 500;
 }
 .empty {
   display: flex;
@@ -134,9 +226,9 @@ export default {
   align-items: center;
   padding: 160rpx 0;
 }
-.empty-emoji {
-  font-size: 80rpx;
-  margin-bottom: 24rpx;
+.muted {
+  color: var(--dp-text3);
+  font-size: 26rpx;
 }
 .small {
   font-size: 22rpx;

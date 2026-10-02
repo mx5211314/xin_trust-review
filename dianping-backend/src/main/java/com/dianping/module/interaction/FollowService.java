@@ -83,9 +83,35 @@ public class FollowService {
                 .stream().map(Follow::getFollowUserId).toList();
     }
 
-    /** 我关注的列表（含昵称） */
-    public Map<String, Object> followingList(Long me, int page, int pageSize) {
+    /** 粉丝列表：谁关注了我（含互关标记，供"回关"） */
+    public Map<String, Object> fansList(Long me, int page, int pageSize) {
         Page<Follow> p = followMapper.selectPage(new Page<>(page, pageSize),
+                new LambdaQueryWrapper<Follow>()
+                        .eq(Follow::getFollowUserId, me)
+                        .orderByDesc(Follow::getCreateTime));
+        List<Long> ids = p.getRecords().stream().map(Follow::getUserId).toList();
+        Map<Long, User> users = ids.isEmpty() ? Map.of()
+                : userMapper.selectBatchIds(ids).stream()
+                        .collect(java.util.stream.Collectors.toMap(User::getId, u -> u));
+        java.util.Set<Long> mine = new java.util.HashSet<>(followingIds(me));
+        List<Map<String, Object>> list = ids.stream()
+                .map(id -> {
+                    User u = users.get(id);
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("userId", String.valueOf(id));
+                    m.put("nickname", u == null ? "已注销" : u.getNickname());
+                    m.put("role", u == null ? "" : u.getRole());
+                    m.put("mutual", mine.contains(id));
+                    return m;
+                }).toList();
+        Map<String, Object> data = new HashMap<>();
+        data.put("total", p.getTotal());
+        data.put("list", list);
+        return data;
+    }
+
+    /** 我关注的列表（含昵称） */
+    public Map<String, Object> followingList(Long me, int page, int pageSize) {        Page<Follow> p = followMapper.selectPage(new Page<>(page, pageSize),
                 new LambdaQueryWrapper<Follow>()
                         .eq(Follow::getUserId, me)
                         .orderByDesc(Follow::getCreateTime));

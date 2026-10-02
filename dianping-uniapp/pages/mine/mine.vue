@@ -38,7 +38,7 @@
         <text class="stat-label">关注</text>
       </view>
       <view class="stat-div"></view>
-      <view class="stat">
+      <view class="stat" @tap="goFans">
         <text class="stat-num">{{ stats.followers }}</text>
         <text class="stat-label">粉丝</text>
       </view>
@@ -454,7 +454,10 @@ export default {
       uni.navigateTo({ url: '/pages/settings/settings' })
     },
     goFollowing() {
-      uni.navigateTo({ url: '/pages/following/following' })
+      uni.navigateTo({ url: '/pages/following/following?tab=follow' })
+    },
+    goFans() {
+      uni.navigateTo({ url: '/pages/following/following?tab=fans' })
     },
     goGuide() {
       uni.navigateTo({ url: '/pages/guide/guide' })
