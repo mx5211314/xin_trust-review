@@ -1,6 +1,6 @@
 <template>
   <view class="page" :class="{'theme-dark': isDark}">
-    <!-- 自定义导航：发现/同城 + 搜索入口 -->
+    <!-- 自定义导航：发现/同城 + 城市定位 + 显性搜索框 -->
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="seg">
         <text class="seg-item" :class="{ on: tab === 'follow' }" @tap="switchTab('follow')">关注</text>
@@ -8,12 +8,19 @@
         <text class="seg-item" :class="{ on: tab === 'find' }" @tap="switchTab('find')">发现</text>
         <text class="seg-item" :class="{ on: tab === 'city' }" @tap="switchTab('city')">同城</text>
       </view>
-      <view class="sicon search-icon" @tap="goSearch">
-        <view class="sicon-ring"></view>
-        <view class="sicon-handle"></view>
+      <view class="sbar">
+        <view class="sbar-loc" @tap="goCity">
+          <image class="sbar-loc-ic" src="/static/icons/location.png" mode="aspectFit" />
+          <text class="sbar-loc-tx">{{ cityText }}</text>
+          <text class="sbar-loc-arr">▾</text>
+        </view>
+        <view class="sbar-box" @tap="goSearch">
+          <view class="sbar-mag"><view class="sbar-ring"></view><view class="sbar-handle"></view></view>
+          <text class="sbar-ph">搜内容 / 话题 / 店铺</text>
+        </view>
       </view>
     </view>
-    <view :style="{ height: statusBarHeight + 50 + 'px' }"></view>
+    <view :style="{ height: statusBarHeight + 96 + 'px' }"></view>
 
     <!-- 地区 chips（同城 tab 下显示） -->
     <scroll-view v-if="tab === 'city'" class="chips" scroll-x :show-scrollbar="false">
@@ -52,6 +59,13 @@
           </view>
           <view class="wbody">
             <text class="wtitle">{{ item.title }}</text>
+            <view v-if="item.poiName" class="wpoi">
+              <image class="wpoi-ic" src="/static/icons/location.png" mode="aspectFit" />
+              <text class="wpoi-tx">{{ item.poiName }}</text>
+            </view>
+            <view v-if="item.tags && item.tags.length" class="wtag">
+              <text class="wtag-tx"># {{ item.tags.join(' # ') }}</text>
+            </view>
             <view class="wfoot">
               <view class="wauthor">
                 <view class="avatar-ph wavatar">
@@ -89,6 +103,13 @@
           </view>
           <view class="wbody">
             <text class="wtitle">{{ item.title }}</text>
+            <view v-if="item.poiName" class="wpoi">
+              <image class="wpoi-ic" src="/static/icons/location.png" mode="aspectFit" />
+              <text class="wpoi-tx">{{ item.poiName }}</text>
+            </view>
+            <view v-if="item.tags && item.tags.length" class="wtag">
+              <text class="wtag-tx"># {{ item.tags.join(' # ') }}</text>
+            </view>
             <view class="wfoot">
               <view class="wauthor">
                 <view class="avatar-ph wavatar">
@@ -134,7 +155,7 @@
 
 <script>
 import { request } from '@/utils/request'
-import { REGIONS } from '@/utils/config'
+import { REGIONS, regionName } from '@/utils/config'
 import { isLogin } from '@/utils/auth'
 
 export default {
@@ -160,6 +181,10 @@ export default {
     },
     rightList() {
       return this.list.filter((_, i) => i % 2 === 1)
+    },
+    /** 搜索框前的城市名：同城 tab 显示当前选中城市，其余 tab 显示默认城市 */
+    cityText() {
+      return this.region ? regionName(this.region) : '石家庄'
     }
   },
   onLoad() {
@@ -210,6 +235,10 @@ export default {
     },
     goSearch() {
       uni.navigateTo({ url: '/pages/search/search' })
+    },
+    /** 点城市名 = 去同城 tab（城市心智的延伸入口） */
+    goCity() {
+      if (this.tab !== 'city') this.switchTab('city')
     },
     loadUnread() {
       Promise.all([
@@ -297,15 +326,14 @@ export default {
   right: 0;
   z-index: 10;
   background: var(--dp-card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 50px;
-  box-sizing: content-box;
+  padding-bottom: 10rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
 }
 .seg {
   display: flex;
   align-items: center;
+  justify-content: center;
+  height: 46px;
 }
 .seg-item {
   font-size: 30rpx;
@@ -328,47 +356,116 @@ export default {
   border-radius: 3rpx;
   background: #ff2442;
 }
-.sicon {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 36rpx;
-  height: 36rpx;
+/* 显性搜索框：城市定位 + 胶囊搜索框（点击整体跳搜索页） */
+.sbar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 4rpx 24rpx 8rpx;
 }
-.search-icon {
-  right: 32rpx;
+.sbar-loc {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
-.msg-entry {
-  right: 110rpx;
+.sbar-loc-ic {
+  width: 28rpx;
+  height: 28rpx;
 }
-.msg-icon {
-  width: 40rpx;
-  height: 40rpx;
+.sbar-loc-tx {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--dp-text);
+  margin: 0 4rpx 0 8rpx;
 }
-.msg-dot {
-  position: absolute;
-  right: -6rpx;
-  top: -6rpx;
-  width: 16rpx;
-  height: 16rpx;
+.sbar-loc-arr {
+  font-size: 18rpx;
+  color: var(--dp-text4);
+}
+.sbar-box {
+  flex: 1;
+  background: var(--dp-soft);
+  border-radius: 999rpx;
+  height: 62rpx;
+  display: flex;
+  align-items: center;
+  padding: 0 24rpx;
+  min-width: 0;
+}
+.sbar-mag {
+  width: 26rpx;
+  height: 26rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+.sbar-ring {
+  width: 18rpx;
+  height: 18rpx;
+  border: 3rpx solid var(--dp-text4);
   border-radius: 50%;
-  background: #ff2442;
-  border: 2rpx solid #ffffff;
 }
-.sicon-ring {
-  width: 24rpx;
-  height: 24rpx;
-  border: 4rpx solid var(--dp-text);
-  border-radius: 50%;
-}
-.sicon-handle {
-  width: 14rpx;
-  height: 4rpx;
-  background: var(--dp-text);
+.sbar-handle {
+  width: 10rpx;
+  height: 3rpx;
+  background: var(--dp-text4);
   border-radius: 2rpx;
   transform: rotate(45deg);
-  margin-top: -4rpx;
-  margin-left: 20rpx;
+  margin-top: -3rpx;
+  margin-left: 15rpx;
+}
+.sbar-ph {
+  font-size: 24rpx;
+  color: var(--dp-text4);
+  margin-left: 12rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wpoi {
+  display: flex;
+  align-items: center;
+  margin-top: 8rpx;
+  min-width: 0;
+}
+.wpoi-ic {
+  width: 22rpx;
+  height: 22rpx;
+  flex-shrink: 0;
+}
+.wpoi-tx {
+  font-size: 21rpx;
+  color: #ff2442;
+  margin-left: 6rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wtag {
+  margin-top: 6rpx;
+  min-width: 0;
+}
+.wtag-tx {
+  font-size: 20rpx;
+  color: var(--dp-text4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.seg-item.on {
+  color: var(--dp-text);
+  font-weight: 500;
+}
+.seg-item.on::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -10rpx;
+  width: 40rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  background: #ff2442;
 }
 .chips {
   white-space: nowrap;
@@ -467,10 +564,10 @@ export default {
   min-width: 0;
 }
 .wavatar {
-  width: 40rpx;
-  height: 40rpx;
+  width: 36rpx;
+  height: 36rpx;
   border-radius: 50%;
-  background: #cecbf6;
+  background: linear-gradient(135deg, #ffb199, #ff2442);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -478,7 +575,7 @@ export default {
 }
 .wavatar-text {
   font-size: 20rpx;
-  color: #3c3489;
+  color: #ffffff;
 }
 .wnick {
   margin-left: 10rpx;
@@ -513,7 +610,7 @@ export default {
   width: 36rpx;
   height: 36rpx;
   border-radius: 50%;
-  background: var(--dp-accent-soft);
+  background: linear-gradient(135deg, #ffb199, #ff2442);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -522,7 +619,7 @@ export default {
 }
 .wavatar-text {
   font-size: 20rpx;
-  color: #ff2442;
+  color: #ffffff;
 }
 .wnick {
   font-size: 21rpx;

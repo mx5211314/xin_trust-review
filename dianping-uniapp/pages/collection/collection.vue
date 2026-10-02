@@ -37,7 +37,13 @@
           </view>
           <view class="wbody">
             <text class="wtitle">{{ item.title }}</text>
-            <text class="wpoi" v-if="item.poiName">{{ item.poiName }}</text>
+            <view v-if="item.poiName" class="wpoi">
+              <image class="wpoi-ic" src="/static/icons/location.png" mode="aspectFit" />
+              <text class="wpoi-tx">{{ item.poiName }}</text>
+            </view>
+            <view v-if="item.tags && item.tags.length" class="wtag">
+              <text class="wtag-tx"># {{ item.tags.join(' # ') }}</text>
+            </view>
             <view class="wfoot">
               <view class="wauthor">
                 <view class="avatar-ph wavatar"><text class="wavatar-text">{{ shortName(item.author) }}</text></view>
@@ -67,7 +73,13 @@
           </view>
           <view class="wbody">
             <text class="wtitle">{{ item.title }}</text>
-            <text class="wpoi" v-if="item.poiName">{{ item.poiName }}</text>
+            <view v-if="item.poiName" class="wpoi">
+              <image class="wpoi-ic" src="/static/icons/location.png" mode="aspectFit" />
+              <text class="wpoi-tx">{{ item.poiName }}</text>
+            </view>
+            <view v-if="item.tags && item.tags.length" class="wtag">
+              <text class="wtag-tx"># {{ item.tags.join(' # ') }}</text>
+            </view>
             <view class="wfoot">
               <view class="wauthor">
                 <view class="avatar-ph wavatar"><text class="wavatar-text">{{ shortName(item.author) }}</text></view>
@@ -252,13 +264,35 @@ export default {
   overflow: hidden;
 }
 .wpoi {
-  display: block;
+  display: flex;
+  align-items: center;
   margin-top: 8rpx;
-  font-size: 22rpx;
-  color: #ff6a3d;
-  overflow: hidden;
+  min-width: 0;
+}
+.wpoi-ic {
+  width: 22rpx;
+  height: 22rpx;
+  flex-shrink: 0;
+}
+.wpoi-tx {
+  font-size: 21rpx;
+  color: #ff2442;
+  margin-left: 6rpx;
   white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
+}
+.wtag {
+  margin-top: 6rpx;
+  min-width: 0;
+}
+.wtag-tx {
+  font-size: 20rpx;
+  color: var(--dp-text4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 .wfoot {
   display: flex;

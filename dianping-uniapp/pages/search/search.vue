@@ -62,6 +62,13 @@
                 <view v-else class="cover cover-empty"><text class="cover-empty-text">视频</text></view>
               </view>
               <text class="wtitle">{{ item.title }}</text>
+              <view v-if="item.poiName" class="wpoi">
+                <image class="wpoi-ic" src="/static/icons/location.png" mode="aspectFit" />
+                <text class="wpoi-tx">{{ item.poiName }}</text>
+              </view>
+              <view v-if="item.tags && item.tags.length" class="wtag">
+                <text class="wtag-tx"># {{ item.tags.join(' # ') }}</text>
+              </view>
               <view class="wfoot">
                 <text class="wauthor">{{ item.author ? item.author.nickname : '匿名' }}</text>
                 <text class="wlike">♥ {{ item.likeCount }}</text>
@@ -80,6 +87,13 @@
                 <view v-else class="cover cover-empty"><text class="cover-empty-text">视频</text></view>
               </view>
               <text class="wtitle">{{ item.title }}</text>
+              <view v-if="item.poiName" class="wpoi">
+                <image class="wpoi-ic" src="/static/icons/location.png" mode="aspectFit" />
+                <text class="wpoi-tx">{{ item.poiName }}</text>
+              </view>
+              <view v-if="item.tags && item.tags.length" class="wtag">
+                <text class="wtag-tx"># {{ item.tags.join(' # ') }}</text>
+              </view>
               <view class="wfoot">
                 <text class="wauthor">{{ item.author ? item.author.nickname : '匿名' }}</text>
                 <text class="wlike">♥ {{ item.likeCount }}</text>
@@ -464,6 +478,37 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 10rpx 14rpx 14rpx;
+}
+.wpoi {
+  display: flex;
+  align-items: center;
+  margin: 8rpx 14rpx 0;
+  min-width: 0;
+}
+.wpoi-ic {
+  width: 22rpx;
+  height: 22rpx;
+  flex-shrink: 0;
+}
+.wpoi-tx {
+  font-size: 21rpx;
+  color: #ff2442;
+  margin-left: 6rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wtag {
+  margin: 6rpx 14rpx 0;
+  min-width: 0;
+}
+.wtag-tx {
+  font-size: 20rpx;
+  color: var(--dp-text4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 .wauthor {
   font-size: 21rpx;
