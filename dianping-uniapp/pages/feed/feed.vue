@@ -9,7 +9,7 @@
         <text class="seg-item" :class="{ on: tab === 'city' }" @tap="switchTab('city')">同城</text>
       </view>
       <view class="sbar">
-        <view class="sbar-loc" @tap="openCitySheet">
+        <view v-if="tab === 'city'" class="sbar-loc" @tap="openCitySheet">
           <image class="sbar-loc-ic" src="/static/icons/location.png" mode="aspectFit" />
           <text class="sbar-loc-tx">{{ cityText }}</text>
           <text class="sbar-loc-arr">▾</text>
