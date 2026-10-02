@@ -7,12 +7,16 @@
 
     <!-- 沉浸式图区（黑底，custom 导航） -->
     <view class="media" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="nav-ghost">
+      <view class="nav-ghost" :style="{ top: statusBarHeight + 'px' }">
         <view class="nav-btn" @tap="goBack">
-          <text class="nav-btn-text">‹</text>
+          <view class="chev"></view>
         </view>
         <view class="nav-btn nav-more" @tap="showMore">
-          <text class="nav-btn-text more-dots">···</text>
+          <view class="dots-row">
+            <view class="ndot"></view>
+            <view class="ndot"></view>
+            <view class="ndot"></view>
+          </view>
         </view>
       </view>
       <swiper
@@ -750,36 +754,47 @@ export default {
 }
 .nav-ghost {
   position: absolute;
-  top: 0;
   left: 0;
   right: 0;
   z-index: 5;
   display: flex;
   align-items: center;
-  padding: 10rpx 24rpx;
+  padding: 12rpx 24rpx;
 }
+/* 毛玻璃白钮：与右侧微信胶囊同基线，深浅图上都清晰 */
 .nav-btn {
-  width: 60rpx;
-  height: 60rpx;
+  width: 64rpx;
+  height: 64rpx;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16rpx);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.nav-btn-text {
-  color: #ffffff;
-  font-size: 40rpx;
-  line-height: 40rpx;
-  margin-top: -6rpx;
+/* CSS 画返回箭头（加粗 chevron，替代细弱的 ‹ 字符） */
+.chev {
+  width: 20rpx;
+  height: 20rpx;
+  border-left: 5rpx solid #1f2430;
+  border-bottom: 5rpx solid #1f2430;
+  transform: rotate(45deg);
+  margin-left: 8rpx;
 }
 .nav-more {
   margin-left: auto;
 }
-.more-dots {
-  font-size: 32rpx;
-  letter-spacing: 2rpx;
-  margin-top: -12rpx;
+.dots-row {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+.ndot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: #1f2430;
 }
 .banner {
   width: 100%;
