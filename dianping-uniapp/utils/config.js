@@ -36,6 +36,14 @@ export function regionName(code) {
 }
 
 /**
+ * 腾讯位置服务 Key（lbs.qq.com 免费申请，WebService API 勾选 WebServiceAPI）。
+ * 用于"定位当前城市"：getLocation 拿经纬度后逆地理编码出城市名。
+ * 留空 = 定位功能降级，点"定位当前城市"会提示手动选择城市（选择器仍然可用）。
+ * 注意：小程序正式包还需在微信公众平台把 apis.map.qq.com 加入 request 合法域名。
+ */
+export const TENCENT_LBS_KEY = ''
+
+/**
  * 微信订阅消息模板 ID（mp.weixin.qq.com 订阅消息里选用后复制）。
  * 留空 = 不弹授权、不请求（本地开发/未配置时静默跳过）。
  * audit = 审核结果通知；interact = 互动通知（赞/评/关注/@）。

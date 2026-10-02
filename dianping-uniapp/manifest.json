@@ -36,5 +36,18 @@
     "router" : {
       "mode" : "hash"
     }
+  },
+  "mp-weixin" : {
+    "appid" : "",
+    "setting" : {
+      "urlCheck" : false
+    },
+    "usingComponents" : true,
+    "permission" : {
+      "scope.userLocation" : {
+        "desc" : "用于推荐你所在城市的本地点评"
+      }
+    },
+    "requiredPrivateInfos" : [ "getLocation" ]
   }
 }
