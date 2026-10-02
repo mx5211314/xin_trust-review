@@ -351,7 +351,7 @@ export default {
   margin-top: -6rpx;
 }
 .follow-btn {
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   border-radius: 40rpx;
   padding: 0 66rpx;
   height: 70rpx;

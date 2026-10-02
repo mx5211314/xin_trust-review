@@ -701,7 +701,7 @@ export default {
   color: var(--dp-text);
 }
 .nav-publish {
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   border-radius: 30rpx;
   padding: 10rpx 34rpx;
 }
@@ -839,7 +839,7 @@ export default {
   width: 44rpx;
   height: 44rpx;
   border-radius: 50%;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   color: #ffffff;
   font-size: 24rpx;
   display: flex;

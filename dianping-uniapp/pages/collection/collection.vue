@@ -251,7 +251,7 @@ export default {
   z-index: 2;
   padding: 10rpx 28rpx;
   border-radius: 999rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   border: 1rpx solid #ff2442;
 }
 .follow-btn.on {

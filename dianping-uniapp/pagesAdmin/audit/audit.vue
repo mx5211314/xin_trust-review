@@ -412,7 +412,7 @@ export default {
   padding: 0;
 }
 .op-pass {
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   color: #ffffff;
 }
 .op-reject {
@@ -465,7 +465,7 @@ export default {
   line-height: 76rpx;
   font-size: 26rpx;
   border-radius: 38rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   color: #ffffff;
   padding: 0 60rpx;
 }
