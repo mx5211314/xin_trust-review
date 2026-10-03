@@ -121,7 +121,11 @@
           </view>
         </view>
         <view v-if="!loading && !list.length" class="empty">
-          <text class="muted">没找到"{{ lastKw }}"相关的内容</text>
+          <view class="empty-ic">
+            <image class="empty-ic-img" src="/static/icons/topic.png" mode="aspectFit" />
+          </view>
+          <text class="empty-t">没找到「{{ lastKw }}」相关的内容</text>
+          <text class="empty-d">换个关键词试试，或检查一下拼写</text>
         </view>
         <view v-if="list.length && !hasMore" class="empty"><text class="muted">— 到底啦 —</text></view>
       </view>
@@ -129,7 +133,13 @@
 
     <!-- 用户 -->
     <block v-else-if="tab === 'user'">
-      <view v-if="!searched" class="empty"><text class="muted">输入昵称，搜索用户</text></view>
+      <view v-if="!searched" class="empty">
+        <view class="empty-ic">
+          <image class="empty-ic-img" src="/static/icons/eye.png" mode="aspectFit" />
+        </view>
+        <text class="empty-t">搜索用户</text>
+        <text class="empty-d">输入昵称，找到想关注的点评人</text>
+      </view>
       <view v-else>
         <view v-if="users.length" class="user-list">
           <view v-for="u in users" :key="u.userId" class="user-row" @tap="goUser(u)">
@@ -139,7 +149,11 @@
           </view>
         </view>
         <view v-if="!loading && !users.length" class="empty">
-          <text class="muted">没找到"{{ lastKw }}"相关的用户</text>
+          <view class="empty-ic">
+            <image class="empty-ic-img" src="/static/icons/eye.png" mode="aspectFit" />
+          </view>
+          <text class="empty-t">没找到「{{ lastKw }}」相关的用户</text>
+          <text class="empty-d">试试完整的昵称</text>
         </view>
       </view>
     </block>
@@ -657,9 +671,12 @@ export default {
   font-weight: 600;
   color: var(--dp-text);
 }
+/* 引导式空状态容器（原则 09） */
 .empty {
-  text-align: center;
-  padding: 100rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx var(--sp-5) 60rpx;
 }
 .muted {
   color: var(--dp-text4);

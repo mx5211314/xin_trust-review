@@ -51,7 +51,11 @@
     </view>
 
     <view v-if="!loading && list.length === 0" class="empty">
-      <text class="muted">没有匹配的用户</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/eye.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">没有匹配的用户</text>
+      <text class="empty-d">换个关键词试试</text>
     </view>
   </view>
 </template>
@@ -243,8 +247,11 @@ export default {
   background: #f1efe8;
   color: #5f5e5a;
 }
+/* 引导式空状态容器（原则 09） */
 .empty {
-  text-align: center;
-  padding: 80rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx var(--sp-5) 60rpx;
 }
 </style>

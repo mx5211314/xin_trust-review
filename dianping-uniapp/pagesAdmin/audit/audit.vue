@@ -97,7 +97,11 @@
       </view>
 
       <view v-if="!loading && list.length === 0" class="empty">
-        <text class="muted">该状态下暂无内容</text>
+        <view class="empty-ic">
+          <image class="empty-ic-img" src="/static/icons/eye.png" mode="aspectFit" />
+        </view>
+        <text class="empty-t">该状态下暂无内容</text>
+        <text class="empty-d">切换上面的状态筛选，或等作者提交新内容</text>
       </view>
     </view>
   </view>
@@ -521,9 +525,12 @@ export default {
   line-height: 56rpx;
   padding: 0 36rpx;
 }
+/* 引导式空状态容器（原则 09） */
 .empty {
-  text-align: center;
-  padding: 80rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx var(--sp-5) 60rpx;
 }
 .muted {
   font-size: 24rpx;
