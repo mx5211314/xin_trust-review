@@ -15,6 +15,8 @@ public class Message {
     private Long fromUserId;
     private Long toUserId;
     private String text;
+    /** 图片对象键，空=纯文本消息 */
+    private String imageKey;
     /** 0 未读 1 已读 */
     private Integer isRead;
     private LocalDateTime createTime;

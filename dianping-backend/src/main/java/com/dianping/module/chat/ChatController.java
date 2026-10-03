@@ -25,9 +25,11 @@ public class ChatController {
     public R<Map<String, Object>> send(@RequestBody Map<String, Object> body) {
         Object to = body.get("toUserId");
         Object text = body.get("text");
+        Object img = body.get("imageKey");
         Long toUserId = to == null ? null : Long.parseLong(String.valueOf(to));
         return R.ok(chatService.send(UserContext.userId(), toUserId,
-                text == null ? "" : String.valueOf(text)));
+                text == null ? "" : String.valueOf(text),
+                img == null ? "" : String.valueOf(img)));
     }
 
     /** GET /chat/messages?userId=xxx —— 与某人的聊天记录 */

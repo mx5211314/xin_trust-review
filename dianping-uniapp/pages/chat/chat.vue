@@ -17,8 +17,15 @@
         <view v-if="!m.mine" class="msg-avatar">
           <text class="msg-avatar-text">{{ (peer.nickname || '客').slice(0, 1) }}</text>
         </view>
-        <view class="bubble" :class="{ mine: m.mine }">
-          <text class="bubble-text" :class="{ mine: m.mine }">{{ m.text }}</text>
+        <view class="bubble" :class="{ mine: m.mine, img: m.imageUrl }">
+          <image
+            v-if="m.imageUrl"
+            class="bubble-img"
+            :src="m.imageUrl"
+            mode="widthFix"
+            @tap="previewImg(m.imageUrl)"
+          />
+          <text v-else class="bubble-text" :class="{ mine: m.mine }">{{ m.text }}</text>
         </view>
         <view v-if="m.mine" class="msg-avatar mine-avatar">
           <text class="msg-avatar-text">{{ (myName || '我').slice(0, 1) }}</text>
@@ -39,8 +46,13 @@
         :adjust-position="true"
         @confirm="send"
       />
-      <view class="send" :class="{ on: draft.trim() }" @tap="send">
-        <text class="send-text">发送</text>
+      <!-- 同一按钮位：未输入显示 ➕（发图），一输入就变成「发送」（原型 v4） -->
+      <view v-if="!draft.trim() && !sending" class="plus-btn" @tap="pickImage">
+        <view class="plus-v"></view>
+        <view class="plus-h"></view>
+      </view>
+      <view v-else class="send" @tap="send">
+        <text class="send-text">{{ sending ? '…' : '发送' }}</text>
       </view>
     </view>
   </view>
@@ -49,6 +61,7 @@
 <script>
 import { request } from '@/utils/request'
 import { getUser } from '@/utils/auth'
+import { uploadFile } from '@/utils/upload'
 
 export default {
   data() {
@@ -58,6 +71,7 @@ export default {
       myName: '',
       list: [],
       draft: '',
+      sending: false,
       scrollTo: ''
     }
   },
@@ -97,7 +111,8 @@ export default {
     },
     async send() {
       const text = this.draft.trim()
-      if (!text) return
+      if (!text || this.sending) return
+      this.sending = true
       try {
         const res = await request({
           url: '/chat/send',
@@ -109,10 +124,47 @@ export default {
           messageId: res.messageId,
           mine: true,
           text,
+          imageUrl: res.imageUrl || '',
           createTime: ''
         })
         this.scrollToBottom()
       } catch (e) { /* toast 已提示 */ }
+      this.sending = false
+    },
+    /** ➕ 发图：选图 → 上传 OSS → 以 imageKey 发送（纯图片消息 text 为空） */
+    pickImage() {
+      if (this.sending) return
+      uni.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        success: async (r) => {
+          const p = r.tempFilePaths && r.tempFilePaths[0]
+          if (!p) return
+          this.sending = true
+          try {
+            const up = await uploadFile(p, 'image')
+            const res = await request({
+              url: '/chat/send',
+              method: 'POST',
+              data: { toUserId: this.peerId, text: '', imageKey: up.key }
+            })
+            this.list.push({
+              messageId: res.messageId,
+              mine: true,
+              text: '',
+              imageUrl: res.imageUrl || '',
+              createTime: ''
+            })
+            this.scrollToBottom()
+          } catch (e) { /* toast 已提示 */ }
+          this.sending = false
+        }
+      })
+    },
+    /** 点图片气泡看大图 */
+    previewImg(url) {
+      if (!url) return
+      uni.previewImage({ urls: [url] })
     }
   }
 }
@@ -189,12 +241,18 @@ export default {
   font-size: 22rpx;
   color: var(--dp-text4);
 }
+/* 毛玻璃输入栏（原型 v4） */
 .input-bar {
   display: flex;
   align-items: center;
-  background: var(--dp-card);
+  gap: var(--sp-2);
+  background: rgba(250, 248, 245, .88);
+  backdrop-filter: blur(36rpx) saturate(1.6);
   border-top: 1rpx solid var(--dp-line);
   padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
+}
+.theme-dark .input-bar {
+  background: rgba(20, 17, 14, .88);
 }
 .chat-input {
   flex: 1;
@@ -207,17 +265,48 @@ export default {
 .ph {
   color: var(--dp-text4);
 }
+/* 发送：有输入时实心品牌红 */
 .send {
-  margin-left: 18rpx;
-  padding: 12rpx 26rpx;
-  border-radius: 28rpx;
-}
-.send.on {
-  background: var(--dp-accent-soft);
+  flex-shrink: 0;
+  padding: 12rpx 28rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-brand-deep);
+  box-shadow: var(--sh-float);
 }
 .send-text {
-  font-size: 28rpx;
-  color: var(--dp-brand-deep);
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  color: #ffffff;
+  font-weight: 600;
+}
+/* ➕ 发图入口（与「发送」共用一个位置，纯 CSS 绘制，不占图标资源） */
+.plus-btn {
+  flex-shrink: 0;
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.plus-v,
+.plus-h {
+  position: absolute;
+  background: var(--dp-text2);
+  border-radius: 2rpx;
+}
+.plus-v { width: 4rpx; height: 30rpx; }
+.plus-h { width: 30rpx; height: 4rpx; }
+/* 图片气泡：去内边距，图随宽度自适应 */
+.bubble.img {
+  padding: 0;
+  overflow: hidden;
+  background: var(--dp-soft);
+}
+.bubble-img {
+  display: block;
+  width: 320rpx;
+  border-radius: 16rpx;
 }
 </style>

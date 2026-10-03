@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import com.dianping.module.notify.NotifyService;
+import com.dianping.module.oss.OssService;
 
 /**
  * 私信：用户之间一对一聊天（点评人模式下的"粉丝问店铺地址"场景）。
@@ -35,9 +36,10 @@ public class ChatService {
     private final NotifyService notifyService;
     private final com.dianping.common.RateLimitService rateLimitService;
     private final com.dianping.module.interaction.BlockService blockService;
+    private final OssService ossService;
 
     /** 发私信 */
-    public Map<String, Object> send(Long me, Long toUserId, String text) {
+    public Map<String, Object> send(Long me, Long toUserId, String text, String imageKey) {
         if (toUserId == null || toUserId.equals(me)) {
             throw new BizException(ResultCode.PARAM_ERROR, "不能给自己发私信");
         }
@@ -50,7 +52,9 @@ public class ChatService {
             throw new BizException(ResultCode.FORBIDDEN, "对方已屏蔽，无法发送私信");
         }
         String t = text == null ? "" : text.trim();
-        if (t.isEmpty()) {
+        String key = imageKey == null ? "" : imageKey.trim();
+        // 文本和图片至少要有一样
+        if (t.isEmpty() && key.isEmpty()) {
             throw new BizException(ResultCode.PARAM_ERROR, "消息不能为空");
         }
         if (t.length() > 500) {
@@ -62,12 +66,17 @@ public class ChatService {
         m.setFromUserId(me);
         m.setToUserId(toUserId);
         m.setText(t);
+        m.setImageKey(key.isEmpty() ? null : key);
         m.setIsRead(0);
         messageMapper.insert(m);
-        // 站内通知提醒对方
-        notifyService.send(toUserId, "MESSAGE", me, 0L, 0L,
-                t.length() > 30 ? t.substring(0, 30) + "…" : t);
-        return Map.of("messageId", String.valueOf(m.getId()));
+        // 站内通知提醒对方（纯图片消息用「图片」占位）
+        String notice = t.isEmpty() ? "「图片」" : (t.length() > 30 ? t.substring(0, 30) + "…" : t);
+        notifyService.send(toUserId, "MESSAGE", me, 0L, 0L, notice);
+        // 回传图片可直接访问的 URL，前端本地回显不用再拼
+        Map<String, Object> out = new HashMap<>();
+        out.put("messageId", String.valueOf(m.getId()));
+        out.put("imageUrl", key.isEmpty() ? "" : ossService.publicUrl(key));
+        return out;
     }
 
     /** 与某人的聊天记录（正序；同时把对方发来的置为已读） */
@@ -94,6 +103,10 @@ public class ChatService {
             mm.put("messageId", String.valueOf(m.getId()));
             mm.put("mine", m.getFromUserId().equals(me));
             mm.put("text", m.getText());
+            // 图片消息：下发给可直接访问的 URL，纯文本为空串
+            mm.put("imageUrl",
+                    m.getImageKey() == null || m.getImageKey().isBlank()
+                            ? "" : ossService.publicUrl(m.getImageKey()));
             mm.put("createTime", m.getCreateTime() == null ? "" : m.getCreateTime().format(FMT));
             list.add(mm);
         }
@@ -129,7 +142,11 @@ public class ChatService {
             c.put("peerId", String.valueOf(peerId));
             c.put("nickname", peer.getNickname());
             c.put("avatar", peer.getAvatar());
-            c.put("lastText", last.getText());
+            // 会话预览：纯图片消息显示「[图片]」
+            boolean hasImg = last.getImageKey() != null && !last.getImageKey().isBlank();
+            String preview = hasImg && (last.getText() == null || last.getText().isBlank())
+                    ? "[图片]" : last.getText();
+            c.put("lastText", preview);
             c.put("lastMine", last.getFromUserId().equals(me));
             c.put("lastTime", last.getCreateTime() == null ? "" : last.getCreateTime().format(FMT));
             c.put("unread", messageMapper.unreadFrom(peerId, me));

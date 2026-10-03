@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS `message` (
     `from_user_id` BIGINT       NOT NULL,
     `to_user_id`   BIGINT       NOT NULL,
     `text`         VARCHAR(500) NOT NULL,
+    `image_key`    VARCHAR(255) NULL,
     `is_read`      TINYINT      NOT NULL DEFAULT 0,
     `create_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -227,6 +228,12 @@ SET @e9 := (SELECT COUNT(*) FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='user' AND COLUMN_NAME='followed_topics');
 SET @d9 := IF(@e9=0, 'ALTER TABLE `user` ADD COLUMN followed_topics VARCHAR(500) NOT NULL DEFAULT '''' COMMENT ''关注的话题，JSON数组'' AFTER status', 'SELECT 1');
 PREPARE s9 FROM @d9; EXECUTE s9; DEALLOCATE PREPARE s9;
+
+-- ---------- 聊天发图迁移：message.image_key ----------
+SET @e10 := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='message' AND COLUMN_NAME='image_key');
+SET @d10 := IF(@e10=0, 'ALTER TABLE `message` ADD COLUMN image_key VARCHAR(255) NULL COMMENT ''图片对象键，空=纯文本'' AFTER text', 'SELECT 1');
+PREPARE s10 FROM @d10; EXECUTE s10; DEALLOCATE PREPARE s10;
 
 -- ---------- 初始管理员（dev 环境验证码固定 8888）----------
 INSERT INTO `user` (`id`, `phone`, `nickname`, `role`)
