@@ -79,6 +79,15 @@
           <text class="follow-mini-text">{{ authorFollowing ? '已关注' : '+ 关注' }}</text>
         </view>
       </view>
+      <!-- 地点：提到正文之前，点进来第一时间知道「在哪」（不用划到底） -->
+      <view class="poi-row" v-if="content.poiName">
+        <view class="poi tap" @tap="goPoi(content.poiName)">
+          <image class="poi-ico" src="/static/icons/location.png" />
+          <text class="poi-text">{{ content.poiName }}</text>
+        </view>
+        <text class="region" v-if="content.regionCode">{{ regionName(content.regionCode) }}</text>
+      </view>
+
       <view class="text">
         <text
           v-for="(p, i) in textParts"
@@ -98,14 +107,6 @@
         >#{{ t }}</text>
       </view>
 
-      <!-- 地点 -->
-      <view class="poi-row" v-if="content.poiName">
-        <view class="poi tap" @tap="goPoi(content.poiName)">
-          <image class="poi-ico" src="/static/icons/location.png" />
-          <text class="poi-text">{{ content.poiName }}</text>
-        </view>
-        <text class="region" v-if="content.regionCode">{{ regionName(content.regionCode) }}</text>
-      </view>
       <text class="time">编辑于 {{ content.createTime }}</text>
 
       <!-- 同店铺其他点评（按 poiName 关联，单篇→店铺入口） -->
@@ -231,6 +232,10 @@
         <view class="act">
           <image class="act-img" src="/static/icons/bubble.png" />
           <text class="act-num">{{ fmtNum(commentTotal) }}</text>
+        </view>
+        <view class="act" @tap="shareToFriend">
+          <image class="act-img" src="/static/icons/share.png" />
+          <text class="act-num">分享</text>
         </view>
       </view>
     </view>
@@ -1127,11 +1132,16 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--dp-card);
+  /* 毛玻璃底栏：内容从后面透出来（原则 06） */
+  background: rgba(250, 248, 245, .88);
+  backdrop-filter: blur(36rpx) saturate(1.6);
   border-top: 1rpx solid var(--dp-line);
   display: flex;
   align-items: center;
   padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
+}
+.theme-dark .footer {
+  background: rgba(20, 17, 14, .88);
 }
 .comment-input {
   flex: 1;
