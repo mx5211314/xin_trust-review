@@ -201,7 +201,7 @@ h1 em{font-style:normal;color:var(--brand-deep)}
 <div class="wrap">
   <header>
     <div class="eyebrow">全页面对比 · Before / After</div>
-    <h1>8 个页面，<em>逐一对照</em></h1>
+    <h1>13 个页面，<em>逐一对照</em></h1>
     <p class="lede">
       左机用<b>代码里的真实字号值</b>还原现状，右机用新的 <b>8 档字阶 + 8rpx 间距</b>重绘。
       每行标注该页实测的字号种类数与间距离格率，数据来自脚本 <b>audit_per_page.py</b>。
@@ -723,6 +723,351 @@ h1 em{font-style:normal;color:var(--brand-deep)}
           <div class="note ok">
             「待审」用 <b>xl + 品牌红</b>拔高，其余 lg——<br>
             一眼锁定该盯的数字。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 9 收藏/话题合集 ========== -->
+  <section class="row">
+    <div class="row-head">
+      <span class="row-no">09</span>
+      <h2 class="row-t">话题合集 <code>pages/collection/collection.vue</code></h2>
+      <span class="row-stat">字号 <b>7 种</b> · 离格 <b>64%</b> → <i>8 档 · 0%</i></span>
+    </div>
+    <div class="pair">
+      <div class="slot">
+        <div class="slot-label bad"><i class="dot bad"></i>现状</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div style="padding:16px;border-bottom:1px solid var(--line);position:relative">
+              <div style="font-size:14px;font-weight:700"># 深夜放肆</div>
+              <div style="font-size:11px;color:#8b8178;margin-top:3px">128 篇笔记 · 1.2k 赞</div>
+              <div style="display:inline-block;font-size:12px;padding:5px 14px;border-radius:999px;background:#d81228;color:#fff;margin-top:10px">关注话题</div>
+              <div style="position:absolute;right:12px;bottom:-18px;font-size:96px;font-weight:700;color:#f3ede3">#</div>
+            </div>
+            <div style="display:flex;gap:8px;padding:16px">
+              <div style="flex:1">
+                <div style="height:88px;border-radius:8px;background:linear-gradient(140deg,#c99a6e,#8c6a52);margin-bottom:7px"></div>
+                <div style="font-size:11px;font-weight:600;line-height:1.4;margin-bottom:4px">石家庄这几家烤肉</div>
+                <div style="font-size:10.5px;color:#d81228">◎ 老王烤肉</div>
+              </div>
+              <div style="flex:1">
+                <div style="height:64px;border-radius:8px;background:linear-gradient(140deg,#a87b58,#6b4f3a);margin-bottom:7px"></div>
+                <div style="font-size:11px;font-weight:600;line-height:1.4">铜锅现烧的南门</div>
+              </div>
+            </div>
+          </div>
+          <div class="note bad">
+            字号 20/21/22/24/28 挤在 10~14px 之间，<br>
+            标题 11px、POI 10.5px——<b>差 0.5px 等于没差</b>。
+          </div>
+        </div>
+      </div>
+      <div class="slot">
+        <div class="slot-label ok"><i class="dot ok"></i>整改后</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div style="padding:var(--sp-4);border-bottom:1px solid var(--line);position:relative">
+              <div style="font-size:var(--fs-lg);font-weight:700"># 深夜放肆</div>
+              <div style="font-size:var(--fs-sm);color:var(--ink3);margin-top:var(--sp-1)">128 篇笔记 · 1.2k 赞</div>
+              <div style="display:inline-block;font-size:var(--fs-base);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);background:var(--brand-deep);color:#fff;margin-top:var(--sp-3)">关注话题</div>
+              <div style="position:absolute;right:var(--sp-3);bottom:-18px;font-size:96px;font-weight:700;color:var(--soft)">#</div>
+            </div>
+            <div style="display:flex;gap:var(--sp-2);padding:var(--sp-4)">
+              <div style="flex:1">
+                <div style="height:88px;border-radius:var(--r-md);background:linear-gradient(140deg,#c99a6e,#8c6a52);margin-bottom:var(--sp-2)"></div>
+                <div style="font-size:var(--fs-base);font-weight:600;line-height:1.45;margin-bottom:var(--sp-1)">石家庄这几家烤肉</div>
+                <div style="font-size:var(--fs-sm);color:var(--brand-deep)">◎ 老王烤肉</div>
+              </div>
+              <div style="flex:1">
+                <div style="height:64px;border-radius:var(--r-md);background:linear-gradient(140deg,#a87b58,#6b4f3a);margin-bottom:var(--sp-2)"></div>
+                <div style="font-size:var(--fs-base);font-weight:600;line-height:1.45">铜锅现烧的南门</div>
+              </div>
+            </div>
+          </div>
+          <div class="note ok">
+            话题名 lg、笔记数 sm、卡片标题 base、POI sm。<br>
+            四层各归其位，<b>差值最小也有 4rpx</b>。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 10 聊天 ========== -->
+  <section class="row">
+    <div class="row-head">
+      <span class="row-no">10</span>
+      <h2 class="row-t">聊天 <code>pages/chat/chat.vue</code></h2>
+      <span class="row-stat">字号 <b>3 种</b>（最少） · 离格 <b>43%</b> → <i>8 档 · 0%</i></span>
+    </div>
+    <div class="pair">
+      <div class="slot">
+        <div class="slot-label bad"><i class="dot bad"></i>现状</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div class="titlebar" style="font-size:14px">小周探店</div>
+            <div style="padding:16px;background:var(--soft);flex:1">
+              <div style="display:flex;gap:8px;margin-bottom:14px">
+                <div style="width:30px;height:30px;border-radius:50%;background:#8b8178;flex-shrink:0"></div>
+                <div style="background:#fff;padding:9px 12px;border-radius:4px 12px 12px 12px;font-size:13px;max-width:70%">上次说的那家烤肉，周末去吗</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-bottom:14px;flex-direction:row-reverse">
+                <div style="width:30px;height:30px;border-radius:50%;background:#d81228;flex-shrink:0"></div>
+                <div style="background:#d81228;color:#fff;padding:9px 12px;border-radius:12px 4px 12px 12px;font-size:13px;max-width:70%">去，六点到</div>
+              </div>
+              <div style="text-align:center;font-size:11px;color:#b5aba1">今天 14:20</div>
+            </div>
+            <div style="display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--line);align-items:center">
+              <div style="flex:1;background:var(--soft);border-radius:999px;padding:8px 12px;font-size:12px;color:#b5aba1">说点什么…</div>
+            </div>
+          </div>
+          <div class="note bad">
+            字号其实只有 22/26/28 三种，但 <b>43% 间距离格</b>——<br>
+            气泡内边距忽大忽小，节奏不稳。<b>此页问题在间距不在字号。</b>
+          </div>
+        </div>
+      </div>
+      <div class="slot">
+        <div class="slot-label ok"><i class="dot ok"></i>整改后</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div class="titlebar" style="font-size:var(--fs-base)">小周探店</div>
+            <div style="padding:var(--sp-4);background:var(--soft);flex:1">
+              <div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4)">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--ink3);flex-shrink:0"></div>
+                <div style="background:#fff;padding:var(--sp-2) var(--sp-3);border-radius:4px 12px 12px 12px;font-size:var(--fs-base);max-width:70%">上次说的那家烤肉，周末去吗</div>
+              </div>
+              <div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);flex-direction:row-reverse">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--brand-deep);flex-shrink:0"></div>
+                <div style="background:var(--brand-deep);color:#fff;padding:var(--sp-2) var(--sp-3);border-radius:12px 4px 12px 12px;font-size:var(--fs-base);max-width:70%">去，六点到</div>
+              </div>
+              <div style="text-align:center;font-size:var(--fs-sm);color:var(--ink4)">今天 14:20</div>
+            </div>
+            <div style="display:flex;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border-top:1px solid var(--line);align-items:center">
+              <div style="flex:1;background:var(--soft);border-radius:var(--r-pill);padding:var(--sp-2) var(--sp-3);font-size:var(--fs-sm);color:var(--ink4)">说点什么…</div>
+            </div>
+          </div>
+          <div class="note ok">
+            气泡内边距统一 <b>8/12px</b>、气泡间距 16px、<br>
+            头像 32px。节奏一致，读起来更顺。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 11 关注/粉丝 ========== -->
+  <section class="row">
+    <div class="row-head">
+      <span class="row-no">11</span>
+      <h2 class="row-t">关注 / 粉丝 <code>pages/following/following.vue</code></h2>
+      <span class="row-stat">字号 <b>5 种</b> · 离格 <b>57%</b> → <i>8 档 · 0%</i></span>
+    </div>
+    <div class="pair">
+      <div class="slot">
+        <div class="slot-label bad"><i class="dot bad"></i>现状</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div style="display:flex;gap:20px;padding:0 16px;border-bottom:1px solid var(--line)">
+              <div style="font-size:13px;font-weight:600;padding:10px 0;border-bottom:2px solid #d81228">关注</div>
+              <div style="font-size:13px;padding:10px 0;color:#8b8178">粉丝</div>
+            </div>
+            <div style="display:flex;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);align-items:center">
+              <div style="width:38px;height:38px;border-radius:50%;background:#8b8178;flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;font-weight:600">小周探店</div>
+                <div style="font-size:11px;color:#8b8178;margin-top:2px">只写吃过三次以上的店</div>
+              </div>
+              <div style="font-size:11px;padding:5px 12px;border-radius:999px;background:#f3ede3;color:#574f48">已关注</div>
+            </div>
+            <div style="display:flex;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);align-items:center">
+              <div style="width:38px;height:38px;border-radius:50%;background:#8b8178;flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;font-weight:600">漫步的猫</div>
+                <div style="font-size:11px;color:#8b8178;margin-top:2px">咖啡因驱动</div>
+              </div>
+              <div style="font-size:11px;padding:5px 12px;border-radius:999px;background:#d81228;color:#fff">回关</div>
+            </div>
+          </div>
+          <div class="note bad">
+            昵称 15px、简介 11px、按钮 11px、tab 13px、<br>
+            另有 22/26/30/34rpx 碎值——层级钝。
+          </div>
+        </div>
+      </div>
+      <div class="slot">
+        <div class="slot-label ok"><i class="dot ok"></i>整改后</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div style="display:flex;gap:var(--sp-5);padding:0 var(--sp-4);border-bottom:1px solid var(--line)">
+              <div style="font-size:var(--fs-base);font-weight:600;padding:var(--sp-3) 0;border-bottom:2px solid var(--brand-deep)">关注</div>
+              <div style="font-size:var(--fs-base);padding:var(--sp-3) 0;color:var(--ink3)">粉丝</div>
+            </div>
+            <div style="display:flex;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line);align-items:center">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--ink3);flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:var(--fs-md);font-weight:600">小周探店</div>
+                <div style="font-size:var(--fs-sm);color:var(--ink3);margin-top:var(--sp-1)">只写吃过三次以上的店</div>
+              </div>
+              <div style="font-size:var(--fs-sm);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-pill);background:var(--soft);color:var(--ink2)">已关注</div>
+            </div>
+            <div style="display:flex;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line);align-items:center">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--ink3);flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:var(--fs-md);font-weight:600">漫步的猫</div>
+                <div style="font-size:var(--fs-sm);color:var(--ink3);margin-top:var(--sp-1)">咖啡因驱动</div>
+              </div>
+              <div style="font-size:var(--fs-sm);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-pill);background:var(--brand-deep);color:#fff">回关</div>
+            </div>
+          </div>
+          <div class="note ok">
+            昵称 md、简介 sm、按钮 sm——只 2 档，<br>
+            但间距 12/16px 统一，列表节奏稳。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 12 关注话题 ========== -->
+  <section class="row">
+    <div class="row-head">
+      <span class="row-no">12</span>
+      <h2 class="row-t">关注的话题 <code>pages/topics/topics.vue</code></h2>
+      <span class="row-stat">字号 <b>5 种</b> · 离格 <b>57%</b> → <i>8 档 · 0%</i></span>
+    </div>
+    <div class="pair">
+      <div class="slot">
+        <div class="slot-label bad"><i class="dot bad"></i>现状</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div class="titlebar" style="font-size:14px">关注的话题</div>
+            <div style="display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);align-items:center">
+              <div style="font-size:16px;font-weight:700;color:#d81228">#</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;font-weight:600">深夜放肆</div>
+                <div style="font-size:11px;color:#8b8178;margin-top:2px">128 篇笔记</div>
+              </div>
+              <div style="font-size:11px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;color:#8b8178">取消</div>
+            </div>
+            <div style="display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);align-items:center">
+              <div style="font-size:16px;font-weight:700;color:#d81228">#</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;font-weight:600">巷子咖啡</div>
+                <div style="font-size:11px;color:#8b8178;margin-top:2px">86 篇笔记</div>
+              </div>
+              <div style="font-size:11px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;color:#8b8178">取消</div>
+            </div>
+          </div>
+          <div class="note bad">
+            # 号 16px 比话题名 15px 还大，视觉上<br>
+            <b>符号抢了内容</b>；另有 22/26/30/34rpx 碎值。
+          </div>
+        </div>
+      </div>
+      <div class="slot">
+        <div class="slot-label ok"><i class="dot ok"></i>整改后</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div class="titlebar" style="font-size:var(--fs-base)">关注的话题</div>
+            <div style="display:flex;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line);align-items:center">
+              <div style="font-size:var(--fs-md);font-weight:700;color:var(--brand-deep)">#</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:var(--fs-md);font-weight:600">深夜放肆</div>
+                <div style="font-size:var(--fs-sm);color:var(--ink3);margin-top:var(--sp-1)">128 篇笔记</div>
+              </div>
+              <div style="font-size:var(--fs-sm);padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-pill);color:var(--ink3)">取消</div>
+            </div>
+            <div style="display:flex;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line);align-items:center">
+              <div style="font-size:var(--fs-md);font-weight:700;color:var(--brand-deep)">#</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:var(--fs-md);font-weight:600">巷子咖啡</div>
+                <div style="font-size:var(--fs-sm);color:var(--ink3);margin-top:var(--sp-1)">86 篇笔记</div>
+              </div>
+              <div style="font-size:var(--fs-sm);padding:var(--sp-2) var(--sp-3);border:1px solid var(--line);border-radius:var(--r-pill);color:var(--ink3)">取消</div>
+            </div>
+          </div>
+          <div class="note ok">
+            # 降到与话题名同级（md），<b>符号不再抢戏</b>；<br>
+            内容用 md + sm 两层，清晰。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 13 草稿箱 ========== -->
+  <section class="row">
+    <div class="row-head">
+      <span class="row-no">13</span>
+      <h2 class="row-t">草稿箱 <code>pages/draftbox/draftbox.vue</code></h2>
+      <span class="row-stat">字号 <b>6 种</b> · 离格 <b>54%</b> → <i>8 档 · 0%</i></span>
+    </div>
+    <div class="pair">
+      <div class="slot">
+        <div class="slot-label bad"><i class="dot bad"></i>现状</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)">
+              <div style="font-size:16px;font-weight:600">草稿箱</div>
+              <div style="font-size:12px;color:#d81228">清空</div>
+            </div>
+            <div style="margin:12px 16px;border:1px solid var(--line);border-radius:12px;padding:13px">
+              <div style="font-size:14px;font-weight:600;margin-bottom:6px">石家庄这几家烤肉我劝你全试一遍</div>
+              <div style="font-size:12px;color:#8b8178;line-height:1.6;margin-bottom:9px">从棉一环的老王到裕华路南门，炭火声一直烧到凌晨两点…</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:11px;color:#b5aba1">2 小时前</div>
+                <div style="font-size:10px;padding:2px 8px;border-radius:999px;background:#f3ede3;color:#574f48">图文</div>
+              </div>
+            </div>
+            <div style="margin:12px 16px;border:1px solid var(--line);border-radius:12px;padding:13px">
+              <div style="font-size:14px;font-weight:600;margin-bottom:6px">胡同咖啡的下午光</div>
+              <div style="font-size:12px;color:#8b8178;line-height:1.6">门面只有两米宽…</div>
+            </div>
+          </div>
+          <div class="note bad">
+            字号 20/22/24/26/30/36 六种。<br>
+            摘要 12px 与时间 11px 只差 1px，分不清主次。
+          </div>
+        </div>
+      </div>
+      <div class="slot">
+        <div class="slot-label ok"><i class="dot ok"></i>整改后</div>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line)">
+              <div style="font-size:var(--fs-lg);font-weight:600">草稿箱</div>
+              <div style="font-size:var(--fs-base);color:var(--brand-deep)">清空</div>
+            </div>
+            <div style="margin:var(--sp-3) var(--sp-4);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-3)">
+              <div style="font-size:var(--fs-md);font-weight:600;margin-bottom:var(--sp-2)">石家庄这几家烤肉我劝你全试一遍</div>
+              <div style="font-size:var(--fs-sm);color:var(--ink3);line-height:1.7;margin-bottom:var(--sp-3)">从棉一环的老王到裕华路南门，炭火声一直烧到凌晨两点…</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:var(--fs-sm);color:var(--ink4)">2 小时前</div>
+                <div style="font-size:var(--fs-caption);padding:2px 8px;border-radius:var(--r-pill);background:var(--soft);color:var(--ink2)">图文</div>
+              </div>
+            </div>
+            <div style="margin:var(--sp-3) var(--sp-4);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-3)">
+              <div style="font-size:var(--fs-md);font-weight:600;margin-bottom:var(--sp-2)">胡同咖啡的下午光</div>
+              <div style="font-size:var(--fs-sm);color:var(--ink3);line-height:1.7">门面只有两米宽…</div>
+            </div>
+          </div>
+          <div class="note ok">
+            标题 md、摘要 sm、时间 sm、类型标签 caption。<br>
+            卡片间距统一 12/16px。
           </div>
         </div>
       </div>
