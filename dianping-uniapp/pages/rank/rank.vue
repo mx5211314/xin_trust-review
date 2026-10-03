@@ -27,8 +27,14 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09：说清楚 + 给下一步） -->
     <view v-if="!loading && !list.length" class="empty">
-      <text class="muted">还没有带店铺的点评，榜单会在内容积累后自动生成</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/shop.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">榜单还没生成</text>
+      <text class="empty-d">带店铺的点评积累到一定数量后，榜单会自动出现</text>
+      <view class="empty-btn" @tap="goWrite">去写点评</view>
     </view>
   </view>
 </template>
@@ -67,6 +73,10 @@ export default {
       uni.navigateTo({
         url: '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(shop)
       })
+    },
+    /** 空状态引导：去发布页写点评（发布是 tabBar 页，须用 switchTab） */
+    goWrite() {
+      uni.switchTab({ url: '/pages/publish/publish' })
     }
   }
 }
@@ -129,7 +139,7 @@ export default {
   color: var(--dp-text3);
 }
 .no1 {
-  background: linear-gradient(135deg, var(--dp-brand), var(--dp-brand));
+  background: linear-gradient(135deg, var(--dp-brand), var(--dp-brand-deep));
 }
 .no1 .no-text { color: #fff; }
 .no2 {
@@ -170,7 +180,7 @@ export default {
 }
 .bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--dp-brand), var(--dp-brand));
+  background: linear-gradient(90deg, var(--dp-brand), var(--dp-brand-deep));
   border-radius: 6rpx;
 }
 .arrow {
@@ -179,8 +189,48 @@ export default {
   flex-shrink: 0;
 }
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx var(--sp-5) 80rpx;
+}
+.empty-ic {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--sp-4);
+}
+.empty-ic-img {
+  width: 56rpx;
+  height: 56rpx;
+  opacity: .45;
+}
+.empty-t {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--dp-text);
+}
+.empty-d {
+  font-size: var(--fs-sm);
+  color: var(--dp-text3);
+  line-height: 1.7;
   text-align: center;
-  padding: 120rpx 40rpx;
+  margin-top: var(--sp-2);
+  max-width: 440rpx;
+}
+.empty-btn {
+  margin-top: var(--sp-5);
+  padding: 18rpx 56rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-brand-deep);
+  color: #ffffff;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  box-shadow: 0 8rpx 24rpx -6rpx rgba(216, 18, 40, .45);
 }
 .muted {
   font-size: 24rpx;

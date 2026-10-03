@@ -139,7 +139,7 @@ export default {
   padding-bottom: 40rpx;
 }
 .head {
-  background: linear-gradient(165deg, var(--dp-accent-soft), var(--dp-accent-soft) 55%, #ffffff);
+  background: linear-gradient(165deg, var(--dp-accent-soft), var(--dp-card) 58%);
   padding: 40rpx 32rpx 36rpx;
 }
 .title {

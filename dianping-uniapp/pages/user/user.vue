@@ -279,7 +279,7 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 50rpx 0 30rpx;
-  background: linear-gradient(180deg, var(--dp-accent-soft), var(--dp-accent-soft) 60%, rgba(255, 255, 255, 0));
+  background: linear-gradient(180deg, var(--dp-accent-soft), var(--dp-accent-soft) 60%, transparent);
 }
 .avatar {
   width: 150rpx;
