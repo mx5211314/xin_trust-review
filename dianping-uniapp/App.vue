@@ -25,6 +25,37 @@ page {
   --dp-brand-deep: #d81228;
   --dp-brand: #ff2442;
   --dp-jade: #1f6f5c;      /* 可信认证 / 上升趋势 */
+
+  /* ---- 字阶：8 档（替代原有 26 种，来源《UI 审查与对标报告》）----
+     小字密集、大字拉开。全站字号只准取这 8 个值。
+     与 uni.scss 的 $fs-* 一一对应。 */
+  --fs-caption: 20rpx;   /* 10px 角标、极小注释 */
+  --fs-sm:      24rpx;   /* 12px 辅助信息、时间戳 */
+  --fs-base:    28rpx;   /* 14px 正文主力 */
+  --fs-md:      32rpx;   /* 16px 强调正文、列表标题 */
+  --fs-lg:      40rpx;   /* 20px 小标题 */
+  --fs-xl:      48rpx;   /* 24px 区块标题 */
+  --fs-2xl:     64rpx;   /* 32px 页面大标题 */
+  --fs-display: 88rpx;   /* 44px 英雄数字 */
+
+  /* ---- 间距：8rpx 刻度（4pt 基准）----
+     所有 margin/padding/gap 只准取这 8 个值。
+     与 uni.scss 的 $sp-* 一一对应。 */
+  --sp-1: 8rpx;    /*  4px 最小间隙 */
+  --sp-2: 16rpx;   /*  8px 紧密 */
+  --sp-3: 24rpx;   /* 12px 常规 */
+  --sp-4: 32rpx;   /* 16px 卡片内边距 */
+  --sp-5: 48rpx;   /* 24px 区块间距 */
+  --sp-6: 64rpx;   /* 32px 大分隔 */
+  --sp-7: 96rpx;   /* 48px 页面级留白 */
+  --sp-8: 128rpx;  /* 64px 超大留白 */
+
+  /* ---- 圆角 ---- */
+  --r-sm: 8rpx; --r-md: 16rpx; --r-lg: 28rpx; --r-pill: 999rpx;
+
+  /* ---- 底部安全区（全面屏兜底）---- */
+  --safe-bottom: env(safe-area-inset-bottom);
+
   background-color: #f7f8fa;
   font-size: 28rpx;
   color: #1f2430;
@@ -45,16 +76,16 @@ page {
 /* 品牌红主题（小红书式） */
 .card {
   background: var(--dp-card);
-  border-radius: 16rpx;
-  margin: 16rpx 24rpx;
-  padding: 24rpx;
+  border-radius: var(--r-md);
+  margin: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3);
 }
 .btn-primary {
   /* 白字按钮：底色必须用加深版，原色 #ff2442 配白字仅 3.76:1 不达 AA（加深版 5.20:1） */
   background: var(--dp-brand-deep);
   color: #ffffff;
-  border-radius: 44rpx;
-  font-size: 30rpx;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-base);
 }
 .btn-primary.disabled {
   opacity: 0.5;
