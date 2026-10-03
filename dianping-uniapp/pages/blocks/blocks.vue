@@ -124,7 +124,7 @@ export default {
 }
 .avatar-text {
   font-size: 30rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .nickname {
   flex: 1;

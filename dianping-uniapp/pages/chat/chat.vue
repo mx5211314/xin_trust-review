@@ -145,7 +145,7 @@ export default {
   height: 68rpx;
   border-radius: 50%;
   background: var(--dp-card);
-  border: 1rpx solid #ffe0e4;
+  border: 1rpx solid var(--dp-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,7 +169,7 @@ export default {
   padding: 20rpx 24rpx;
 }
 .bubble.mine {
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   border-radius: 20rpx 6rpx 20rpx 20rpx;
 }
 .bubble-text {

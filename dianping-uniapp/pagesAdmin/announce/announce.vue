@@ -88,7 +88,7 @@ export default {
   padding: 24rpx;
 }
 .tip-card {
-  background: #fff7e8;
+  background: var(--dp-warn-soft);
   border-radius: 16rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
@@ -149,7 +149,7 @@ export default {
 .history-text {
   display: block;
   font-size: 26rpx;
-  color: #1f2430;
+  color: var(--dp-text);
   line-height: 1.5;
 }
 .history-time {

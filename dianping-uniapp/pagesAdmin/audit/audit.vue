@@ -303,7 +303,7 @@ export default {
   color: var(--dp-text3);
   margin-top: 4rpx;
 }
-.stat.c0 .stat-num { color: #ff2442; }
+.stat.c0 .stat-num { color: var(--dp-brand-deep); }
 .stat.c1 .stat-num { color: #0a9d6e; }
 .stat.c2 .stat-num { color: #e08a00; }
 .stat.c3 .stat-num { color: #3a7afe; }
@@ -320,7 +320,7 @@ export default {
   margin-right: 16rpx;
 }
 .tab.active {
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .tab-text {
   font-size: 26rpx;
@@ -507,7 +507,7 @@ export default {
   color: var(--dp-text);
 }
 .reason {
-  color: #a32d2d;
+  color: var(--dp-danger);
   font-size: 22rpx;
 }
 .ops {

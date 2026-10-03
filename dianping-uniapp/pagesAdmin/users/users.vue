@@ -236,8 +236,8 @@ export default {
   color: #0f6e56;
 }
 .op-red {
-  background: #fcebeb;
-  color: #a32d2d;
+  background: var(--dp-danger-soft);
+  color: var(--dp-danger);
 }
 .op-plain {
   background: #f1efe8;

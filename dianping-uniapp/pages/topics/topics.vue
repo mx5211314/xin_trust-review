@@ -78,7 +78,7 @@ export default {
   background: var(--dp-bg);
 }
 .head {
-  background: linear-gradient(165deg, #ffe4e9, #fff1f3 55%, #ffffff);
+  background: linear-gradient(165deg, var(--dp-accent-soft), var(--dp-accent-soft) 55%, #ffffff);
   padding: 40rpx 32rpx 36rpx;
 }
 .title {
@@ -119,7 +119,7 @@ export default {
   height: 60rpx;
   border-radius: 14rpx;
   background: var(--dp-soft);
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-size: 34rpx;
   font-weight: 700;
   display: flex;

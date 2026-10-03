@@ -83,7 +83,7 @@ export default {
   width: 150rpx;
   height: 150rpx;
   border-radius: 50%;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   position: relative;
   margin-bottom: 30rpx;
 }

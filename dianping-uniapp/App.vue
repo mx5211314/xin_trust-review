@@ -37,6 +37,10 @@ page {
   --dp-brand: #ff2442;       /* 原色：仅大字号/暗底/图形 3.52:1 */
   --dp-orange: #ff7a45;      /* 暖橙辅色：渐变、榜单 */
   --dp-jade: #0f9d76;        /* 可信认证 / 上升趋势 */
+  --dp-danger: #a32d2d;      /* 驳回/封禁文字 6.2:1 */
+  --dp-danger-soft: #fcebeb; /* 驳回底 */
+  --dp-warn: #8a5d18;        /* 提示文字 4.9:1 */
+  --dp-warn-soft: #fff7e8;   /* 提示底 */
 
   /* 字阶：8 档（替代原有 26 种，来源《UI 审查与对标报告》） */
   --fs-caption: 20rpx;   /* 10px 角标、极小注释 */
@@ -84,6 +88,10 @@ page {
   --dp-brand-deep: #ff5a6e;  /* 暗底提亮 6.22:1 */
   --dp-orange: #ff9a6b;
   --dp-jade: #4fbf9e;
+  --dp-danger: #ff8f8f;      /* 暗底 7.8:1 */
+  --dp-danger-soft: #3a1d1d;
+  --dp-warn: #e0b070;        /* 暗底 8.7:1 */
+  --dp-warn-soft: #3a2f1a;
   --sh-card: 0 2rpx 4rpx rgba(0,0,0,.2), 0 8rpx 24rpx -6rpx rgba(0,0,0,.5);
 }
 

@@ -530,7 +530,7 @@ export default {
   padding-bottom: 40rpx;
 }
 .head {
-  background: linear-gradient(165deg, #ffe4e9, #fff1f3 55%, #ffffff);
+  background: linear-gradient(165deg, var(--dp-accent-soft), var(--dp-accent-soft) 55%, #ffffff);
   padding: 40rpx 32rpx 60rpx;
   position: relative;
   overflow: hidden;
@@ -557,7 +557,7 @@ export default {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffb199, #ff2442);
+  background: linear-gradient(135deg, var(--dp-orange), var(--dp-brand));
   margin-right: 26rpx;
   display: flex;
   align-items: center;
@@ -680,7 +680,7 @@ export default {
   width: 48rpx;
   height: 5rpx;
   border-radius: 3rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .waterfall {
   display: flex;
@@ -710,7 +710,7 @@ export default {
   color: #555555;
 }
 .folder-chip.on .folder-chip-text {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 500;
 }
 .folder-chip-count {
@@ -719,7 +719,7 @@ export default {
   margin-left: 10rpx;
 }
 .folder-chip.on .folder-chip-count {
-  color: #ff7a8e;
+  color: var(--dp-brand);
 }
 .folder-add {
   background: transparent;
@@ -811,14 +811,14 @@ export default {
   color: var(--dp-text);
 }
 .menu-text.logout {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .menu-arrow {
   color: var(--dp-text4);
   font-size: 32rpx;
 }
 .badge {
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   border-radius: 999rpx;
   padding: 2rpx 12rpx;
   margin-left: 12rpx;
@@ -886,7 +886,7 @@ export default {
   justify-content: center;
 }
 .edit-avatar-btn {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-size: 26rpx;
 }
 .edit-input {
@@ -917,7 +917,7 @@ export default {
   margin-right: 20rpx;
 }
 .edit-btn.primary {
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   color: #ffffff;
 }
 </style>

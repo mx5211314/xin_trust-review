@@ -368,7 +368,7 @@ export default {
   position: absolute;
   right: -30rpx;
   top: -8rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   border-radius: 999rpx;
   min-width: 30rpx;
   height: 30rpx;
@@ -394,7 +394,7 @@ export default {
   width: 36rpx;
   height: 5rpx;
   border-radius: 3rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .chat-avatar {
   background: var(--dp-accent-soft);
@@ -411,7 +411,7 @@ export default {
 }
 .chat-badge {
   margin-top: 8rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   border-radius: 999rpx;
   padding: 2rpx 14rpx;
 }
@@ -444,7 +444,7 @@ export default {
   margin-right: 0;
 }
 .sum-card.on {
-  border-color: #ff2442;
+  border-color: var(--dp-brand-deep);
   background: #fff8f9;
 }
 .sum-img {
@@ -460,7 +460,7 @@ export default {
   position: absolute;
   right: 14rpx;
   top: 12rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   border-radius: 999rpx;
   min-width: 30rpx;
   padding: 0 8rpx;
@@ -488,12 +488,12 @@ export default {
   color: var(--dp-brand-deep);
 }
 .announce-icon {
-  background: #ffeef1;
+  background: var(--dp-accent-soft);
 }
 .announce-tag {
   font-size: 20rpx;
   color: var(--dp-brand-deep);
-  background: #ffeef1;
+  background: var(--dp-accent-soft);
   border-radius: 6rpx;
   padding: 2rpx 10rpx;
   margin-left: 10rpx;
@@ -510,7 +510,7 @@ export default {
   position: relative;
 }
 .item.unread {
-  background: #fff5f6;
+  background: var(--dp-accent-soft);
 }
 .item.unread .actor {
   font-weight: 600;
@@ -580,7 +580,7 @@ export default {
   width: 16rpx;
   height: 16rpx;
   border-radius: 50%;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .empty {
   text-align: center;

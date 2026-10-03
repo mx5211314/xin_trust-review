@@ -798,11 +798,11 @@ export default {
   padding-bottom: 150rpx;
 }
 .reject-bar {
-  background: #fcebeb;
+  background: var(--dp-danger-soft);
   padding: 20rpx 24rpx;
 }
 .reject-text {
-  color: #a32d2d;
+  color: var(--dp-danger);
   font-size: 26rpx;
 }
 .media {
@@ -834,8 +834,8 @@ export default {
 .chev {
   width: 20rpx;
   height: 20rpx;
-  border-left: 5rpx solid #1f2430;
-  border-bottom: 5rpx solid #1f2430;
+  border-left: 5rpx solid var(--dp-text);
+  border-bottom: 5rpx solid var(--dp-text);
   transform: rotate(45deg);
   margin-left: 8rpx;
 }
@@ -851,7 +851,7 @@ export default {
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background: #1f2430;
+  background: var(--dp-text);
 }
 .banner {
   width: 100%;
@@ -919,7 +919,7 @@ export default {
   display: inline;
 }
 .text .mention {
-  color: #4a90d9;
+  color: var(--dp-brand-deep);
   font-weight: 500;
 }
 .topic-row {
@@ -929,7 +929,7 @@ export default {
 }
 .topic {
   font-size: 26rpx;
-  color: #4a90d9;
+  color: var(--dp-brand-deep);
   margin-right: 22rpx;
 }
 .poi-row {
@@ -947,7 +947,7 @@ export default {
   display: inline-flex;
   align-items: center;
   padding: 6rpx 16rpx;
-  background: #fff5f6;
+  background: var(--dp-accent-soft);
   border-radius: 999rpx;
 }
 .poi-ico {
@@ -956,7 +956,7 @@ export default {
   margin-right: 8rpx;
 }
 .poi-text {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 500;
 }
 .region {
@@ -1101,7 +1101,7 @@ export default {
 }
 
 .clike-icon.liked {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .clike-img {
   width: 38rpx;
@@ -1150,7 +1150,7 @@ export default {
   border-radius: 24rpx;
 }
 .send-text {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-size: 26rpx;
   font-weight: 500;
 }
@@ -1162,7 +1162,7 @@ export default {
 }
 
 .act-icon.liked {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   animation: dpop 0.3s ease;
 }
 @keyframes dpop {
@@ -1171,11 +1171,11 @@ export default {
   100% { transform: scale(1); }
 }
 .act-icon.star {
-  color: #ff8a3d;
+  color: var(--dp-orange);
   font-size: 38rpx;
 }
 .act-icon.star.faved {
-  color: #ff8a3d;
+  color: var(--dp-orange);
 }
 .act-img {
   width: 46rpx;
@@ -1193,11 +1193,11 @@ export default {
   padding: 18rpx 20rpx;
 }
 .reply-tag {
-  color: #4a90d9;
+  color: var(--dp-brand-deep);
 }
 .creply {
   font-size: 22rpx;
-  color: #4a90d9;
+  color: var(--dp-brand-deep);
   margin-right: 16rpx;
 }
 .cdel {
@@ -1225,7 +1225,7 @@ export default {
   height: 48rpx;
   border-radius: 50%;
   background: var(--dp-card);
-  border: 1rpx solid #ffe0e4;
+  border: 1rpx solid var(--dp-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1284,7 +1284,7 @@ export default {
 }
 .follow-mini {
   margin-left: auto;
-  border: 1.5rpx solid #ff2442;
+  border: 1.5rpx solid var(--dp-brand-deep);
   border-radius: 999rpx;
   padding: 8rpx 26rpx;
 }
@@ -1391,7 +1391,7 @@ export default {
   margin-left: 12rpx;
 }
 .fav-row-add .fav-row-name {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .fav-cancel {
   padding: 24rpx 32rpx;

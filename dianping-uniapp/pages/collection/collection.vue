@@ -252,7 +252,7 @@ export default {
   padding: 10rpx 28rpx;
   border-radius: 999rpx;
   background: var(--dp-brand-deep);
-  border: 1rpx solid #ff2442;
+  border: 1rpx solid var(--dp-brand-deep);
 }
 .follow-btn.on {
   background: rgba(255, 255, 255, 0.16);
@@ -379,7 +379,7 @@ export default {
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  background: #ffd7df;
+  background: var(--dp-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;

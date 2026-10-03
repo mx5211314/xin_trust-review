@@ -120,7 +120,7 @@ export default {
 }
 /* 品牌区：红渐变 + 波点纹理，白脸 logo 反转聚焦 */
 .hero {
-  background: linear-gradient(160deg, #ff4d64, #ff2442 45%, #d91c38);
+  background: linear-gradient(160deg, #ff4d64, var(--dp-brand) 45%, #d91c38);
   padding: 150rpx 0 130rpx;
   position: relative;
   overflow: hidden;
@@ -151,7 +151,7 @@ export default {
   width: 20rpx;
   height: 20rpx;
   border-radius: 50%;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   top: 56rpx;
 }
 .eye-l {
@@ -161,7 +161,7 @@ export default {
   position: absolute;
   right: 34rpx;
   top: 44rpx;
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-size: 40rpx;
   line-height: 40rpx;
 }
@@ -171,7 +171,7 @@ export default {
   right: 45rpx;
   bottom: 34rpx;
   height: 34rpx;
-  border-bottom: 10rpx solid #ff2442;
+  border-bottom: 10rpx solid var(--dp-brand-deep);
   border-radius: 0 0 70rpx 70rpx;
 }
 .app-name {
@@ -226,7 +226,7 @@ export default {
   justify-content: center;
 }
 .code-btn-text {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-size: 26rpx;
 }
 .login-btn {

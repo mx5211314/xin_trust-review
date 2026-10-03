@@ -139,7 +139,7 @@ export default {
   padding-bottom: 40rpx;
 }
 .head {
-  background: linear-gradient(165deg, #ffe4e9, #fff1f3 55%, #ffffff);
+  background: linear-gradient(165deg, var(--dp-accent-soft), var(--dp-accent-soft) 55%, #ffffff);
   padding: 40rpx 32rpx 36rpx;
 }
 .title {
@@ -179,7 +179,7 @@ export default {
   width: 72rpx;
   height: 72rpx;
   border-radius: 16rpx;
-  background: linear-gradient(135deg, #ffb199, #ff2442);
+  background: linear-gradient(135deg, var(--dp-orange), var(--dp-brand));
   display: flex;
   align-items: center;
   justify-content: center;

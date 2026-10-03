@@ -78,7 +78,7 @@ export default {
   background: var(--dp-bg);
 }
 .hero {
-  background: linear-gradient(135deg, #ff5468, #ff2442 55%, #e01836);
+  background: linear-gradient(135deg, #ff5468, var(--dp-brand) 55%, #e01836);
   padding: 60rpx 40rpx 48rpx;
 }
 .hero-title {
@@ -129,11 +129,11 @@ export default {
   color: var(--dp-text3);
 }
 .no1 {
-  background: linear-gradient(135deg, #ff7a8e, #ff2442);
+  background: linear-gradient(135deg, var(--dp-brand), var(--dp-brand));
 }
 .no1 .no-text { color: #fff; }
 .no2 {
-  background: linear-gradient(135deg, #ffb199, #ff7a45);
+  background: linear-gradient(135deg, var(--dp-orange), #ff7a45);
 }
 .no2 .no-text { color: #fff; }
 .no3 {
@@ -170,7 +170,7 @@ export default {
 }
 .bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff7a8e, #ff2442);
+  background: linear-gradient(90deg, var(--dp-brand), var(--dp-brand));
   border-radius: 6rpx;
 }
 .arrow {

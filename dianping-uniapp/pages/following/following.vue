@@ -165,7 +165,7 @@ export default {
   width: 40rpx;
   height: 6rpx;
   border-radius: 3rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .user-item {
   display: flex;
@@ -177,7 +177,7 @@ export default {
   width: 88rpx;
   height: 88rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffb199, #ff2442);
+  background: linear-gradient(135deg, var(--dp-orange), var(--dp-brand));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,8 +212,8 @@ export default {
   color: var(--dp-text3);
 }
 .pill-on {
-  background: #ff2442;
-  border-color: #ff2442;
+  background: var(--dp-brand-deep);
+  border-color: var(--dp-brand-deep);
 }
 .pill-tx-on {
   font-size: 24rpx;

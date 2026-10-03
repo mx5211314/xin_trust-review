@@ -279,13 +279,13 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 50rpx 0 30rpx;
-  background: linear-gradient(180deg, #ffe4e9, #fff1f3 60%, rgba(255, 255, 255, 0));
+  background: linear-gradient(180deg, var(--dp-accent-soft), var(--dp-accent-soft) 60%, rgba(255, 255, 255, 0));
 }
 .avatar {
   width: 150rpx;
   height: 150rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffb199, #ff2442);
+  background: linear-gradient(135deg, var(--dp-orange), var(--dp-brand));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -421,7 +421,7 @@ export default {
   width: 48rpx;
   height: 5rpx;
   border-radius: 3rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .waterfall {
   display: flex;

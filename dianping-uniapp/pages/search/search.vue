@@ -349,7 +349,7 @@ export default {
   padding: 16rpx 24rpx;
 }
 .search-box.active {
-  border: 1.5rpx solid #ff2442;
+  border: 1.5rpx solid var(--dp-brand-deep);
   background: var(--dp-card);
 }
 .s-ring {
@@ -403,7 +403,7 @@ export default {
   width: 36rpx;
   height: 5rpx;
   border-radius: 3rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .sec-head {
   display: flex;
@@ -451,7 +451,7 @@ export default {
   flex-shrink: 0;
 }
 .hno.r1 {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-size: 34rpx;
 }
 .hno.r2 {
@@ -621,7 +621,7 @@ export default {
   width: 72rpx;
   height: 72rpx;
   border-radius: 50%;
-  background: #ffd7df;
+  background: var(--dp-accent-soft);
   flex-shrink: 0;
 }
 .u-name {

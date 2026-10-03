@@ -186,7 +186,7 @@ export default {
   color: var(--dp-text3);
 }
 .prov-tx.on {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 700;
 }
 .city-col {
@@ -224,7 +224,7 @@ export default {
   color: var(--dp-text);
 }
 .city-item.on {
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .city-tx.on {
   color: #ffffff;

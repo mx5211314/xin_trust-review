@@ -777,7 +777,7 @@ export default {
   flex-shrink: 0;
 }
 .mention-avatar.ph {
-  background: linear-gradient(135deg, #ffb199, #ff2442);
+  background: linear-gradient(135deg, var(--dp-orange), var(--dp-brand));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -803,7 +803,7 @@ export default {
   width: 140rpx;
   height: 140rpx;
   border-radius: 50%;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
   margin: 0 auto 40rpx;
   display: flex;
   align-items: center;
@@ -858,7 +858,7 @@ export default {
   line-height: 88rpx;
 }
 .edit-tip {
-  background: #fff7e8;
+  background: var(--dp-warn-soft);
   border-radius: 12rpx;
   padding: 14rpx 22rpx;
   margin-bottom: 10rpx;
@@ -902,11 +902,11 @@ export default {
   color: var(--dp-text3);
 }
 .type-tab.active {
-  border-color: #ff2442;
+  border-color: var(--dp-brand-deep);
   background: var(--dp-accent-soft);
 }
 .type-tab.active .type-tab-tx {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 600;
 }
 .textarea {
@@ -1052,7 +1052,7 @@ export default {
   max-width: 560rpx;
 }
 .line-topic.picked {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
 }
 .arrow {
   color: var(--dp-text4);
@@ -1064,7 +1064,7 @@ export default {
 }
 /* 已填店铺名红色显示（原型05：已选 POI 强调） */
 .poi-input.filled {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 500;
 }
 /* "附近"入口：定位选附近店铺 */
@@ -1164,14 +1164,14 @@ export default {
 }
 .tchip.on {
   background: var(--dp-accent-soft);
-  border-color: #ff2442;
+  border-color: var(--dp-brand-deep);
 }
 .tchip-text {
   font-size: 24rpx;
   color: #6b7280;
 }
 .tchip-text.on {
-  color: #ff2442;
+  color: var(--dp-brand-deep);
   font-weight: 500;
 }
 </style>
