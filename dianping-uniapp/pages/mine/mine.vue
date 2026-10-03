@@ -25,8 +25,13 @@
           <text class="muted head-muted">点评号：{{ dianpingNo }}</text>
           <text v-if="user && user.bio" class="muted head-muted">{{ user.bio }}</text>
         </view>
-        <view class="head-icons" @tap="goSettings">
-          <image class="gear-img" src="/static/icons/gear.png" mode="aspectFit" />
+        <!-- ☰ 侧边栏：次要功能统一收在这里（参考抖音/小红书） -->
+        <view class="head-icons" @tap="drawerShow = true">
+          <view class="drawer-btn">
+            <view class="drawer-bar"></view>
+            <view class="drawer-bar"></view>
+            <view class="drawer-bar"></view>
+          </view>
         </view>
       </view>
     </view>
@@ -108,6 +113,8 @@
           <text class="wtitle">{{ item.title }}</text>
           <view class="wfoot">
             <text class="wlike-num">{{ item.likeCount }} 赞</text>
+            <!-- 播放量属作者私有数据：后端只对作者本人下发，非作者为 null -->
+            <text v-if="item.viewCount != null" class="wview-num">{{ item.viewCount }} 播放</text>
           </view>
         </view>
       </view>
@@ -135,50 +142,66 @@
           <text class="wtitle">{{ item.title }}</text>
           <view class="wfoot">
             <text class="wlike-num">{{ item.likeCount }} 赞</text>
+            <!-- 播放量属作者私有数据：后端只对作者本人下发，非作者为 null -->
+            <text v-if="item.viewCount != null" class="wview-num">{{ item.viewCount }} 播放</text>
           </view>
         </view>
       </view>
     </view>
 
+    <!-- 引导式空状态：说清楚 + 给下一步（原则 09，去掉 emoji） -->
     <view v-if="!loading && !list.length" class="empty">
-      <text class="empty-emoji">📝</text>
-      <text class="muted">{{ tab === 'note' ? '还没有发布过笔记' : tab === 'fav' ? '还没有收藏内容' : '还没有赞过内容' }}</text>
-      <text v-if="tab === 'note' && isReviewer" class="muted small">长按卡片可编辑或删除</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" :src="emptyInfo.icon" mode="aspectFit" />
+      </view>
+      <text class="empty-t">{{ emptyInfo.title }}</text>
+      <text class="empty-d">{{ emptyInfo.desc }}</text>
+      <view v-if="emptyInfo.btn" class="empty-btn" @tap="goEmptyAction">{{ emptyInfo.btn }}</view>
     </view>
 
-    <!-- 菜单 -->
-    <view class="menu">
-      <view class="menu-item" v-if="user && user.role === 'USER'" @tap="goGuide">
-        <text class="menu-text">如何成为点评人</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" v-if="isAdminUser" @tap="goAdminAudit">
-        <text class="menu-text">内容管理（后台）</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" v-if="isAdminUser" @tap="goAnnounce">
-        <text class="menu-text">发布公告</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" v-if="isAdminUser" @tap="goAdminUsers">
-        <text class="menu-text">用户管理（后台）</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @tap="goFolders">
-        <text class="menu-text">收藏夹管理</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @tap="goBrowse">
-        <text class="menu-text">浏览记录</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @tap="goDraftbox">
-        <text class="menu-text">草稿箱</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @tap="goTopics">
-        <text class="menu-text">关注的话题</text>
-        <text class="menu-arrow">›</text>
+    <!-- 侧边栏抽屉：功能入口不占主屏（抖音/小红书式） -->
+    <view v-if="drawerShow" class="drawer-mask" @tap="drawerShow = false">
+      <view class="drawer" @tap.stop>
+        <view class="drawer-head">
+          <view class="drawer-avatar">
+            <image v-if="user && user.avatar" class="drawer-avatar-img" :src="user.avatar" mode="aspectFill" />
+            <text v-else class="drawer-avatar-text">{{ shortName }}</text>
+          </view>
+          <view class="drawer-id">
+            <text class="drawer-name">{{ user ? user.nickname : '-' }}</text>
+            <text class="drawer-sub">点评号：{{ dianpingNo }}</text>
+          </view>
+        </view>
+        <scroll-view class="drawer-list" scroll-y="true">
+          <view class="drawer-item" v-if="user && user.role === 'USER'" @tap="drawerGo('goGuide')">
+            <text class="drawer-text">如何成为点评人</text><text class="drawer-arrow">›</text>
+          </view>
+          <view class="drawer-item" @tap="drawerGo('goFolders')">
+            <text class="drawer-text">收藏夹管理</text><text class="drawer-arrow">›</text>
+          </view>
+          <view class="drawer-item" @tap="drawerGo('goBrowse')">
+            <text class="drawer-text">浏览记录</text><text class="drawer-arrow">›</text>
+          </view>
+          <view class="drawer-item" @tap="drawerGo('goDraftbox')">
+            <text class="drawer-text">草稿箱</text><text class="drawer-arrow">›</text>
+          </view>
+          <view class="drawer-item" @tap="drawerGo('goTopics')">
+            <text class="drawer-text">关注的话题</text><text class="drawer-arrow">›</text>
+          </view>
+          <view class="drawer-item" @tap="drawerGo('goSettings')">
+            <text class="drawer-text">设置</text><text class="drawer-arrow">›</text>
+          </view>
+          <!-- 管理端入口 -->
+          <view class="drawer-item" v-if="isAdminUser" @tap="drawerGo('goAdminAudit')">
+            <text class="drawer-text">内容管理（后台）</text><text class="drawer-arrow">›</text>
+          </view>
+          <view class="drawer-item" v-if="isAdminUser" @tap="drawerGo('goAnnounce')">
+            <text class="drawer-text">发布公告</text><text class="drawer-arrow">›</text>
+          </view>
+          <view class="drawer-item" v-if="isAdminUser" @tap="drawerGo('goAdminUsers')">
+            <text class="drawer-text">用户管理（后台）</text><text class="drawer-arrow">›</text>
+          </view>
+        </scroll-view>
       </view>
     </view>
 
@@ -224,6 +247,7 @@ export default {
       loading: false,
       unread: 0,
       editShow: false,
+      drawerShow: false,
       editNickname: '',
       editAvatar: '',
       editBio: ''
@@ -236,6 +260,31 @@ export default {
     isReviewer() {
       const u = this.user
       return !!u && (u.role === 'REVIEWER' || u.role === 'ADMIN')
+    },
+    /** 空状态文案：说清楚 + 给下一步（原则 09） */
+    emptyInfo() {
+      if (this.tab === 'note') {
+        return {
+          icon: '/static/icons/topic.png',
+          title: '还没有发布过笔记',
+          desc: this.isReviewer ? '发布后长按卡片可编辑或删除' : '成为点评人后即可发布',
+          btn: this.isReviewer ? '写第一条点评' : ''
+        }
+      }
+      if (this.tab === 'fav') {
+        return {
+          icon: '/static/icons/star.png',
+          title: '还没有收藏内容',
+          desc: '在详情页点收藏，就能在这里找到',
+          btn: '去逛逛'
+        }
+      }
+      return {
+        icon: '/static/icons/heart.png',
+        title: '还没有赞过内容',
+        desc: '点赞后会出现在这里',
+        btn: '去逛逛'
+      }
     },
     shortName() {
       return this.user && this.user.nickname ? this.user.nickname.slice(0, 1) : '我'
@@ -481,6 +530,19 @@ export default {
     goSettings() {
       uni.navigateTo({ url: '/pages/settings/settings' })
     },
+    /** 抽屉条目点击：先收起抽屉，再执行跳转 */
+    drawerGo(fn) {
+      this.drawerShow = false
+      if (typeof this[fn] === 'function') this[fn]()
+    },
+    /** 空状态的引导动作（feed/publish 均为 tabBar 页，需用 switchTab） */
+    goEmptyAction() {
+      if (this.tab === 'note') {
+        uni.switchTab({ url: '/pages/publish/publish' })
+      } else {
+        uni.switchTab({ url: '/pages/feed/feed' })
+      }
+    },
     goFollowing() {
       uni.navigateTo({ url: '/pages/following/following?tab=follow' })
     },
@@ -618,9 +680,19 @@ export default {
 .head-icons {
   padding: 10rpx;
 }
-.gear-img {
-  width: 40rpx;
-  height: 40rpx;
+/* ☰ 三横线（纯 CSS，不需要图标资源） */
+.drawer-btn {
+  width: 44rpx;
+  height: 44rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8rpx;
+}
+.drawer-bar {
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: var(--dp-text);
 }
 .stats {
   background: var(--dp-card);
@@ -780,42 +852,103 @@ export default {
   overflow: hidden;
 }
 .wfoot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   padding: 8rpx 14rpx 14rpx;
 }
 .wlike-num {
-  font-size: 20rpx;
+  font-size: var(--fs-caption);
   color: var(--dp-text3);
 }
-.menu {
-  background: var(--dp-card);
-  border-radius: 20rpx;
-  margin: 20rpx 24rpx;
-  padding: 0 28rpx;
+/* 播放量：只有作者本人拿得到（后端按归属下发，非作者为 null 不渲染） */
+.wview-num {
+  font-size: var(--fs-caption);
+  color: var(--dp-brand-deep);
+  margin-left: auto;
 }
-.menu-item {
+/* 侧边栏抽屉（抖音/小红书式：功能入口不占主屏） */
+.drawer-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(28, 25, 23, .4);
+  z-index: 200;
+}
+.drawer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 560rpx;
+  max-width: 78%;
+  background: var(--dp-bg);
+  box-shadow: -16rpx 0 48rpx rgba(28, 25, 23, .2);
+  display: flex;
+  flex-direction: column;
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 96rpx 32rpx 32rpx;
+  border-bottom: 1rpx solid var(--dp-line);
+}
+.drawer-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: var(--r-pill);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(140deg, var(--dp-orange), var(--dp-brand-deep));
+}
+.drawer-avatar-img {
+  width: 100%;
+  height: 100%;
+}
+.drawer-avatar-text {
+  color: #ffffff;
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.drawer-id {
+  flex: 1;
+  min-width: 0;
+}
+.drawer-name {
+  display: block;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--dp-text);
+}
+.drawer-sub {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--dp-text3);
+  margin-top: 4rpx;
+}
+.drawer-list {
+  flex: 1;
+  padding: var(--sp-2) 0;
+}
+.drawer-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 30rpx 0;
-  border-bottom: 1rpx solid var(--dp-soft);
+  padding: var(--sp-3) var(--sp-4);
 }
-.menu-item:last-child {
-  border-bottom: none;
-}
-.menu-left {
-  display: flex;
-  align-items: center;
-}
-.menu-text {
-  font-size: 28rpx;
+.drawer-text {
+  font-size: var(--fs-base);
   color: var(--dp-text);
 }
-.menu-text.logout {
-  color: var(--dp-brand-deep);
-}
-.menu-arrow {
+.drawer-arrow {
+  font-size: var(--fs-md);
   color: var(--dp-text4);
-  font-size: 32rpx;
 }
 .badge {
   background: var(--dp-brand-deep);
@@ -834,9 +967,44 @@ export default {
   padding: 100rpx 0;
   background: var(--dp-bg);
 }
-.empty-emoji {
-  font-size: 70rpx;
-  margin-bottom: 20rpx;
+/* 引导式空状态（原则 09，去掉 emoji） */
+.empty-ic {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--sp-4);
+}
+.empty-ic-img {
+  width: 56rpx;
+  height: 56rpx;
+  opacity: .45;
+}
+.empty-t {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--dp-text);
+}
+.empty-d {
+  font-size: var(--fs-sm);
+  color: var(--dp-text3);
+  line-height: 1.7;
+  text-align: center;
+  margin-top: var(--sp-2);
+  max-width: 440rpx;
+}
+.empty-btn {
+  margin-top: var(--sp-5);
+  padding: 18rpx 56rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-brand-deep);
+  color: #ffffff;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  box-shadow: 0 8rpx 24rpx -6rpx rgba(216, 18, 40, .45);
 }
 .small {
   font-size: 22rpx;

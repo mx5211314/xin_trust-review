@@ -198,7 +198,7 @@ public class ContentService {
                         .eq(status != null && !status.isBlank(), Content::getStatus, status)
                         .orderByDesc(Content::getCreateTime));
         List<ContentVO> vos = p.getRecords().stream()
-                .map(c -> toVo(c, null, false, true, false, 0, 0, ""))
+                .map(c -> toVo(c, null, false, true, false, 0, 0, "", null))
                 .toList();
         Map<String, Object> data = new java.util.HashMap<>();
         data.put("total", p.getTotal());
@@ -389,7 +389,7 @@ public class ContentService {
                 : userMapper.selectBatchIds(userIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
         return list.stream()
-                .map(c -> toVo(c, users.get(c.getUserId()), false, false, false, 0, 0, ""))
+                .map(c -> toVo(c, users.get(c.getUserId()), false, false, false, 0, 0, "", null))
                 .toList();
     }
 
@@ -456,7 +456,7 @@ public class ContentService {
                         .collect(Collectors.toMap(User::getId, Function.identity()));
         return ordered.stream()
                 .map(c -> toVo(c, users.get(c.getUserId()), true, false, false, 0, 0,
-                        viewTimes.getOrDefault(c.getId(), "")))
+                        viewTimes.getOrDefault(c.getId(), ""), null))
                 .toList();
     }
 
@@ -586,7 +586,7 @@ public class ContentService {
                         .collect(Collectors.toMap(User::getId, Function.identity()));
 
         List<ContentVO> list = records.stream()
-                .map(c -> toVo(c, users.get(c.getUserId()), likedSet.contains(c.getId()), false, false, 0, 0, ""))
+                .map(c -> toVo(c, users.get(c.getUserId()), likedSet.contains(c.getId()), false, false, 0, 0, "", me))
                 .toList();
 
         Map<String, Object> data = new java.util.HashMap<>();
@@ -595,10 +595,11 @@ public class ContentService {
         return data;
     }
 
-    /** 带作者信息的 VO 转换（列表/详情共用） */
+    /** 带作者信息的 VO 转换（列表/详情共用）
+     *  viewerId：当前访问者。播放量属作者私有数据，仅当访问者就是作者时才返回。 */
     private ContentVO toVo(Content c, User author, boolean liked, boolean withDetail,
                            boolean favorited, long favoriteCount, long commentCount,
-                           String viewTime) {
+                           String viewTime, Long viewerId) {
         List<String> imageKeys = fromJson(c.getImages());
         List<String> imageUrls = imageKeys.stream().map(ossService::publicUrl).toList();
         ContentVO.Author a = author == null ? null
@@ -620,7 +621,8 @@ public class ContentService {
                 c.getLikeCount(),
                 (int) favoriteCount,
                 (int) commentCount,
-                c.getViewCount(),
+                // 播放量：仅作者本人可见，其余一律不下发（避免经公开接口泄露）
+                (viewerId != null && viewerId.equals(c.getUserId())) ? c.getViewCount() : null,
                 liked,
                 favorited,
                 c.getCreateTime() == null ? "" : c.getCreateTime().format(FMT),
@@ -641,7 +643,7 @@ public class ContentService {
                 .eq(UserAction::getContentId, c.getId())
                 .eq(UserAction::getType, UserAction.TYPE_FAV)) > 0;
         long cmtCount = commentService.countOf(c.getId());
-        return toVo(c, author, likedSet.contains(c.getId()), true, favorited, favCount, cmtCount, "");
+        return toVo(c, author, likedSet.contains(c.getId()), true, favorited, favCount, cmtCount, "", me);
     }
 
     /** 批量查"我是否点过赞"（user_action 唯一索引，快） */
