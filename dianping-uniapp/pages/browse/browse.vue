@@ -40,9 +40,14 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09） -->
     <view v-if="!loading && !groups.length" class="empty">
-      <text class="muted">还没有浏览记录</text>
-      <text class="muted small">去首页逛逛，看过的点评会记在这里</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/eye.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">还没有浏览记录</text>
+      <text class="empty-d">去首页逛逛，看过的点评会记在这里</text>
+      <view class="empty-btn" @tap="goFeed">去逛逛</view>
     </view>
   </view>
 </template>
@@ -137,6 +142,10 @@ export default {
     },
     goDetail(item) {
       uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
+    },
+    /** 空状态引导：去首页逛逛（feed 是 tabBar 页，须用 switchTab） */
+    goFeed() {
+      uni.switchTab({ url: '/pages/feed/feed' })
     }
   }
 }

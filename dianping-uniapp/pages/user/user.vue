@@ -95,8 +95,13 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09） -->
     <view v-if="!loading && !list.length" class="empty">
-      <text class="muted">还没有发布过笔记</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/topic.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">还没有发布过笔记</text>
+      <text class="empty-d">TA 发布后，笔记会出现在这里</text>
     </view>
     <view style="height: 40rpx"></view>
   </view>
@@ -477,8 +482,11 @@ export default {
   font-size: 20rpx;
   color: var(--dp-text3);
 }
+/* 引导式空状态容器（原则 09） */
 .empty {
-  text-align: center;
-  padding: 80rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx var(--sp-5) 80rpx;
 }
 </style>

@@ -19,8 +19,13 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09） -->
     <view v-else-if="!list.length" class="empty">
-      <text class="empty-text">还没有相关内容</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/topic.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">还没有相关内容</text>
+      <text class="empty-d">换个关键词试试，或去首页逛逛</text>
     </view>
 
     <view v-else class="waterfall">
@@ -298,7 +303,7 @@ export default {
   justify-content: center;
 }
 .cover-empty-text {
-  color: #bbb;
+  color: var(--dp-text4);
   font-size: 24rpx;
 }
 .video-badge {
@@ -412,17 +417,16 @@ export default {
   color: var(--dp-text3);
   margin-left: 6rpx;
 }
+/* 引导式空状态容器（原则 09） */
 .empty {
-  text-align: center;
-  padding: 160rpx 0;
-}
-.empty-text {
-  color: #bbb;
-  font-size: 28rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx var(--sp-5) 80rpx;
 }
 .loading-more {
   text-align: center;
-  color: #bbb;
+  color: var(--dp-text4);
   padding: 24rpx;
   font-size: 24rpx;
 }

@@ -38,8 +38,11 @@
         </view>
       </view>
       <view v-if="!loadingChat && !conversations.length" class="empty">
-        <text class="muted">还没有私信</text>
-        <text class="muted small">在用户主页点"私信"可以给对方发消息</text>
+        <view class="empty-ic">
+          <image class="empty-ic-img" src="/static/icons/bubble.png" mode="aspectFit" />
+        </view>
+        <text class="empty-t">还没有私信</text>
+        <text class="empty-d">在用户主页点「私信」就能给对方发消息</text>
       </view>
     </view>
 
@@ -61,7 +64,11 @@
         <view v-if="!a.isRead" class="dot"></view>
       </view>
       <view v-if="!loadingAnnounce && !announces.length" class="empty">
-        <text class="muted">暂无公告</text>
+        <view class="empty-ic">
+          <image class="empty-ic-img" src="/static/icons/announce.png" mode="aspectFit" />
+        </view>
+        <text class="empty-t">暂无公告</text>
+        <text class="empty-d">平台的重要通知会出现在这里</text>
       </view>
     </view>
 
@@ -110,7 +117,11 @@
     </view>
 
     <view v-if="tab === 'interact' && !list.length" class="empty">
-      <text class="muted">还没有互动消息</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/heart.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">还没有互动消息</text>
+      <text class="empty-d">收到赞、收藏和评论时会提醒你</text>
     </view>
   </view>
 </template>
@@ -582,8 +593,11 @@ export default {
   border-radius: 50%;
   background: var(--dp-brand-deep);
 }
+/* 引导式空状态容器（原则 09） */
 .empty {
-  text-align: center;
-  padding: 120rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx var(--sp-5) 80rpx;
 }
 </style>
