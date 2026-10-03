@@ -327,6 +327,17 @@ page {
   line-height: 1.7;
   text-align: center;
 }
+/* 空状态主按钮：只在「有明确下一步」时才用，别为了填充而加 */
+.empty-btn {
+  margin-top: var(--sp-5);
+  padding: 18rpx 56rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-brand-deep);
+  color: #ffffff;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  box-shadow: var(--sh-float);
+}
 
 /* ---------- 7. 底部操作栏（毛玻璃 + 安全区） ---------- */
 .glass-bar {

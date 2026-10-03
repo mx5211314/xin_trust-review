@@ -1,9 +1,14 @@
 <template>
   <view class="page" :class="{'theme-dark': isDark}">
-    <!-- 头部 -->
+    <!-- 头部：新建入口放右上角，20 个夹子也不用滚到底 -->
     <view class="head">
-      <text class="title">收藏夹</text>
-      <text class="sub">管理你的收藏分类，删除后内容回落到未分类</text>
+      <view class="head-main">
+        <text class="title">收藏夹</text>
+        <text class="sub">管理你的收藏分类，删除后内容回落到未分类</text>
+      </view>
+      <view class="head-add" @tap="create">
+        <text class="head-add-text">＋ 新建</text>
+      </view>
     </view>
 
     <!-- 收藏夹列表 -->
@@ -26,14 +31,14 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09） -->
     <view v-if="!loading && !folders.length" class="empty">
-      <text class="muted">还没有收藏夹</text>
-      <text class="muted small">点下面按钮新建一个吧</text>
-    </view>
-
-    <!-- 新建 -->
-    <view class="add-bar" @tap="create">
-      <text class="add-text">＋ 新建收藏夹</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/star.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">还没有收藏夹</text>
+      <text class="empty-d">点右上角「新建」，把收藏的内容分门别类</text>
+      <view class="empty-btn" @tap="create">新建收藏夹</view>
     </view>
   </view>
 </template>
@@ -139,8 +144,29 @@ export default {
   padding-bottom: 40rpx;
 }
 .head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
   background: linear-gradient(165deg, var(--dp-accent-soft), var(--dp-card) 58%);
   padding: 40rpx 32rpx 36rpx;
+}
+.head-main {
+  flex: 1;
+  min-width: 0;
+}
+/* 新建入口：固定在页头，不随列表变长而下沉 */
+.head-add {
+  flex-shrink: 0;
+  margin-top: 8rpx;
+  padding: 12rpx 26rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-brand-deep);
+  box-shadow: var(--sh-float);
+}
+.head-add-text {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: #ffffff;
 }
 .title {
   display: block;
@@ -240,17 +266,5 @@ export default {
   color: var(--dp-text4);
   margin-top: 10rpx;
 }
-.add-bar {
-  margin: 24rpx 24rpx 0;
-  background: var(--dp-card);
-  border: 1rpx dashed var(--dp-text4);
-  border-radius: 20rpx;
-  padding: 32rpx 0;
-  text-align: center;
-}
-.add-text {
-  font-size: 28rpx;
-  color: var(--dp-brand-deep);
-  font-weight: 500;
-}
+/* 原底部「＋新建收藏夹」已上移到页头（见 .head-add），此处样式移除 */
 </style>

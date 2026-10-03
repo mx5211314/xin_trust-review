@@ -30,9 +30,14 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09） -->
     <view v-else class="empty">
-      <text class="muted">草稿箱是空的</text>
-      <text class="muted small">写点评时点「存草稿」或离开时自动保存，都会到这里</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/topic.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">草稿箱是空的</text>
+      <text class="empty-d">写点评时点「存草稿」，或离开时自动保存，都会到这里</text>
+      <view class="empty-btn" @tap="goPublish">去写点评</view>
     </view>
   </view>
 </template>
@@ -82,6 +87,10 @@ export default {
           this.load()
         }
       })
+    },
+    /** 空状态引导：去发布页写点评（发布是 tabBar 页，须用 switchTab） */
+    goPublish() {
+      uni.switchTab({ url: '/pages/publish/publish' })
     },
     clearAll() {
       if (!this.list.length) return

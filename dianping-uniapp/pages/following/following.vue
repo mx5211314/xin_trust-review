@@ -35,10 +35,14 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09） -->
     <view v-if="!loading && !list.length" class="empty">
-      <text class="muted">{{ emptyText }}</text>
-      <text class="muted small">{{ emptySub }}</text>
-      <button class="btn-primary go-btn" @tap="goFeed">去逛逛</button>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/star.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">{{ emptyText }}</text>
+      <text class="empty-d">{{ emptySub }}</text>
+      <view class="empty-btn" @tap="goFeed">去逛逛</view>
     </view>
   </view>
 </template>

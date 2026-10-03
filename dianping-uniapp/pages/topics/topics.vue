@@ -22,9 +22,14 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09） -->
     <view v-else class="empty">
-      <text class="muted">还没有关注的话题</text>
-      <text class="muted small">在话题页点「关注话题」就能收集到这里</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/topic.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">还没有关注的话题</text>
+      <text class="empty-d">在笔记里点话题标签，关注后就能收集到这里</text>
+      <view class="empty-btn" @tap="goFeed">去逛逛</view>
     </view>
   </view>
 </template>
@@ -60,6 +65,10 @@ export default {
     },
     goTopic(t) {
       uni.navigateTo({ url: '/pages/collection/collection?mode=topic&q=' + encodeURIComponent(t) })
+    },
+    /** 空状态引导：去首页逛逛（feed 是 tabBar 页，须用 switchTab） */
+    goFeed() {
+      uni.switchTab({ url: '/pages/feed/feed' })
     },
     async unfollow(t) {
       try {
