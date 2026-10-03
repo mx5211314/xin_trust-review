@@ -84,7 +84,10 @@
               </view>
               <view class="wfoot">
                 <text class="wauthor">{{ item.author ? item.author.nickname : '匿名' }}</text>
-                <text class="wlike">♥ {{ item.likeCount }}</text>
+                <view class="wlike">
+                  <image class="wlike-ic" src="/static/icons/heart.png" mode="aspectFit" />
+                  <text>{{ item.likeCount }}</text>
+                </view>
               </view>
             </view>
           </view>
@@ -109,7 +112,10 @@
               </view>
               <view class="wfoot">
                 <text class="wauthor">{{ item.author ? item.author.nickname : '匿名' }}</text>
-                <text class="wlike">♥ {{ item.likeCount }}</text>
+                <view class="wlike">
+                  <image class="wlike-ic" src="/static/icons/heart.png" mode="aspectFit" />
+                  <text>{{ item.likeCount }}</text>
+                </view>
               </view>
             </view>
           </view>
@@ -605,8 +611,15 @@ export default {
   color: var(--dp-text3);
 }
 .wlike {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
   font-size: 21rpx;
   color: var(--dp-text3);
+}
+.wlike-ic {
+  width: 22rpx;
+  height: 22rpx;
 }
 .user-list {
   padding: 8rpx 24rpx;

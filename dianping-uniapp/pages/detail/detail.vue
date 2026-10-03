@@ -254,7 +254,7 @@
             class="fav-row"
             @tap="chooseFolder(f.folderId)"
           >
-            <text class="fav-row-icon">📁</text>
+            <image class="fav-row-icon" src="/static/icons/folder.png" mode="aspectFit" />
             <text class="fav-row-name">{{ f.name }}</text>
             <text class="fav-row-count">{{ f.count }}</text>
           </view>
@@ -617,7 +617,7 @@ export default {
         this.favorited = true
         if (!wasFav) this.favoriteCount += 1
         this.favPanelShow = false
-        uni.showToast({ title: wasFav ? '已移动到该收藏夹' : '已收藏 ★', icon: 'none', duration: 900 })
+        uni.showToast({ title: wasFav ? '已移动到该收藏夹' : '已收藏', icon: 'none', duration: 900 })
       } catch (e) { /* toast 已提示 */ }
     },
     /** 取消收藏 */
@@ -777,7 +777,7 @@ export default {
           await request({ url: `/content/${c.contentId}/like`, method: 'POST', silent: true })
           c.liked = true
           c.likeCount += 1
-          uni.showToast({ title: '已点赞 ♥', icon: 'none', duration: 900 })
+          uni.showToast({ title: '已点赞', icon: 'none', duration: 900 })
         } catch (e) {
           if (e.code === 2003) c.liked = true
         }
@@ -1387,8 +1387,10 @@ export default {
   border-bottom: 1rpx solid var(--dp-soft);
 }
 .fav-row-icon {
-  font-size: 32rpx;
+  width: 32rpx;
+  height: 32rpx;
   margin-right: 18rpx;
+  flex-shrink: 0;
 }
 .fav-row-name {
   flex: 1;

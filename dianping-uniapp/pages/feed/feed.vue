@@ -393,7 +393,7 @@ export default {
           await request({ url: `/content/${item.contentId}/like`, method: 'POST', silent: true })
           item.liked = true
           item.likeCount += 1
-          uni.showToast({ title: '已点赞 ♥', icon: 'none', duration: 800 })
+          uni.showToast({ title: '已点赞', icon: 'none', duration: 800 })
         } catch (e) {
           if (e.code === 2003) item.liked = true
         }

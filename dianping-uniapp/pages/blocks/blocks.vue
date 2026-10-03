@@ -18,9 +18,13 @@
       </view>
     </view>
 
+    <!-- 引导式空状态（原则 09，去掉 emoji） -->
     <view v-if="!loading && !list.length" class="empty">
-      <text class="empty-emoji">🚫</text>
-      <text class="muted">还没有拉黑任何人</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" src="/static/icons/eye.png" mode="aspectFit" />
+      </view>
+      <text class="empty-t">还没有拉黑任何人</text>
+      <text class="empty-d">拉黑后彼此看不到对方的内容与评论</text>
     </view>
   </view>
 </template>
@@ -146,8 +150,32 @@ export default {
   align-items: center;
   padding: 120rpx 0;
 }
-.empty-emoji {
-  font-size: 72rpx;
-  margin-bottom: 20rpx;
+.empty-ic {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--sp-4);
+}
+.empty-ic-img {
+  width: 56rpx;
+  height: 56rpx;
+  opacity: .45;
+}
+.empty-t {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--dp-text);
+}
+.empty-d {
+  font-size: var(--fs-sm);
+  color: var(--dp-text3);
+  line-height: 1.7;
+  text-align: center;
+  margin-top: var(--sp-2);
+  max-width: 440rpx;
 }
 </style>
