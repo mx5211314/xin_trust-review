@@ -120,7 +120,7 @@ export default {
 }
 /* 品牌区：红渐变 + 波点纹理，白脸 logo 反转聚焦 */
 .hero {
-  background: linear-gradient(160deg, #ff4d64, var(--dp-brand) 45%, #d91c38);
+  background: linear-gradient(160deg, var(--dp-brand), var(--dp-brand) 45%, var(--dp-brand-deep));
   padding: 150rpx 0 130rpx;
   position: relative;
   overflow: hidden;

@@ -15,21 +15,21 @@
     <!-- 三步流程 -->
     <view class="steps">
       <view class="step">
-        <view class="step-num" style="background: #ff2442"><text>1</text></view>
+        <view class="step-num num-1"><text>1</text></view>
         <view class="step-body">
           <text class="step-title">联系管理员</text>
           <text class="step-desc">说明你想点评的领域和地区</text>
         </view>
       </view>
       <view class="step">
-        <view class="step-num" style="background: #ff8a3d"><text>2</text></view>
+        <view class="step-num num-2"><text>2</text></view>
         <view class="step-body">
           <text class="step-title">平台确认身份</text>
           <text class="step-desc">管理员审核通过后为你开通权限</text>
         </view>
       </view>
       <view class="step">
-        <view class="step-num" style="background: var(--dp-text)"><text>3</text></view>
+        <view class="step-num num-3"><text>3</text></view>
         <view class="step-body">
           <text class="step-title">开始发布点评</text>
           <text class="step-desc">重新登录后发布入口即点亮</text>
@@ -148,6 +148,10 @@ export default {
   margin-right: 24rpx;
   flex-shrink: 0;
 }
+/* 三步配色（原为行内样式，收进类便于深色模式统一管理） */
+.num-1 { background: var(--dp-brand-deep); }
+.num-2 { background: var(--dp-orange); }
+.num-3 { background: var(--dp-text); }
 .step-num text {
   color: #ffffff;
   font-size: 26rpx;
