@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>真实点评 · 本地生活 UI 原型</title>
+<style>
+/* ============================================================
+   真实点评 · 本地生活点评平台 UI 原型
+   业务：吃 + 玩 + 景区 + 亲子（对标大众点评，非美食 App）
+   参考：大众点评 V10 complexion reduction / Behance 餐饮案例 / Dribbble
+   ============================================================ */
+:root{
+  /* 暖调中性（餐饮/生活内容更亲和） */
+  --bg:#faf8f5;
+  --card:#ffffff;
+  --soft:#f4f1ec;
+  --ink:#1c1917;
+  --ink2:#57534e;
+  --ink3:#8f8880;
+  --ink4:#b8b1a8;
+  --line:#ece7e0;
+
+  /* 品牌红 + 暖橙辅色（食欲感） */
+  --brand:#ff2442;
+  --brand-deep:#d81228;
+  --brand-wash:#fff1f2;
+  --orange:#ff7a45;
+  --jade:#0f9d76;
+
+  /* 字阶 8 档 */
+  --fs-caption:11px; --fs-sm:12.5px; --fs-base:14px; --fs-md:16px;
+  --fs-lg:20px; --fs-xl:25px; --fs-2xl:32px;
+
+  /* 间距 8 刻度 */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:24px; --sp-6:32px; --sp-7:48px;
+
+  --r-sm:8px; --r-md:12px; --r-lg:18px; --r-xl:24px; --r-pill:999px;
+
+  /* 弥散投影（大众点评式：柔和、低透明度、大扩散） */
+  --sh-card:0 2px 4px rgba(28,25,23,.03), 0 8px 24px -6px rgba(28,25,23,.10);
+  --sh-hover:0 4px 8px rgba(28,25,23,.05), 0 16px 40px -8px rgba(28,25,23,.16);
+  --sh-fab:0 6px 20px -4px rgba(216,18,40,.42);
+
+  --e-expo:cubic-bezier(.16,1,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:'PingFang SC','HarmonyOS Sans SC','Microsoft YaHei',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{width:min(1160px,100% - 48px);margin-inline:auto}
+@media(max-width:720px){.wrap{width:calc(100% - 32px)}}
+
+/* ---------- 页头 ---------- */
+header{padding:64px 0 48px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:var(--fs-caption);font-weight:600;letter-spacing:.1em;
+  color:var(--brand-deep);background:var(--brand-wash);
+  padding:5px 12px;border-radius:var(--r-pill);margin-bottom:var(--sp-5);
+}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.18;margin:0 0 var(--sp-4);letter-spacing:-.02em;font-weight:700}
+h1 em{font-style:normal;color:var(--brand-deep)}
+.lede{font-size:var(--fs-md);line-height:1.85;color:var(--ink2);max-width:60ch;margin:0}
+.lede b{color:var(--ink);font-weight:600}
+.scope{
+  display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-5);
+}
+.scope span{
+  font-size:var(--fs-sm);padding:6px 14px;border-radius:var(--r-pill);
+  background:var(--card);border:1px solid var(--line);color:var(--ink2);
+}
+
+/* ---------- 手机 ---------- */
+/* 手机排成自适应网格：一行放不下就换行，全程只用页面纵向滚动 */
+.screens{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:var(--sp-7) var(--sp-6);
+  padding:var(--sp-4) 0 var(--sp-7);
+  justify-items:center;
+}
+@media(max-width:760px){
+  .screens{grid-template-columns:1fr}
+}
+.shot{display:flex;flex-direction:column;gap:var(--sp-4);align-items:center}
+
+/* 发布页顶部导航：返回 / 分段 / 发布 */
+.pub-nav{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:34px var(--sp-4) var(--sp-3);
+  background:var(--card);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:10;
+}
+.pub-back{width:28px;height:28px;display:grid;place-items:center;flex-shrink:0}
+.pub-back svg{width:19px;height:19px;stroke:var(--ink);fill:none;stroke-width:2.2}
+.pub-seg{
+  display:flex;gap:2px;background:var(--soft);border-radius:var(--r-pill);
+  padding:3px;margin:0 auto;
+}
+.pub-seg span{
+  font-size:var(--fs-sm);font-weight:600;color:var(--ink3);
+  padding:6px 16px;border-radius:var(--r-pill);
+  transition:background .24s var(--e-expo);
+}
+.pub-seg span.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(28,25,23,.12)}
+.pub-submit{
+  font-size:var(--fs-md);font-weight:700;color:var(--brand-deep);
+  flex-shrink:0;padding:4px 2px;
+}
+.shot-cap{max-width:326px}
+.shot-cap b{display:block;font-size:var(--fs-base);font-weight:600;margin-bottom:var(--sp-1)}
+.shot-cap p{margin:0;font-size:var(--fs-sm);color:var(--ink3);line-height:1.75}
+
+.phone{
+  width:326px;height:692px;background:var(--bg);border-radius:36px;
+  position:relative;overflow:hidden;flex-shrink:0;
+  box-shadow:0 0 0 9px #1c1917, 0 0 0 10px #383330, 0 30px 60px -22px rgba(28,25,23,.45);
+}
+.scr{height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;background:var(--bg)}
+.scr::-webkit-scrollbar{display:none}
+
+/* ---------- 顶部导航 ---------- */
+.nav{
+  position:sticky;top:0;z-index:20;
+  padding:34px var(--sp-4) var(--sp-3);
+  background:rgba(250,248,245,.88);
+  backdrop-filter:blur(16px) saturate(1.5);
+  -webkit-backdrop-filter:blur(16px) saturate(1.5);
+}
+.nav-top{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3)}
+.city{display:flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-md);font-weight:600}
+.city svg{width:13px;height:13px;stroke:var(--brand-deep);fill:none;stroke-width:2}
+.nav-icons{margin-left:auto;display:flex;gap:var(--sp-2)}
+.ibtn{
+  width:34px;height:34px;border-radius:var(--r-pill);background:rgba(28,25,23,.05);
+  display:grid;place-items:center;
+}
+.ibtn svg{width:17px;height:17px;stroke:var(--ink);fill:none;stroke-width:1.7}
+.searchbar{
+  display:flex;align-items:center;gap:var(--sp-2);
+  background:#fff;border-radius:var(--r-pill);padding:var(--sp-3) var(--sp-4);
+  box-shadow:var(--sh-card);
+}
+.searchbar svg{width:15px;height:15px;stroke:var(--ink3);fill:none;stroke-width:2}
+.searchbar span{font-size:var(--fs-base);color:var(--ink4)}
+
+/* 分类胶囊 */
+.chips{display:flex;gap:var(--sp-2);overflow-x:auto;padding:var(--sp-1) 0 0;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex-shrink:0;font-size:var(--fs-sm);font-weight:500;
+  padding:7px 15px;border-radius:var(--r-pill);
+  background:rgba(28,25,23,.045);color:var(--ink2);white-space:nowrap;
+}
+.chip.on{background:var(--brand-deep);color:#fff}
+
+/* ---------- 榜单横条 ---------- */
+.rankbar{
+  margin:var(--sp-3) var(--sp-4) 0;padding:var(--sp-4);
+  border-radius:var(--r-xl);
+  background:linear-gradient(135deg,#fff5f5,#ffe9ec 55%,#ffdfe4);
+  box-shadow:var(--sh-card);position:relative;overflow:hidden;
+}
+.rankbar::after{
+  content:'';position:absolute;right:-30px;top:-30px;width:120px;height:120px;
+  border-radius:50%;background:rgba(255,36,66,.07);
+}
+.rank-head{display:flex;align-items:baseline;gap:var(--sp-2);margin-bottom:var(--sp-3);position:relative}
+.rank-head b{font-size:var(--fs-md);font-weight:700;letter-spacing:.01em}
+.rank-head em{
+  font-style:normal;font-size:var(--fs-caption);color:var(--brand-deep);font-weight:600;
+  background:rgba(255,255,255,.8);padding:2px 8px;border-radius:var(--r-pill);
+}
+.rank-head a{margin-left:auto;font-size:var(--fs-sm);color:var(--brand-deep);font-weight:500;text-decoration:none}
+.rank-row{display:flex;align-items:center;gap:var(--sp-3);padding:7px 0;position:relative}
+.rank-no{
+  font-size:var(--fs-lg);font-weight:800;font-variant-numeric:lining-nums;
+  color:var(--brand-deep);width:26px;line-height:1;
+}
+.rank-row:nth-child(3) .rank-no{color:#ff8fa0}
+.rank-row:nth-child(4) .rank-no{color:#ffb3bf}
+.rank-nm{font-size:var(--fs-base);font-weight:600;flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-tag{
+  font-size:var(--fs-caption);padding:3px 9px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.85);color:var(--brand-deep);font-weight:600;
+  flex-shrink:0;
+}
+
+/* ---------- 内容流（大图卡） ---------- */
+.feed{padding:var(--sp-4)}
+.sec-title{
+  display:flex;align-items:center;gap:var(--sp-2);
+  font-size:var(--fs-lg);font-weight:700;letter-spacing:-.01em;
+  margin:var(--sp-2) 0 var(--sp-3);
+}
+.sec-title i{width:3px;height:17px;border-radius:2px;background:var(--brand-deep);display:block;flex-shrink:0}
+.sec-title em{
+  font-style:normal;font-size:var(--fs-sm);color:var(--ink3);font-weight:400;margin-left:auto;
+}
+
+.card{
+  background:var(--card);border-radius:var(--r-xl);overflow:hidden;
+  margin-bottom:var(--sp-4);box-shadow:var(--sh-card);
+  transition:transform .3s var(--e-expo), box-shadow .3s var(--e-expo);
+}
+.card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover)}
+.card:active{transform:scale(.985)}
+.cover{position:relative;height:186px;overflow:hidden;background:var(--soft)}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover-badge{
+  position:absolute;left:var(--sp-3);top:var(--sp-3);
+  display:flex;align-items:center;gap:4px;
+  font-size:var(--fs-caption);font-weight:600;color:#fff;
+  background:rgba(28,25,23,.52);backdrop-filter:blur(8px);
+  padding:4px 10px;border-radius:var(--r-pill);
+}
+.cover-badge svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2}
+.cover-rank{
+  position:absolute;right:var(--sp-3);top:var(--sp-3);
+  font-size:var(--fs-caption);font-weight:700;color:#fff;
+  background:linear-gradient(135deg,#ff7a45,#ff2442);
+  padding:5px 11px;border-radius:var(--r-pill);
+  box-shadow:0 4px 12px -2px rgba(255,60,90,.5);
+}
+/* ---- 视频卡：播放钮 + 时长（点评人可发视频） ---- */
+.cover-play{
+  position:absolute;left:50%;top:50%;translate:-50% -50%;
+  width:52px;height:52px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  display:grid;place-items:center;
+  box-shadow:0 6px 20px -4px rgba(28,25,23,.4);
+  transition:transform .28s var(--e-expo);
+}
+.card:hover .cover-play{transform:translate(-50%,-50%) scale(1.08)}
+.cover-play svg{width:20px;height:20px;fill:var(--brand-deep);stroke:none;margin-left:2px}
+.cover-dur{
+  position:absolute;right:var(--sp-3);bottom:var(--sp-3);
+  font-size:var(--fs-caption);font-weight:600;color:#fff;
+  background:rgba(28,25,23,.6);backdrop-filter:blur(6px);
+  padding:3px 9px;border-radius:var(--r-sm);
+  font-variant-numeric:tabular-nums;
+}
+.cover-scan{
+  position:absolute;left:var(--sp-3);bottom:var(--sp-3);
+  display:flex;align-items:center;gap:4px;
+  font-size:var(--fs-caption);font-weight:600;color:#fff;
+  background:rgba(28,25,23,.5);backdrop-filter:blur(6px);
+  padding:3px 9px;border-radius:var(--r-pill);
+}
+.cover-scan svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.2}
+.body{padding:var(--sp-4)}
+.title{
+  font-size:var(--fs-md);font-weight:700;line-height:1.5;
+  margin:0 0 var(--sp-2);letter-spacing:-.01em;
+}
+.poi{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:var(--fs-sm);color:var(--ink2);margin-bottom:var(--sp-3);
+}
+.poi svg{width:12px;height:12px;stroke:var(--brand-deep);fill:none;stroke-width:2}
+.tags{display:flex;gap:var(--sp-1);flex-wrap:wrap;margin-bottom:var(--sp-3)}
+.tag{font-size:var(--fs-caption);color:var(--brand-deep);background:var(--brand-wash);
+  padding:3px 9px;border-radius:var(--r-sm);font-weight:500}
+.byline{display:flex;align-items:center;gap:var(--sp-2);padding-top:var(--sp-3);border-top:1px solid var(--line)}
+.avatar{
+  width:26px;height:26px;border-radius:var(--r-pill);flex-shrink:0;
+  display:grid;place-items:center;color:#fff;font-size:var(--fs-caption);font-weight:700;
+  background:linear-gradient(140deg,#ff7a45,#d81228);
+}
+.by-nm{font-size:var(--fs-sm);font-weight:600}
+.by-verify{
+  display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-caption);
+  color:var(--jade);font-weight:600;
+}
+.by-verify svg{width:11px;height:11px;stroke:var(--jade);fill:none;stroke-width:2.2}
+.by-right{margin-left:auto;display:flex;align-items:center;gap:var(--sp-3)}
+.stat{display:flex;align-items:center;gap:4px;font-size:var(--fs-sm);color:var(--ink3)}
+.stat svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
+.stat.liked{color:var(--brand-deep)}
+.stat.liked svg{fill:var(--brand-deep);stroke:var(--brand-deep)}
+
+/* ---------- 详情页 ---------- */
+.hero{position:relative;height:300px;background:var(--soft)}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.28) 0%,transparent 32%,transparent 46%,rgba(0,0,0,.66) 100%)}
+.hero-back{
+  position:absolute;left:var(--sp-4);top:38px;z-index:3;
+  width:34px;height:34px;border-radius:var(--r-pill);
+  background:rgba(28,25,23,.42);backdrop-filter:blur(10px);
+  display:grid;place-items:center;
+}
+.hero-back svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.2}
+.hero-txt{position:absolute;left:var(--sp-4);right:var(--sp-4);bottom:var(--sp-5);z-index:2;color:#fff}
+.hero-kicker{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:var(--fs-caption);font-weight:600;
+  background:rgba(255,255,255,.2);backdrop-filter:blur(8px);
+  padding:4px 10px;border-radius:var(--r-pill);margin-bottom:var(--sp-3);
+}
+.hero h3{font-size:var(--fs-xl);line-height:1.35;margin:0;font-weight:700;letter-spacing:-.01em}
+.detail-body{padding:var(--sp-5) var(--sp-4) 100px}
+/* 笔记作者区：参考小红书「扁平无卡」
+   作者信息独立成行（头像 + 昵称/认证 + 时间 + 关注），标题另起一行占满宽度
+   —— 不再让头像与标题同行，避免标题被挤成难看的两行 */
+.note-head{display:flex;align-items:center;gap:var(--sp-3)}
+.note-head .follow-btn{margin-left:auto}
+.nh-av{
+  width:44px;height:44px;border-radius:var(--r-pill);flex-shrink:0;
+  display:grid;place-items:center;color:#fff;
+  font-size:var(--fs-md);font-weight:700;
+  background:linear-gradient(140deg,#ff7a45,#d81228);
+}
+.nh-body{flex:1;min-width:0}
+.nh-name{
+  font-size:var(--fs-base);font-weight:700;
+  display:flex;align-items:center;gap:5px;
+  white-space:nowrap;overflow:hidden;
+}
+.nh-sub{font-size:var(--fs-caption);color:var(--ink3);margin-top:3px}
+/* 标题独立成全宽大字 */
+.note-title{
+  font-size:var(--fs-lg);font-weight:700;line-height:1.42;
+  margin:var(--sp-4) 0 0;letter-spacing:-.01em;
+}
+/* 地点：内联浅色标签（不再是独立卡片） */
+.poi-inline{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:var(--sp-4);padding:7px var(--sp-3);
+  border-radius:var(--r-pill);background:var(--brand-wash);
+  font-size:var(--fs-sm);color:var(--brand-deep);font-weight:500;
+  max-width:100%;
+}
+.poi-inline svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;flex-shrink:0}
+.poi-inline span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.follow-btn{
+  flex-shrink:0;
+  font-size:var(--fs-sm);font-weight:600;color:#fff;
+  background:var(--brand-deep);padding:7px 18px;border-radius:var(--r-pill);
+  box-shadow:0 4px 12px -3px rgba(216,18,40,.45);
+}
+.poi-nm{font-size:var(--fs-base);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.poi-sub{font-size:var(--fs-caption);color:var(--ink3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.poi-go{margin-left:auto;flex-shrink:0;font-size:var(--fs-sm);color:var(--brand-deep);font-weight:600}
+.detail-body p{font-size:var(--fs-base);line-height:1.95;color:var(--ink2);margin:var(--sp-4) 0 0}
+.detail-body p b{color:var(--ink);font-weight:600}
+.quote{
+  margin:var(--sp-5) 0;padding:var(--sp-4);
+  background:var(--brand-wash);border-radius:var(--r-lg);
+  font-size:var(--fs-base);line-height:1.85;color:var(--ink);font-weight:500;
+}
+/* 底部操作栏（毛玻璃 + 安全区）：点赞 / 收藏 / 评论 / 分享 四功能位 */
+.actionbar{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-around;
+  padding:var(--sp-3) var(--sp-4) calc(var(--sp-3) + 8px);
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(18px) saturate(1.6);
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);
+  border-top:1px solid rgba(28,25,23,.06);
+}
+.abtn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:var(--fs-caption);color:var(--ink2);font-weight:500;
+  font-variant-numeric:tabular-nums;
+}
+.abtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8}
+.abtn.liked{color:var(--brand-deep)}
+.abtn.liked svg{fill:var(--brand-deep);stroke:var(--brand-deep)}
+.abtn.saved{color:var(--orange)}
+.abtn.saved svg{fill:var(--orange);stroke:var(--orange)}
+
+/* ---------- 我的 ---------- */
+.profile{padding:48px var(--sp-4) 0;background:linear-gradient(180deg,#fff5f5,var(--bg) 62%)}
+.p-head{display:flex;align-items:center;gap:var(--sp-4)}
+.p-av{
+  width:64px;height:64px;border-radius:var(--r-pill);flex-shrink:0;
+  background:linear-gradient(140deg,#ff7a45,#d81228);
+  display:grid;place-items:center;color:#fff;font-size:var(--fs-xl);font-weight:700;
+  box-shadow:0 8px 20px -6px rgba(216,18,40,.4);
+}
+.p-nm{font-size:var(--fs-lg);font-weight:700;display:flex;align-items:center;gap:var(--sp-2)}
+.p-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:var(--fs-caption);font-weight:600;color:#fff;
+  background:linear-gradient(135deg,#ff7a45,#d81228);
+  padding:3px 9px;border-radius:var(--r-pill);
+}
+.p-bio{font-size:var(--fs-sm);color:var(--ink2);margin-top:var(--sp-1)}
+.p-stats{display:flex;gap:var(--sp-6);padding:var(--sp-5) 0 var(--sp-4)}
+.p-stat b{font-size:var(--fs-xl);font-weight:700;display:block;line-height:1;letter-spacing:-.02em}
+.p-stat span{font-size:var(--fs-sm);color:var(--ink3);display:block;margin-top:5px}
+.p-tabs{display:flex;gap:var(--sp-5);padding:0 var(--sp-4);border-bottom:1px solid var(--line)}
+.p-tab{font-size:var(--fs-base);color:var(--ink3);padding:var(--sp-3) 0;font-weight:500}
+.p-tab.on{color:var(--ink);font-weight:700;border-bottom:2px solid var(--brand-deep)}
+.menu{padding:var(--sp-2) 0}
+.mrow{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-4);background:var(--card);
+  margin:0 var(--sp-4) var(--sp-2);border-radius:var(--r-lg);
+  box-shadow:0 1px 2px rgba(28,25,23,.03);
+}
+.mrow-ic{width:32px;height:32px;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--brand-wash)}
+.mrow-ic svg{width:16px;height:16px;stroke:var(--brand-deep);fill:none;stroke-width:1.8}
+.mrow b{font-size:var(--fs-base);font-weight:500}
+.mrow i{margin-left:auto;font-style:normal;font-size:var(--fs-sm);color:var(--ink4)}
+
+/* ---------- 发布页（图文 / 视频双模式） ---------- */
+.pub-tabs{
+  display:flex;gap:var(--sp-6);padding:0 var(--sp-4);
+  background:var(--card);border-bottom:1px solid var(--line);
+}
+.pub-tab{
+  font-size:var(--fs-base);color:var(--ink3);font-weight:500;
+  padding:var(--sp-4) 0 var(--sp-3);position:relative;
+}
+.pub-tab.on{color:var(--ink);font-weight:700}
+.pub-tab.on::after{
+  content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background:var(--brand-deep);border-radius:2px;
+}
+.pub-body{padding:var(--sp-4)}
+.pub-label{
+  font-size:var(--fs-caption);font-weight:700;color:var(--ink3);
+  letter-spacing:.06em;margin-bottom:var(--sp-2);display:block;
+}
+.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);margin-bottom:var(--sp-5)}
+.media-item{aspect-ratio:1;border-radius:var(--r-md);overflow:hidden;position:relative;background:var(--soft)}
+.media-item img{width:100%;height:100%;object-fit:cover;display:block}
+.media-add{
+  aspect-ratio:1;border-radius:var(--r-md);
+  border:1.5px dashed var(--line);background:var(--card);
+  display:grid;place-items:center;gap:3px;
+}
+.media-add svg{width:19px;height:19px;stroke:var(--ink4);fill:none;stroke-width:1.8}
+.media-add span{font-size:var(--fs-caption);color:var(--ink4)}
+/* 视频上传槽 */
+.video-slot{
+  aspect-ratio:16/10;border-radius:var(--r-lg);overflow:hidden;
+  position:relative;background:var(--soft);margin-bottom:var(--sp-3);
+}
+.video-slot img{width:100%;height:100%;object-fit:cover;display:block}
+.video-slot .cover-dur{bottom:var(--sp-3);right:var(--sp-3)}
+.video-slot .cover-play{width:44px;height:44px}
+.video-name{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:var(--sp-3);background:var(--card);border-radius:var(--r-md);
+  border:1px solid var(--line);margin-bottom:var(--sp-5);
+  font-size:var(--fs-sm);color:var(--ink2);
+}
+.video-name svg{width:15px;height:15px;stroke:var(--jade);fill:none;stroke-width:2.2;flex-shrink:0}
+.video-name i{margin-left:auto;font-style:normal;font-size:var(--fs-caption);color:var(--ink4)}
+.pub-input{
+  width:100%;border:0;border-bottom:1px solid var(--line);
+  padding:var(--sp-3) 0;font-size:var(--fs-md);font-weight:700;
+  color:var(--ink);background:transparent;margin-bottom:var(--sp-5);
+  font-family:inherit;
+}
+.pub-input::placeholder{color:var(--ink4);font-weight:400}
+.pub-chips{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-5)}
+.pub-chip{
+  font-size:var(--fs-sm);padding:7px 15px;border-radius:var(--r-pill);
+  border:1px solid var(--line);color:var(--ink2);background:var(--card);
+}
+.pub-chip.on{background:var(--brand-deep);border-color:var(--brand-deep);color:#fff;font-weight:600}
+.pub-poi{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:var(--sp-3);background:var(--card);border-radius:var(--r-lg);
+  border:1px solid var(--line);font-size:var(--fs-sm);color:var(--ink2);
+  margin-bottom:var(--sp-5);
+}
+.pub-poi svg{width:15px;height:15px;stroke:var(--brand-deep);fill:none;stroke-width:2;flex-shrink:0}
+.pub-poi b{margin-left:auto;color:var(--ink4);font-weight:400;font-size:var(--fs-caption)}
+.pub-btn{
+  width:100%;padding:var(--sp-4);border-radius:var(--r-pill);
+  background:var(--brand-deep);color:#fff;text-align:center;
+  font-size:var(--fs-md);font-weight:700;box-shadow:var(--sh-fab);
+}
+.pub-hint{
+  font-size:var(--fs-caption);color:var(--ink4);
+  text-align:center;margin-top:var(--sp-3);line-height:1.6;
+}
+
+/* ---------- 视频播放态 ---------- */
+.vplayer{position:relative;height:214px;background:#171412;overflow:hidden}
+.vplayer img{width:100%;height:100%;object-fit:cover;opacity:.8;display:block}
+.vplayer-top{
+  position:absolute;left:var(--sp-4);right:var(--sp-4);top:34px;z-index:3;
+  display:flex;align-items:center;gap:var(--sp-2);
+}
+.vbtn{
+  width:34px;height:34px;border-radius:var(--r-pill);flex-shrink:0;
+  background:rgba(28,25,23,.45);backdrop-filter:blur(10px);
+  display:grid;place-items:center;
+}
+.vbtn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2}
+.vplay{
+  position:absolute;left:50%;top:50%;translate:-50% -50%;z-index:3;
+  width:56px;height:56px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.94);display:grid;place-items:center;
+  box-shadow:0 8px 26px -6px rgba(0,0,0,.55);
+}
+.vplay svg{width:22px;height:22px;fill:var(--brand-deep);stroke:none;margin-left:3px}
+.vbar-wrap{position:absolute;left:var(--sp-4);right:var(--sp-4);bottom:var(--sp-4);z-index:3}
+.vbar{height:3px;border-radius:2px;background:rgba(255,255,255,.28);overflow:hidden}
+.vbar i{display:block;height:100%;width:38%;background:#fff;border-radius:2px}
+.vmeta{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:var(--sp-2);font-size:var(--fs-caption);
+  color:rgba(255,255,255,.92);font-variant-numeric:tabular-nums;
+}
+.vmeta span{display:flex;align-items:center;gap:4px}
+.vmeta svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.vtitle{
+  font-size:var(--fs-md);font-weight:700;line-height:1.5;
+  margin:var(--sp-4) var(--sp-4) var(--sp-2);
+}
+.vstats{
+  display:flex;align-items:center;gap:var(--sp-4);
+  margin:0 var(--sp-4) var(--sp-4);font-size:var(--fs-sm);color:var(--ink3);
+}
+.vstats span{display:flex;align-items:center;gap:4px}
+.vstats svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
+
+/* ---------- 搜索页 ---------- */
+.s-top{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4)}
+.s-box{
+  flex:1;display:flex;align-items:center;gap:var(--sp-2);
+  background:var(--card);border-radius:var(--r-pill);
+  padding:var(--sp-3) var(--sp-4);box-shadow:var(--sh-card);
+}
+.s-box svg{width:15px;height:15px;stroke:var(--ink3);fill:none;stroke-width:2}
+.s-box span{font-size:var(--fs-base);color:var(--ink4)}
+.s-cancel{font-size:var(--fs-base);color:var(--brand-deep);font-weight:500}
+.s-tabs{display:flex;gap:var(--sp-5);padding:0 var(--sp-4);background:var(--card);border-bottom:1px solid var(--line)}
+.s-tab{font-size:var(--fs-base);color:var(--ink3);font-weight:500;padding:0 0 var(--sp-3);margin-top:var(--sp-3)}
+.s-tab.on{color:var(--ink);font-weight:700;position:relative}
+.s-tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--brand-deep);border-radius:2px}
+.s-sec{padding:var(--sp-5) var(--sp-4) 0}
+.s-sec-t{display:flex;align-items:center;gap:6px;margin-bottom:var(--sp-4);font-size:var(--fs-md);font-weight:700}
+.s-sec-t svg{width:15px;height:15px;stroke:var(--brand-deep);fill:none;stroke-width:2}
+/* 热搜范围：跟随首页定位，省市自适应 */
+.s-scope{
+  margin-left:auto;display:inline-flex;align-items:center;gap:3px;
+  font-size:var(--fs-sm);font-weight:600;color:var(--brand-deep);
+  background:var(--brand-wash);padding:4px 10px;border-radius:var(--r-pill);
+}
+.s-scope svg{width:11px;height:11px;stroke:var(--brand-deep);fill:none;stroke-width:2.4}
+.s-scope-note{
+  display:flex;align-items:center;gap:5px;
+  font-size:var(--fs-caption);color:var(--ink4);margin:-8px 0 var(--sp-3);
+}
+.s-scope-note svg{width:12px;height:12px;stroke:var(--ink4);fill:none;stroke-width:2}
+.hot{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0}
+.hot-no{
+  width:22px;flex-shrink:0;font-size:var(--fs-md);font-weight:800;font-style:italic;
+  color:var(--ink4);font-variant-numeric:lining-nums;
+}
+.hot-no.top3{color:var(--brand-deep)}
+.hot-nm{font-size:var(--fs-base);color:var(--ink);flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hot-tag{
+  font-size:var(--fs-caption);font-weight:700;color:var(--brand-deep);
+  background:var(--brand-wash);padding:2px 8px;border-radius:var(--r-sm);flex-shrink:0;
+}
+.s-chips{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.s-chip{font-size:var(--fs-sm);padding:6px 14px;border-radius:var(--r-pill);background:var(--soft);color:var(--ink2)}
+
+/* ---------- 榜单完整页 ---------- */
+.rk-hero{
+  padding:50px var(--sp-4) var(--sp-5);
+  background:linear-gradient(160deg,#fff1f2,#ffdde3 68%,#ffd0d8);
+}
+.rk-hero h3{font-size:var(--fs-2xl);font-weight:800;margin:0;letter-spacing:-.02em}
+.rk-hero p{margin:var(--sp-2) 0 0;font-size:var(--fs-sm);color:var(--ink2)}
+.rk-hero .chips{margin-top:var(--sp-4);padding:0}
+.rk-hero .chip{background:rgba(255,255,255,.7)}
+/* 修复：.rk-hero .chip 与 .chip.on 特异性相同、后者在前，
+   会把选中态底色覆盖成半透明白，导致白字白底看不见 —— 这里显式补回选中样式 */
+.rk-hero .chip.on{background:var(--brand-deep);color:#fff;box-shadow:0 4px 12px -3px rgba(216,18,40,.42)}
+.rk-list{padding:0 var(--sp-4) var(--sp-5)}
+.rk-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4) 0;border-bottom:1px solid var(--line)}
+.rk-no{
+  width:30px;flex-shrink:0;line-height:1;font-weight:800;
+  font-size:var(--fs-xl);font-variant-numeric:lining-nums;color:var(--ink4);
+}
+.rk-row.top1 .rk-no{font-size:var(--fs-2xl);color:var(--brand-deep)}
+.rk-row.top2 .rk-no{color:#ff7a8c}
+.rk-row.top3 .rk-no{color:#ffa3b0}
+.rk-mid{flex:1;min-width:0}
+.rk-shop{font-size:var(--fs-md);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-meta{font-size:var(--fs-sm);color:var(--ink3);margin-top:3px}
+.rk-bar{height:4px;border-radius:2px;background:var(--soft);margin-top:var(--sp-2);overflow:hidden}
+.rk-bar i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#ff7a45,#ff2442)}
+.rk-up{font-size:var(--fs-caption);font-weight:700;color:var(--jade);flex-shrink:0}
+
+/* ---------- 消息页 ---------- */
+.nt-tabs{
+  display:flex;gap:var(--sp-5);padding:0 var(--sp-4);
+  background:var(--card);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:10;
+}
+.nt-tab{position:relative;font-size:var(--fs-base);color:var(--ink3);font-weight:500;padding:34px 0 var(--sp-3)}
+.nt-tab.on{color:var(--ink);font-weight:700}
+.nt-tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--brand-deep);border-radius:2px}
+.nt-dot{
+  position:absolute;top:30px;right:-12px;
+  min-width:16px;height:16px;padding:0 4px;border-radius:var(--r-pill);
+  background:var(--brand-deep);color:#fff;font-size:9.5px;font-weight:700;
+  display:grid;place-items:center;
+}
+.nt-item{display:flex;gap:var(--sp-3);padding:var(--sp-4);background:var(--card);border-bottom:1px solid var(--line)}
+.nt-av{
+  width:42px;height:42px;border-radius:var(--r-pill);flex-shrink:0;
+  display:grid;place-items:center;color:#fff;font-size:var(--fs-base);font-weight:700;
+  background:linear-gradient(140deg,#ff7a45,#d81228);
+}
+.nt-av.soft{background:linear-gradient(140deg,#ffd9de,#ffeef0);color:var(--brand-deep)}
+.nt-tx{flex:1;min-width:0}
+.nt-t1{font-size:var(--fs-base);line-height:1.55}
+.nt-t1 b{font-weight:700}
+.nt-t2{font-size:var(--fs-sm);color:var(--ink3);margin-top:var(--sp-1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nt-time{font-size:var(--fs-caption);color:var(--ink4);flex-shrink:0;padding-top:3px}
+
+/* ---------- 聊天页 ---------- */
+.chat-top{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:34px var(--sp-4) var(--sp-3);background:var(--card);
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;
+}
+.chat-back{width:30px;height:30px;display:grid;place-items:center;flex-shrink:0}
+.chat-back svg{width:19px;height:19px;stroke:var(--ink);fill:none;stroke-width:2.2}
+.chat-top b{font-size:var(--fs-md);font-weight:700}
+.chat-body{padding:var(--sp-5) var(--sp-4) 90px}
+.chat-day{text-align:center;font-size:var(--fs-caption);color:var(--ink4);margin-bottom:var(--sp-5)}
+.cmsg{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4);align-items:flex-start}
+.cmsg.mine{flex-direction:row-reverse}
+.cav{
+  width:32px;height:32px;border-radius:var(--r-pill);flex-shrink:0;
+  display:grid;place-items:center;color:#fff;font-size:var(--fs-caption);font-weight:700;
+  background:var(--ink3);
+}
+.cmsg.mine .cav{background:linear-gradient(140deg,#ff7a45,#d81228)}
+.cbub{
+  max-width:72%;padding:var(--sp-3) var(--sp-4);
+  font-size:var(--fs-base);line-height:1.6;
+  background:var(--card);border-radius:4px 16px 16px 16px;
+  box-shadow:0 1px 3px rgba(28,25,23,.05);
+}
+.cmsg.mine .cbub{
+  background:var(--brand-deep);color:#fff;
+  border-radius:16px 4px 16px 16px;box-shadow:var(--sh-fab);
+}
+.chat-hint{text-align:center;font-size:var(--fs-caption);color:var(--ink4);padding:var(--sp-2) 0}
+.chat-input{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-4) calc(var(--sp-3) + 8px);
+  background:rgba(255,255,255,.9);
+  backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);
+  border-top:1px solid rgba(28,25,23,.06);
+}
+.chat-input .box{
+  flex:1;background:var(--soft);border-radius:var(--r-pill);
+  padding:10px 16px;font-size:var(--fs-sm);color:var(--ink4);
+}
+.chat-input .send{
+  width:36px;height:36px;border-radius:var(--r-pill);background:var(--brand-deep);
+  display:grid;place-items:center;flex-shrink:0;box-shadow:var(--sh-fab);
+}
+.chat-input .send svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2}
+/* 发送 / 加号 共用一个位置（右侧），按是否有输入切换：
+   未输入 → ➕（发图/视频）；已输入 → 发送 */
+.chat-input .plus-btn{
+  width:34px;height:34px;border-radius:var(--r-pill);flex-shrink:0;
+  background:var(--soft);display:grid;place-items:center;
+}
+.chat-input .plus-btn svg{width:17px;height:17px;stroke:var(--ink2);fill:none;stroke-width:2.2}
+.chat-input .send-btn{
+  height:34px;padding:0 16px;border-radius:var(--r-pill);flex-shrink:0;
+  background:var(--brand-deep);color:#fff;
+  display:grid;place-items:center;
+  font-size:var(--fs-sm);font-weight:600;
+  box-shadow:0 4px 12px -3px rgba(216,18,40,.45);
+}
+.chat-input .box.has-text{color:var(--ink)}
+/* 图片消息气泡 */
+.cimg{
+  width:170px;display:block;object-fit:cover;
+  border-radius:16px 4px 16px 16px;
+  box-shadow:0 1px 3px rgba(28,25,23,.08);
+}
+
+/* ============ 其余页面通用 ============ */
+.pg-head{padding:48px var(--sp-4) var(--sp-4)}
+.pg-head h3{font-size:var(--fs-2xl);font-weight:800;margin:0;letter-spacing:-.02em}
+.pg-head p{margin:var(--sp-2) 0 0;font-size:var(--fs-sm);color:var(--ink3);line-height:1.6}
+/* 页头右上角操作（新建等）——避免操作项沉到列表末尾 */
+.pg-head.with-act{display:flex;align-items:flex-start;gap:var(--sp-3)}
+.pg-head.with-act > div{flex:1;min-width:0}
+.head-act{
+  display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
+  font-size:var(--fs-sm);font-weight:600;color:#fff;
+  background:var(--brand-deep);padding:8px 15px;border-radius:var(--r-pill);
+  box-shadow:var(--sh-fab);margin-top:6px;
+}
+.head-act svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.6}
+.pg-tabs{display:flex;gap:var(--sp-5);padding:0 var(--sp-4);background:var(--card);border-bottom:1px solid var(--line)}
+.pg-tab{font-size:var(--fs-base);color:var(--ink3);font-weight:500;padding:0 0 var(--sp-3);margin-top:var(--sp-3)}
+.pg-tab.on{color:var(--ink);font-weight:700;position:relative}
+.pg-tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--brand-deep);border-radius:2px}
+
+/* 登录 */
+.lg-hero{
+  height:252px;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#ff5a72,#ff2442 45%,#c00f28);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-3);
+}
+.lg-logo{
+  width:74px;height:74px;border-radius:24px;background:#fff;
+  display:grid;place-items:center;
+  box-shadow:0 14px 32px -8px rgba(0,0,0,.32);
+}
+.lg-name{font-size:var(--fs-xl);font-weight:800;color:#fff;letter-spacing:.08em}
+.lg-slogan{font-size:var(--fs-sm);color:rgba(255,255,255,.86)}
+.lg-card{
+  margin:-30px var(--sp-4) 0;position:relative;z-index:2;
+  background:var(--card);border-radius:var(--r-xl);padding:var(--sp-5);
+  box-shadow:var(--sh-card);
+}
+.lg-field{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:var(--sp-3) 0;border-bottom:1px solid var(--line);
+  font-size:var(--fs-base);color:var(--ink4);
+}
+.lg-field svg{width:16px;height:16px;stroke:var(--ink4);fill:none;stroke-width:1.8;flex-shrink:0}
+.lg-code{margin-left:auto;font-size:var(--fs-sm);color:var(--brand-deep);font-weight:600}
+.lg-btn{
+  margin-top:var(--sp-5);padding:var(--sp-4);border-radius:var(--r-pill);
+  background:var(--brand-deep);color:#fff;text-align:center;
+  font-size:var(--fs-md);font-weight:700;box-shadow:var(--sh-fab);
+}
+.lg-alt{text-align:center;font-size:var(--fs-sm);color:var(--ink3);margin-top:var(--sp-5)}
+
+/* 通用列表行（关注/粉丝/黑名单） */
+.lrow{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4);background:var(--card);border-bottom:1px solid var(--line)}
+.lrow-av{
+  width:42px;height:42px;border-radius:var(--r-pill);flex-shrink:0;
+  display:grid;place-items:center;color:#fff;font-size:var(--fs-base);font-weight:700;
+  background:linear-gradient(140deg,#ff7a45,#d81228);
+}
+.lrow-tx{flex:1;min-width:0}
+.lrow-t1{font-size:var(--fs-md);font-weight:600;display:flex;align-items:center;gap:5px}
+.lrow-t2{font-size:var(--fs-sm);color:var(--ink3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow-btn{
+  font-size:var(--fs-sm);font-weight:600;padding:7px 16px;border-radius:var(--r-pill);
+  background:var(--brand-deep);color:#fff;flex-shrink:0;
+}
+.lrow-btn.ghost{background:var(--soft);color:var(--ink2)}
+
+/* 圆角块行（收藏夹 / 设置 / 话题） */
+.frow{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-4);background:var(--card);border-radius:var(--r-lg);
+  margin:0 var(--sp-4) var(--sp-2);box-shadow:0 1px 2px rgba(28,25,23,.03);
+}
+.frow-ic{width:36px;height:36px;border-radius:var(--r-md);background:var(--brand-wash);display:grid;place-items:center;flex-shrink:0}
+.frow-ic svg{width:18px;height:18px;stroke:var(--brand-deep);fill:none;stroke-width:1.8}
+.frow b{font-size:var(--fs-base);font-weight:600}
+.frow i{margin-left:auto;font-style:normal;font-size:var(--fs-sm);color:var(--ink4)}
+.frow .hash{font-size:var(--fs-md);font-weight:800;color:var(--brand-deep);width:22px;text-align:center;flex-shrink:0}
+
+/* 时间线（浏览记录） */
+.tl-group{padding:var(--sp-5) var(--sp-4) 0}
+.tl-label{font-size:var(--fs-sm);font-weight:700;color:var(--ink3);margin-bottom:var(--sp-3)}
+.tl-item{display:flex;gap:var(--sp-3);padding:var(--sp-3) 0;border-bottom:1px solid var(--line)}
+.tl-thumb{width:64px;height:64px;border-radius:var(--r-md);overflow:hidden;flex-shrink:0;background:var(--soft)}
+.tl-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.tl-tx{flex:1;min-width:0}
+.tl-t1{font-size:var(--fs-base);font-weight:600;line-height:1.45}
+.tl-t2{font-size:var(--fs-sm);color:var(--ink3);margin-top:var(--sp-1)}
+
+/* 引导页步骤 */
+.gd-step{display:flex;gap:var(--sp-3);padding:0 var(--sp-4) var(--sp-5)}
+.gd-no{
+  width:26px;height:26px;border-radius:var(--r-pill);background:var(--brand-deep);
+  color:#fff;display:grid;place-items:center;flex-shrink:0;
+  font-size:var(--fs-sm);font-weight:700;
+}
+.gd-tx{font-size:var(--fs-base);line-height:1.65;color:var(--ink2);padding-top:1px}
+
+/* 管理台统计格 */
+.au-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2);padding:0 var(--sp-4) var(--sp-4)}
+.au-cell{
+  background:var(--card);border-radius:var(--r-md);
+  padding:var(--sp-3) var(--sp-1);text-align:center;
+  box-shadow:0 1px 2px rgba(28,25,23,.03);
+}
+.au-cell b{display:block;font-size:var(--fs-lg);font-weight:800;line-height:1.15}
+.au-cell.hot b{color:var(--brand-deep)}
+.au-cell span{display:block;font-size:var(--fs-caption);color:var(--ink3);margin-top:2px}
+.au-card{
+  margin:var(--sp-4);padding:var(--sp-4);background:var(--card);
+  border-radius:var(--r-lg);box-shadow:var(--sh-card);
+}
+.au-card h5{margin:0 0 var(--sp-2);font-size:var(--fs-md);font-weight:700;line-height:1.45}
+.au-card p{margin:0 0 var(--sp-4);font-size:var(--fs-sm);color:var(--ink3);line-height:1.7}
+.au-ops{display:flex;gap:var(--sp-2)}
+/* 审核时查看完整内容 */
+.au-view{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-3);border-radius:var(--r-md);background:var(--soft);
+  margin-bottom:var(--sp-3);
+}
+.au-view .th{width:42px;height:42px;border-radius:var(--r-sm);overflow:hidden;flex-shrink:0;background:var(--line)}
+.au-view .th img{width:100%;height:100%;object-fit:cover;display:block}
+.au-view .nm{font-size:var(--fs-sm);font-weight:600}
+.au-view .sb{font-size:var(--fs-caption);color:var(--ink3);margin-top:2px}
+.au-view .go{margin-left:auto;font-size:var(--fs-sm);color:var(--brand-deep);font-weight:600;flex-shrink:0}
+.au-op{
+  flex:1;text-align:center;padding:var(--sp-3);border-radius:var(--r-pill);
+  font-size:var(--fs-base);font-weight:600;
+}
+.au-op.pass{background:var(--brand-deep);color:#fff}
+.au-op.rej{background:var(--soft);color:var(--ink2)}
+
+/* 公告发布 */
+.an-input{
+  margin:var(--sp-4);padding:var(--sp-4);background:var(--card);
+  border-radius:var(--r-lg);box-shadow:var(--sh-card);
+  min-height:150px;font-size:var(--fs-base);color:var(--ink4);line-height:1.8;
+}
+.an-count{text-align:right;margin:0 var(--sp-4);font-size:var(--fs-sm);color:var(--ink4)}
+.an-btn{
+  margin:var(--sp-5) var(--sp-4) 0;padding:var(--sp-4);border-radius:var(--r-pill);
+  background:var(--brand-deep);color:#fff;text-align:center;
+  font-size:var(--fs-md);font-weight:700;box-shadow:var(--sh-fab);
+}
+
+/* ============ 双列瀑布流（首页 / 主页） ============ */
+.wf{display:flex;gap:var(--sp-2);padding:var(--sp-4)}
+.wf-col{flex:1;display:flex;flex-direction:column;gap:var(--sp-2);min-width:0}
+.mcard{
+  background:var(--card);border-radius:var(--r-lg);overflow:hidden;
+  box-shadow:0 1px 2px rgba(28,25,23,.04), 0 6px 16px -6px rgba(28,25,23,.09);
+  transition:transform .3s var(--e-expo),box-shadow .3s var(--e-expo);
+}
+.mcard:hover{transform:translateY(-2px);box-shadow:var(--sh-hover)}
+.mcover{position:relative;overflow:hidden;background:var(--soft)}
+.mcover img{width:100%;height:100%;object-fit:cover;display:block}
+.mcover .cover-badge{left:var(--sp-2);top:var(--sp-2);padding:3px 8px;font-size:10px}
+.mcover .cover-dur{right:var(--sp-2);bottom:var(--sp-2)}
+.mcover .cover-play{width:40px;height:40px}
+.mcover .cover-play svg{width:16px;height:16px}
+.mbody{padding:var(--sp-3)}
+.mtitle{
+  font-size:var(--fs-base);font-weight:600;line-height:1.45;margin:0 0 var(--sp-2);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.mpoi{
+  display:flex;align-items:center;gap:3px;font-size:var(--fs-caption);color:var(--ink3);
+  margin-bottom:var(--sp-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mpoi svg{width:10px;height:10px;stroke:var(--brand-deep);fill:none;stroke-width:2.2;flex-shrink:0}
+.mfoot{display:flex;align-items:center;gap:var(--sp-1)}
+.mav{
+  width:18px;height:18px;border-radius:var(--r-pill);flex-shrink:0;
+  display:grid;place-items:center;color:#fff;font-size:9px;font-weight:700;
+  background:linear-gradient(140deg,#ff7a45,#d81228);
+}
+.mnm{
+  font-size:var(--fs-caption);color:var(--ink2);flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mlike{display:flex;align-items:center;gap:2px;font-size:var(--fs-caption);color:var(--ink3);flex-shrink:0}
+.mlike svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8}
+.mlike.on{color:var(--brand-deep)}
+.mlike.on svg{fill:var(--brand-deep);stroke:var(--brand-deep)}
+
+/* 视图开关（单列 / 双列） */
+.view-sw{
+  display:flex;gap:2px;background:var(--soft);border-radius:var(--r-sm);
+  padding:2px;margin-left:auto;
+}
+.view-sw span{width:28px;height:24px;display:grid;place-items:center;border-radius:6px}
+.view-sw span.on{background:var(--card);box-shadow:0 1px 2px rgba(28,25,23,.1)}
+.view-sw svg{width:13px;height:13px;stroke:var(--ink4);fill:none;stroke-width:2}
+.view-sw span.on svg{stroke:var(--ink)}
+
+/* 头像上的关注角标（他人主页） */
+.av-follow{position:relative;display:inline-block;flex-shrink:0}
+.av-follow .plus{
+  position:absolute;right:-4px;bottom:-4px;
+  width:25px;height:25px;border-radius:var(--r-pill);
+  background:var(--brand-deep);border:2.5px solid var(--bg);
+  display:grid;place-items:center;
+  box-shadow:0 3px 9px -2px rgba(216,18,40,.55);
+}
+.av-follow .plus svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3}
+.av-follow .plus.done{background:var(--soft)}
+.av-follow .plus.done svg{stroke:var(--ink3)}
+/* 小图标按钮（私信等次要操作） */
+.icon-btn{
+  width:36px;height:36px;border-radius:var(--r-pill);flex-shrink:0;
+  background:var(--card);border:1px solid var(--line);
+  display:grid;place-items:center;
+}
+.icon-btn svg{width:17px;height:17px;stroke:var(--ink2);fill:none;stroke-width:1.8}
+
+/* 侧边栏抽屉（参考抖音 / 小红书：次要功能收进右上角 ☰）
+   —— tab 下方应该是「内容」而不是「功能菜单」 */
+.drawer-btn{
+  position:absolute;right:var(--sp-4);top:16px;
+  width:32px;height:32px;border-radius:var(--r-pill);
+  background:rgba(28,25,23,.06);display:grid;place-items:center;
+}
+.drawer-btn svg{width:17px;height:17px;stroke:var(--ink);fill:none;stroke-width:2}
+.drawer-mask{position:absolute;inset:0;background:rgba(28,25,23,.4);z-index:5}
+.drawer{
+  position:absolute;right:0;top:0;bottom:0;width:74%;max-width:248px;z-index:6;
+  background:var(--bg);box-shadow:-10px 0 32px rgba(28,25,23,.2);
+  display:flex;flex-direction:column;
+}
+.dr-head{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:48px var(--sp-4) var(--sp-4);border-bottom:1px solid var(--line);
+}
+.dr-head .p-av{width:46px;height:46px;font-size:var(--fs-md)}
+.dr-name{font-size:var(--fs-md);font-weight:700}
+.dr-sub{font-size:var(--fs-sm);color:var(--ink3);margin-top:2px}
+.dr-list{flex:1;overflow-y:auto;padding:var(--sp-2) 0}
+.dr-row{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-4);font-size:var(--fs-base);color:var(--ink2);
+}
+.dr-row svg{width:18px;height:18px;stroke:var(--ink3);fill:none;stroke-width:1.8;flex-shrink:0}
+.dr-row i{margin-left:auto;font-style:normal;font-size:var(--fs-sm);color:var(--ink4)}
+.dr-foot{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-4);border-top:1px solid var(--line);
+  font-size:var(--fs-base);color:var(--ink2);
+}
+.dr-foot svg{width:18px;height:18px;stroke:var(--ink3);fill:none;stroke-width:1.8}
+
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">本地生活点评 · UI 原型 v4 · 全 26 屏</div>
+    <h1>吃、玩、逛，<em>一次说清</em></h1>
+    <p class="lede">
+      按项目真实业务重做：<b>本地生活点评平台</b>——覆盖餐饮、景区、夜游、亲子，
+      对标大众点评的「吃喝玩乐」全域，<b>不是美食 App</b>。
+      设计手法取自大众点评 V10 的 complexion reduction（更大字重、更强对比、削弱分割线）
+      与 Behance 餐饮案例的暖色食欲感，配真实图片、弥散投影、充裕留白。
+      <br><br>
+      <b>25 屏覆盖项目全部 22 个页面</b>：浏览 → 探索 → 消费 → 生产 → 社交 → 设置 → 管理端，
+      图文与视频两条内容链路完整走通。    </p>
+    <div class="scope">
+      <span>餐饮 · 烧烤 / 羊汤 / 咖啡</span>
+      <span>景区 · 棋盘山遛娃</span>
+      <span>夜游 · 南湖灯光秀</span>
+      <span>亲子 · 带娃攻略</span>
+      <span>点评人可发 · 图文 / 视频</span>
+      <span>含管理端 3 屏</span>
+    </div>
+  </header>
+
+  <div class="screens">
+
+    <!-- ============ 屏1 首页 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="nav">
+            <div class="nav-top">
+              <span class="city">唐山
+                <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+              <div class="nav-icons">
+                <span class="ibtn"><svg viewBox="0 0 24 24"><path d="M18 8.5a6 6 0 10-12 0c0 6-2 7.5-2 7.5h16s-2-1.5-2-7.5z"/><path d="M13.7 19.5a2 2 0 01-3.4 0"/></svg></span>
+                <span class="ibtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></span>
+              </div>
+            </div>
+            <div class="searchbar">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+              <span>搜店铺 / 景点 / 笔记</span>
+            </div>
+            <div class="chips" style="margin-top:12px">
+              <span class="chip on">推荐</span>
+              <span class="chip">唐山美食</span>
+              <span class="chip">遛娃</span>
+              <span class="chip">夜游</span>
+              <span class="chip">咖啡</span>
+            </div>
+          </div>
+
+          <div class="rankbar">
+            <div class="rank-head">
+              <b>本地口碑榜</b><em>本周</em>
+              <a>完整榜 ›</a>
+            </div>
+            <div class="rank-row">
+              <span class="rank-no">1</span>
+              <span class="rank-nm">老王烧烤（建设南路店）</span>
+              <span class="rank-tag">↑2</span>
+            </div>
+            <div class="rank-row">
+              <span class="rank-no">2</span>
+              <span class="rank-nm">棋盘山景区</span>
+              <span class="rank-tag">新晋</span>
+            </div>
+            <div class="rank-row">
+              <span class="rank-no">3</span>
+              <span class="rank-nm">南湖灯光秀</span>
+              <span class="rank-tag">—</span>
+            </div>
+          </div>
+
+          <div class="feed" style="padding-bottom:var(--sp-5)">
+            <div class="sec-title"><i></i>附近新鲜事<em>换个城市 ›</em></div>
+
+            <!-- 双列瀑布流：图卡更紧凑 -->
+            <div class="wf" style="padding:0">
+              <div class="wf-col">
+                <!-- 餐饮 -->
+                <div class="mcard">
+                  <div class="mcover" style="height:170px">
+                    <img src="https://picsum.photos/seed/dp2001a/500/500" alt="">
+                    <span class="cover-badge">
+                      <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+                      唐山美食
+                    </span>
+                  </div>
+                  <div class="mbody">
+                    <h4 class="mtitle">唐山这家老味烧烤，本地人从小吃到大</h4>
+                    <span class="mpoi">
+                      <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+                      老王烧烤
+                    </span>
+                    <div class="mfoot">
+                      <span class="mav">王</span>
+                      <span class="mnm">爱吃的老王</span>
+                      <span class="mlike on">
+                        <svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>
+                        128
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <!-- 视频 -->
+                <div class="mcard">
+                  <div class="mcover" style="height:132px">
+                    <img src="https://picsum.photos/seed/dp2009a/500/400" alt="">
+                    <span class="cover-play"><svg viewBox="0 0 24 24"><path d="M8 5.3l11 6.7-11 6.7z"/></svg></span>
+                    <span class="cover-dur">01:24</span>
+                  </div>
+                  <div class="mbody">
+                    <h4 class="mtitle">炭火烤肉现场实拍，滋滋冒油</h4>
+                    <div class="mfoot">
+                      <span class="mav">周</span>
+                      <span class="mnm">小周探店</span>
+                      <span class="mlike">
+                        <svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>
+                        56
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wf-col">
+                <!-- 景区（业务不止餐饮） -->
+                <div class="mcard">
+                  <div class="mcover" style="height:136px">
+                    <img src="https://picsum.photos/seed/dp2003a/500/400" alt="">
+                    <span class="cover-badge">
+                      <svg viewBox="0 0 24 24"><path d="M3 20h18M6 20l4.5-8 3 4 2-3 3.5 7z"/></svg>
+                      景区游玩
+                    </span>
+                  </div>
+                  <div class="mbody">
+                    <h4 class="mtitle">周末棋盘山遛娃全攻略，附路线图</h4>
+                    <span class="mpoi">
+                      <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+                      棋盘山景区
+                    </span>
+                    <div class="mfoot">
+                      <span class="mav">猫</span>
+                      <span class="mnm">漫步的猫</span>
+                      <span class="mlike">
+                        <svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>
+                        31
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <!-- 咖啡 -->
+                <div class="mcard">
+                  <div class="mcover" style="height:162px">
+                    <img src="https://picsum.photos/seed/dp2004a/500/500" alt="">
+                    <span class="cover-badge">
+                      <svg viewBox="0 0 24 24"><path d="M4 8h12v6a5 5 0 01-5 5H9a5 5 0 01-5-5z"/><path d="M16 9h1.5a2.5 2.5 0 010 5H16"/></svg>
+                      咖啡
+                    </span>
+                  </div>
+                  <div class="mbody">
+                    <h4 class="mtitle">新开的咖啡店值得二刷</h4>
+                    <span class="mpoi">
+                      <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+                      山有咖啡
+                    </span>
+                    <div class="mfoot">
+                      <span class="mav">豆</span>
+                      <span class="mnm">豆豆酱</span>
+                      <span class="mlike">
+                        <svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>
+                        21
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>首页 · 推荐流</b>
+        <p><b>双列瀑布流</b>——一屏能看到 4 条而不是 1.5 条，信息密度大幅提升。图高错落（170/132/136/162）避免呆板；流里同时有图文与视频、餐饮与景区。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏2 详情 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr" style="position:relative">
+          <div class="hero">
+            <img src="https://picsum.photos/seed/dp2008a/700/500" alt="">
+            <span class="hero-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+            <div class="hero-txt">
+              <span class="hero-kicker">夜游 · 免费出片</span>
+              <h3>唐山南湖灯光秀<br>晚上八点准时开演</h3>
+            </div>
+          </div>
+
+          <div class="detail-body">
+            <!-- 作者独立一行（扁平无卡，小红书式） -->
+            <div class="note-head">
+              <span class="nh-av">周</span>
+              <div class="nh-body">
+                <div class="nh-name">小周探店
+                  <span class="by-verify">
+                    <svg viewBox="0 0 24 24"><path d="M12 3l2.6 1.9 3.2-.2 1 3 2.6 1.9-1.5 2.9 1.5 2.9-2.6 1.9-1 3-3.2-.2L12 21l-2.6-1.9-3.2.2-1-3L2.6 14.4 4.1 11.5 2.6 8.6l2.6-1.9 1-3 3.2.2z"/><path d="M8.8 12l2.2 2.2 4.2-4.4"/></svg>
+                    认证
+                  </span>
+                </div>
+                <div class="nh-sub">2 小时前 · 唐山 · 128 篇笔记</div>
+              </div>
+              <span class="follow-btn">关注</span>
+            </div>
+            <!-- 地点：内联标签，不再是浮起的卡片 -->
+            <span class="poi-inline">
+              <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+              <span>南湖景区 · 唐山市路南区 · 距你 3.2km · 免费</span>
+            </span>
+
+            <p>先说结论：<b>南湖的灯光秀值得专门跑一趟</b>，而且完全免费。八点整开始，持续约二十五分钟。</p>
+
+            <div class="quote">建议六点半就到，先在湖边逛一圈占好机位，正对面那排石头栏杆是出片率最高的位置。</div>
+
+            <p>交通上自驾最方便，南门和东门都有停车场，十块钱一次。公交的话 12 路能到南门。</p>
+          </div>
+        </div>
+
+        <!-- 操作栏移到 .scr 之外：锚定手机底部，不再与滚动内容打架 -->
+        <div class="actionbar">
+          <span class="abtn liked">
+            <svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>
+            210
+          </span>
+          <span class="abtn">
+            <svg viewBox="0 0 24 24"><path d="M6.5 3.5h11a1 1 0 011 1v16l-6.5-4-6.5 4v-16a1 1 0 011-1z"/></svg>
+            收藏
+          </span>
+          <span class="abtn">
+            <svg viewBox="0 0 24 24"><path d="M20.5 12c0 4.1-3.8 7.5-8.5 7.5-1 0-2-.2-2.9-.5L4 20.5l1.6-4.4A7.2 7.2 0 013.5 12C3.5 7.9 7.3 4.5 12 4.5s8.5 3.4 8.5 7.5z"/></svg>
+            42
+          </span>
+          <span class="abtn">
+            <svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4M5 14v5h14v-5"/></svg>
+            分享
+          </span>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>详情页 · 夜游笔记</b>
+        <p>沉浸式大图头 + 渐变遮罩。<b>作者区改为扁平无卡布局</b>（参考小红书）——去掉浮起的白盒，头像 + 昵称 + 关注一行排开；地点降级为<b>内联浅色标签</b>。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏3 我的 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="profile" style="position:relative">
+            <!-- 右上角 ☰：次要功能（浏览记录/草稿/创作数据/设置）都收进侧边栏 -->
+            <span class="drawer-btn">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </span>
+            <div class="p-head">
+              <div class="p-av">王</div>
+              <div>
+                <div class="p-nm">爱吃的老王
+                  <span class="p-badge">
+                    <svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#fff;fill:none;stroke-width:2.4"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                    认证点评人
+                  </span>
+                </div>
+                <div class="p-bio">唐山 · 吃了三十年，只写真实体验</div>
+              </div>
+            </div>
+            <div class="p-stats">
+              <div class="p-stat"><b>128</b><span>笔记</span></div>
+              <div class="p-stat"><b>1.2k</b><span>粉丝</span></div>
+              <div class="p-stat"><b>8.6k</b><span>获赞</span></div>
+            </div>
+          </div>
+
+          <div class="p-tabs">
+            <span class="p-tab on">笔记</span>
+            <span class="p-tab">收藏</span>
+            <span class="p-tab">赞过</span>
+          </div>
+
+          <!-- tab 下面是「内容本身」：自己发布的笔记（双列）
+               作者看自己的笔记时，卡片上会多一个播放量（他人看不到） -->
+          <div class="wf">
+            <div class="wf-col">
+              <div class="mcard">
+                <div class="mcover" style="height:150px">
+                  <img src="https://picsum.photos/seed/dp2001a/500/500" alt="">
+                </div>
+                <div class="mbody">
+                  <h4 class="mtitle">唐山这家老味烧烤，本地人从小吃到大</h4>
+                  <div class="mfoot">
+                    <span class="mlike on"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>128</span>
+                    <span class="mlike" style="margin-left:auto">▶ 1.2k</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mcard">
+                <div class="mcover" style="height:118px">
+                  <img src="https://picsum.photos/seed/dp2007a/500/400" alt="">
+                </div>
+                <div class="mbody">
+                  <h4 class="mtitle">秦皇小巷夜市初体验</h4>
+                  <div class="mfoot">
+                    <span class="mlike on"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>64</span>
+                    <span class="mlike" style="margin-left:auto">▶ 830</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="wf-col">
+              <div class="mcard">
+                <div class="mcover" style="height:132px">
+                  <img src="https://picsum.photos/seed/dp2009a/500/400" alt="">
+                  <span class="cover-play"><svg viewBox="0 0 24 24"><path d="M8 5.3l11 6.7-11 6.7z"/></svg></span>
+                  <span class="cover-dur">01:24</span>
+                </div>
+                <div class="mbody">
+                  <h4 class="mtitle">炭火烤肉现场实拍</h4>
+                  <div class="mfoot">
+                    <span class="mlike on"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>56</span>
+                    <span class="mlike" style="margin-left:auto">▶ 2.4k</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mcard">
+                <div class="mcover" style="height:140px">
+                  <img src="https://picsum.photos/seed/dp2006a/500/500" alt="">
+                </div>
+                <div class="mbody">
+                  <h4 class="mtitle">这家羊汤馆开了三十年</h4>
+                  <div class="mfoot">
+                    <span class="mlike on"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>92</span>
+                    <span class="mlike" style="margin-left:auto">▶ 1.1k</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>我的 · 点评人主页</b>
+        <p><b>tab 下面是内容本身</b>——「笔记」直接展示自己发布的笔记（双列），不再塞功能菜单（原来 tab 写「笔记/收藏/赞过」、下面却是菜单，自相矛盾）。<b>自己看自己的笔记会多一个播放量</b>，他人看不到。次要功能收进右上角 ☰。</p>
+      </div>
+    </div>
+
+    <!-- ============ 侧边栏（☰ 抽屉） ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr" style="position:relative">
+          <!-- 背景：主页（被遮罩压暗） -->
+          <div class="profile">
+            <div class="p-head">
+              <div class="p-av">王</div>
+              <div>
+                <div class="p-nm">爱吃的老王</div>
+                <div class="p-bio">唐山 · 只写真实体验</div>
+              </div>
+            </div>
+            <div class="p-stats">
+              <div class="p-stat"><b>128</b><span>笔记</span></div>
+              <div class="p-stat"><b>1.2k</b><span>粉丝</span></div>
+              <div class="p-stat"><b>8.6k</b><span>获赞</span></div>
+            </div>
+          </div>
+          <div class="drawer-mask"></div>
+
+          <!-- 抽屉：次要功能统一收在这里 -->
+          <div class="drawer">
+            <div class="dr-head">
+              <span class="p-av">王</span>
+              <div>
+                <div class="dr-name">爱吃的老王</div>
+                <div class="dr-sub">查看个人主页 ›</div>
+              </div>
+            </div>
+            <div class="dr-list">
+              <div class="dr-row">
+                <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+                创作数据<i>2.4k 播放</i>
+              </div>
+              <div class="dr-row">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg>
+                浏览记录<i>24</i>
+              </div>
+              <div class="dr-row">
+                <svg viewBox="0 0 24 24"><path d="M5 4.5h9l5 5v10H5z"/><path d="M14 4.5v5h5"/></svg>
+                草稿箱<i>3</i>
+              </div>
+              <div class="dr-row">
+                <svg viewBox="0 0 24 24"><path d="M12 20.5c5-3 8-6.4 8-10a4.5 4.5 0 00-8-2.8A4.5 4.5 0 004 10.5c0 3.6 3 7 8 10z"/></svg>
+                关注的话题<i>16</i>
+              </div>
+              <div class="dr-row">
+                <svg viewBox="0 0 24 24"><path d="M6.5 3.5h11a1 1 0 011 1v16l-6.5-4-6.5 4v-16a1 1 0 011-1z"/></svg>
+                收藏夹管理<i>7</i>
+              </div>
+            </div>
+            <div class="dr-foot">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.5 1.5M17.3 17.3l1.5 1.5M18.8 5.2l-1.5 1.5M6.7 17.3l-1.5 1.5"/></svg>
+              设置
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>侧边栏 · ☰ 抽屉</b>
+        <p>参考抖音 / 小红书：<b>次要功能统一收进侧边栏</b>——创作数据 / 浏览记录 / 草稿箱 / 关注的话题 / 收藏夹管理 / 设置。<b>主页只留「内容」</b>，功能不占主屏。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏4 发布（图文 / 视频双模式） ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <!-- 顶部导航：返回 / 图文·视频分段 / 发布（右上角，仅两字） -->
+          <div class="pub-nav">
+            <span class="pub-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+            <div class="pub-seg">
+              <span>图文</span>
+              <span class="on">视频</span>
+            </div>
+            <span class="pub-submit">发布</span>
+          </div>
+          <div class="pub-body">
+            <span class="pub-label">MEDIA / 媒体</span>
+            <div class="video-slot">
+              <img src="https://picsum.photos/seed/dp2011a/700/440" alt="">
+              <span class="cover-play">
+                <svg viewBox="0 0 24 24"><path d="M8 5.3l11 6.7-11 6.7z"/></svg>
+              </span>
+              <span class="cover-dur">00:48</span>
+            </div>
+            <div class="video-name">
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+              带娃逛唐山宴.mov
+              <i>12.4 MB</i>
+            </div>
+
+            <span class="pub-label">TITLE / 标题</span>
+            <input class="pub-input" placeholder="给这条点评起个标题…">
+
+            <span class="pub-label">BODY / 正文</span>
+            <input class="pub-input" style="font-weight:400;font-size:var(--fs-base)" placeholder="说说你的真实体验…">
+
+            <span class="pub-label">TOPIC / 话题</span>
+            <div class="pub-chips">
+              <span class="pub-chip on">#唐山美食</span>
+              <span class="pub-chip">#遛娃</span>
+              <span class="pub-chip">＋ 自定义</span>
+            </div>
+
+            <span class="pub-label">LOCATION / 地点</span>
+            <div class="pub-poi">
+              <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+              唐山宴（建设路店）
+              <b>切换 ›</b>
+            </div>
+
+            <div class="pub-hint">发布入口在右上角 · 切到「图文」可发 1–9 张图片</div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>发布页 · 图文 / 视频双模式</b>
+        <p><b>发布入口收到右上角，只有「发布」两个字</b>（原来底部大按钮太大、压住内容）；图文/视频改成导航中间的分段控件。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏5 视频播放态 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr" style="position:relative">
+          <div class="vplayer">
+            <img src="https://picsum.photos/seed/dp2009a/700/500" alt="">
+            <div class="vplayer-top">
+              <span class="vbtn"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+              <span style="flex:1"></span>
+              <span class="vbtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="5.6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18.4" r="1.5"/></svg></span>
+            </div>
+            <span class="vplay"><svg viewBox="0 0 24 24"><path d="M8 5.3l11 6.7-11 6.7z"/></svg></span>
+            <div class="vbar-wrap">
+              <div class="vbar"><i></i></div>
+              <div class="vmeta">
+                <span>00:32 / 01:24</span>
+                <span>
+                  <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 15v5h-5M20 9V4h-5M4 15v5h5"/></svg>
+                  全屏
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-body" style="padding-top:var(--sp-4)">
+            <!-- 作者独立一行（小红书式：作者行 → 标题 → 正文 → 地点） -->
+            <div class="note-head">
+              <span class="nh-av">周</span>
+              <div class="nh-body">
+                <div class="nh-name">小周探店
+                  <span class="by-verify">
+                    <svg viewBox="0 0 24 24"><path d="M12 3l2.6 1.9 3.2-.2 1 3 2.6 1.9-1.5 2.9 1.5 2.9-2.6 1.9-1 3-3.2-.2L12 21l-2.6-1.9-3.2.2-1-3L2.6 14.4 4.1 11.5 2.6 8.6l2.6-1.9 1-3 3.2.2z"/><path d="M8.8 12l2.2 2.2 4.2-4.4"/></svg>
+                    认证
+                  </span>
+                </div>
+                <div class="nh-sub">5 小时前 · 唐山</div>
+              </div>
+              <span class="follow-btn">关注</span>
+            </div>
+            <!-- 标题另起一行，占满宽度（不再被头像挤成两行） -->
+            <h4 class="note-title">炭火烤肉现场实拍，滋滋冒油</h4>
+            <span class="poi-inline">
+              <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+              <span>炭火自助烤肉（万达店） · 人均 ¥30 · 营业至 02:00</span>
+            </span>
+            <p>进店先拍了一张，炭一上桌就听到滋滋声。<b>牛舌和五花必点</b>，翻面别超过十秒。</p>
+          </div>
+        </div>
+
+        <div class="actionbar">
+          <span class="abtn liked">
+            <svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>
+            56
+          </span>
+          <span class="abtn">
+            <svg viewBox="0 0 24 24"><path d="M6.5 3.5h11a1 1 0 011 1v16l-6.5-4-6.5 4v-16a1 1 0 011-1z"/></svg>
+            收藏
+          </span>
+          <span class="abtn">
+            <svg viewBox="0 0 24 24"><path d="M20.5 12c0 4.1-3.8 7.5-8.5 7.5-1 0-2-.2-2.9-.5L4 20.5l1.6-4.4A7.2 7.2 0 013.5 12C3.5 7.9 7.3 4.5 12 4.5s8.5 3.4 8.5 7.5z"/></svg>
+            18
+          </span>
+          <span class="abtn">
+            <svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4M5 14v5h14v-5"/></svg>
+            分享
+          </span>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>详情页 · 视频播放态</b>
+        <p>视频笔记的播放界面：居中播放钮、进度条、时间码、全屏入口。作者信息<b>独立成行</b>、标题<b>另起一行占满宽度</b>（小红书式层级）；地点为内联标签；底部四功能位。<b>播放量不在此展示</b>——属作者私有数据，只在「我的 → 创作数据」可见。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏6 发布·图文模式 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pub-nav">
+            <span class="pub-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+            <div class="pub-seg">
+              <span class="on">图文</span>
+              <span>视频</span>
+            </div>
+            <span class="pub-submit">发布</span>
+          </div>
+          <div class="pub-body">
+            <span class="pub-label">MEDIA / 媒体 · 1–9 张</span>
+            <div class="media-grid">
+              <div class="media-item">
+                <img src="https://picsum.photos/seed/dp2001a/300/300" alt="">
+              </div>
+              <div class="media-item">
+                <img src="https://picsum.photos/seed/dp2001b/300/300" alt="">
+              </div>
+              <div class="media-item">
+                <img src="https://picsum.photos/seed/dp2003a/300/300" alt="">
+              </div>
+              <div class="media-add">
+                <svg viewBox="0 0 24 24"><path d="M12 6.5v11M6.5 12h11"/></svg>
+                <span>3/9</span>
+              </div>
+            </div>
+
+            <span class="pub-label">TITLE / 标题</span>
+            <input class="pub-input" value="唐山这家老味烧烤，本地人从小吃到大">
+
+            <span class="pub-label">BODY / 正文</span>
+            <input class="pub-input" style="font-weight:400;font-size:var(--fs-base)" placeholder="说说你的真实体验…">
+
+            <span class="pub-label">TOPIC / 话题</span>
+            <div class="pub-chips">
+              <span class="pub-chip on">#唐山美食</span>
+              <span class="pub-chip on">#老店</span>
+              <span class="pub-chip">＋ 自定义</span>
+            </div>
+
+            <div class="pub-poi">
+              <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+              老王烧烤（建设南路店）
+              <b>已定位 ›</b>
+            </div>
+
+            <div class="pub-hint">发布入口在右上角 · 切到「视频」可上传单个视频</div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>发布页 · 图文模式</b>
+        <p>九宫格选图（含计数 <code style="font-family:ui-monospace;font-size:11px;background:var(--soft);padding:1px 4px;border-radius:3px">3/9</code>）。与视频模式共用同一套表单；<b>发布入口同样在右上角</b>。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏7 搜索 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="s-top">
+            <div class="s-box">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+              <span>搜索内容 / 用户 / 话题 / 店铺</span>
+            </div>
+            <span class="s-cancel">取消</span>
+          </div>
+
+          <div class="s-tabs">
+            <span class="s-tab on">综合</span>
+            <span class="s-tab">内容</span>
+            <span class="s-tab">用户</span>
+            <span class="s-tab">店铺</span>
+          </div>
+
+          <div class="s-sec">
+            <div class="s-sec-t">
+              <svg viewBox="0 0 24 24"><path d="M12 2.5l2.6 6.4 6.9.5-5.3 4.4 1.7 6.7-5.9-3.6-5.9 3.6 1.7-6.7L2.5 9.4l6.9-.5z"/></svg>
+              河北热搜
+              <span class="s-scope">
+                全省
+                <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </div>
+            <div class="s-scope-note">
+              <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 10-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+              跟随首页定位；切到城市则只看该市
+            </div>
+            <div class="hot">
+              <span class="hot-no top3">1</span>
+              <span class="hot-nm">唐山 棋盘山 遛娃</span>
+              <span class="hot-tag">热</span>
+            </div>
+            <div class="hot">
+              <span class="hot-no top3">2</span>
+              <span class="hot-nm">石家庄 深夜烧烤</span>
+              <span class="hot-tag">热</span>
+            </div>
+            <div class="hot">
+              <span class="hot-no top3">3</span>
+              <span class="hot-nm">秦皇岛 海边民宿</span>
+            </div>
+            <div class="hot">
+              <span class="hot-no">4</span>
+              <span class="hot-nm">保定 驴肉火烧</span>
+            </div>
+            <div class="hot">
+              <span class="hot-no">5</span>
+              <span class="hot-nm">承德 避暑山庄</span>
+            </div>
+          </div>
+
+          <div class="s-sec">
+            <div class="s-sec-t">搜索历史</div>
+            <div class="s-chips">
+              <span class="s-chip">老味烧烤</span>
+              <span class="s-chip">山有咖啡</span>
+              <span class="s-chip">夜市</span>
+              <span class="s-chip">遛娃好去处</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>搜索页</b>
+        <p>综合/内容/用户/店铺四类 tab。<b>热搜范围跟随首页定位、省市自适应</b>——首页选「全省」则出省级热榜，选到城市则只看该市（利用项目 <code style="font-family:ui-monospace;font-size:11px;background:var(--soft);padding:1px 4px;border-radius:3px">regionCode</code> 的 2 位省码 / 6 位市码前缀匹配能力）。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏8 榜单完整页 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="rk-hero">
+            <h3>口碑榜</h3>
+            <p>2026 · 第 36 周 · 唐山　按近 7 天获赞与发布数加权</p>
+            <div class="chips">
+              <span class="chip on">全城</span>
+              <span class="chip">美食</span>
+              <span class="chip">景区</span>
+              <span class="chip">咖啡</span>
+            </div>
+          </div>
+
+          <div class="rk-list">
+            <div class="rk-row top1">
+              <span class="rk-no">1</span>
+              <div class="rk-mid">
+                <div class="rk-shop">老王烧烤（建设南路店）</div>
+                <div class="rk-meta">128 篇 · 1.2k 赞</div>
+                <div class="rk-bar"><i style="width:100%"></i></div>
+              </div>
+              <span class="rk-up">↑2</span>
+            </div>
+            <div class="rk-row top2">
+              <span class="rk-no">2</span>
+              <div class="rk-mid">
+                <div class="rk-shop">棋盘山景区</div>
+                <div class="rk-meta">86 篇 · 876 赞</div>
+                <div class="rk-bar"><i style="width:72%"></i></div>
+              </div>
+              <span class="rk-up">新晋</span>
+            </div>
+            <div class="rk-row top3">
+              <span class="rk-no">3</span>
+              <div class="rk-mid">
+                <div class="rk-shop">唐山宴</div>
+                <div class="rk-meta">64 篇 · 742 赞</div>
+                <div class="rk-bar"><i style="width:61%"></i></div>
+              </div>
+              <span class="rk-up" style="color:var(--ink4)">—</span>
+            </div>
+            <div class="rk-row">
+              <span class="rk-no">4</span>
+              <div class="rk-mid">
+                <div class="rk-shop">南湖景区</div>
+                <div class="rk-meta">52 篇 · 618 赞</div>
+                <div class="rk-bar"><i style="width:50%"></i></div>
+              </div>
+              <span class="rk-up">↑4</span>
+            </div>
+            <div class="rk-row">
+              <span class="rk-no">5</span>
+              <div class="rk-mid">
+                <div class="rk-shop">郝家羊汤（老店）</div>
+                <div class="rk-meta">47 篇 · 505 赞</div>
+                <div class="rk-bar"><i style="width:41%"></i></div>
+              </div>
+              <span class="rk-up" style="color:var(--ink4)">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>口碑榜 · 完整榜</b>
+        <p>名次数字按 <b>1→2→3→4</b> 递减字号并加品牌红；每行带<b>进度条</b>直观表达热度差（对应项目 <code style="font-family:ui-monospace;font-size:11px;background:var(--soft);padding:1px 4px;border-radius:3px">.bar</code>）。<b>榜单里也有景区</b>，不是纯餐饮榜。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏9 消息 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="nt-tabs">
+            <span class="nt-tab on">互动<span class="nt-dot">3</span></span>
+            <span class="nt-tab">私信<span class="nt-dot">1</span></span>
+            <span class="nt-tab">公告</span>
+          </div>
+          <div class="nt-item">
+            <span class="nt-av">王</span>
+            <div class="nt-tx">
+              <div class="nt-t1"><b>爱吃的老王</b> 赞了你的点评</div>
+              <div class="nt-t2">唐山这家老味烧烤，本地人从小吃到大</div>
+            </div>
+            <span class="nt-time">2 小时前</span>
+          </div>
+          <div class="nt-item">
+            <span class="nt-av">猫</span>
+            <div class="nt-tx">
+              <div class="nt-t1"><b>漫步的猫</b> 评论了你：周末我也去了，人确实多</div>
+              <div class="nt-t2">唐山这家老味烧烤，本地人从小吃到大</div>
+            </div>
+            <span class="nt-time">5 小时前</span>
+          </div>
+          <div class="nt-item">
+            <span class="nt-av soft">系</span>
+            <div class="nt-tx">
+              <div class="nt-t1">你的点评已通过审核</div>
+              <div class="nt-t2">周末棋盘山遛娃全攻略，附路线图</div>
+            </div>
+            <span class="nt-time">昨天</span>
+          </div>
+          <div class="nt-item">
+            <span class="nt-av">周</span>
+            <div class="nt-tx">
+              <div class="nt-t1"><b>小周探店</b> 关注了你</div>
+              <div class="nt-t2">点这里回关 TA</div>
+            </div>
+            <span class="nt-time">昨天</span>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>消息页</b>
+        <p>三类 tab：<b>互动 / 私信 / 公告</b>（与项目一致）。未读用品牌红角标，系统通知用浅色头像区分。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏10 聊天 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr" style="position:relative">
+          <div class="chat-top">
+            <span class="chat-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+            <b>小周探店</b>
+          </div>
+          <div class="chat-body">
+            <div class="chat-day">今天 14:20</div>
+            <div class="cmsg">
+              <span class="cav">周</span>
+              <span class="cbub">棋盘山那条东线你走过吗？带娃推车方不方便</span>
+            </div>
+            <div class="cmsg mine">
+              <span class="cav">王</span>
+              <span class="cbub">走过，东线是缓坡，推车完全 OK</span>
+            </div>
+            <div class="cmsg">
+              <span class="cav">周</span>
+              <span class="cbub">那太好了，周末就去。山顶那个茶社要排队吗</span>
+            </div>
+            <div class="cmsg mine">
+              <span class="cav">王</span>
+              <span class="cbub">上午人少，建议十点前上山</span>
+            </div>
+            <div class="cmsg mine">
+              <span class="cav">王</span>
+              <img class="cimg" src="https://picsum.photos/seed/dp2003a/500/400" alt="">
+            </div>
+            <div class="cmsg">
+              <span class="cav">周</span>
+              <span class="cbub">好看！我周末就去</span>
+            </div>
+            <div class="chat-hint">— 友善交流，文明点评 —</div>
+          </div>
+          <div class="chat-input">
+            <span class="box">说点什么…</span>
+            <!-- 未输入：右侧显示 ➕（发图 / 视频） -->
+            <span class="plus-btn">
+              <svg viewBox="0 0 24 24"><path d="M12 6.5v11M6.5 12h11"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>聊天页 · 未输入</b>
+        <p>底部输入栏右侧显示 <b>➕</b>（发图 / 视频）；气泡右对齐品牌红。保留项目的「友善交流」提示行。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏11 聊天（输入态） ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr" style="position:relative">
+          <div class="chat-top">
+            <span class="chat-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+            <b>小周探店</b>
+          </div>
+          <div class="chat-body">
+            <div class="chat-day">今天 14:20</div>
+            <div class="cmsg">
+              <span class="cav">周</span>
+              <span class="cbub">棋盘山那条东线你走过吗？带娃推车方不方便</span>
+            </div>
+            <div class="cmsg mine">
+              <span class="cav">王</span>
+              <span class="cbub">走过，东线是缓坡，推车完全 OK</span>
+            </div>
+          </div>
+          <div class="chat-input">
+            <span class="box has-text">那周末一起去呗</span>
+            <!-- 已输入：同一位置切换成「发送」 -->
+            <span class="send-btn">发送</span>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>聊天 · 输入态</b>
+        <p>同一个按钮位<b>按输入状态切换</b>：未输入是 ➕（发图/视频），一输入文字就变「发送」——<b>不额外占位、不互相挤</b>。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏11 登录 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="lg-hero">
+            <div class="lg-logo">
+              <svg viewBox="0 0 48 48" fill="none">
+                <circle cx="17" cy="19" r="3.2" fill="#d81228"/>
+                <circle cx="31" cy="19" r="3.2" fill="#d81228"/>
+                <path d="M15 29c3.2 4.2 6.8 6.2 9 6.2s5.8-2 9-6.2" stroke="#d81228" stroke-width="3.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="lg-name">真实点评</div>
+            <div class="lg-slogan">本地人的真实体验，比广告可信</div>
+          </div>
+          <div class="lg-card">
+            <div class="lg-field">
+              <svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>
+              请输入手机号
+            </div>
+            <div class="lg-field">
+              <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+              请输入验证码
+              <span class="lg-code">获取验证码</span>
+            </div>
+            <div class="lg-btn">登录 / 注册</div>
+            <div class="lg-alt">未注册的手机号将自动创建账号</div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>登录页</b>
+        <p>保留项目的<b>好评脸 logo 母题</b>（品牌红绘制）；红色渐变头 + 上浮白卡，slogan 强调「真实」这一核心主张。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏12 关注 / 粉丝 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-tabs" style="padding-top:34px">
+            <span class="pg-tab on">关注</span>
+            <span class="pg-tab">粉丝</span>
+          </div>
+          <div class="lrow">
+            <span class="lrow-av">周</span>
+            <div class="lrow-tx">
+              <div class="lrow-t1">小周探店</div>
+              <div class="lrow-t2">只写吃过三次以上的店</div>
+            </div>
+            <span class="lrow-btn ghost">已关注</span>
+          </div>
+          <div class="lrow">
+            <span class="lrow-av">猫</span>
+            <div class="lrow-tx">
+              <div class="lrow-t1">漫步的猫</div>
+              <div class="lrow-t2">咖啡因驱动 · 12 篇</div>
+            </div>
+            <span class="lrow-btn ghost">已关注</span>
+          </div>
+          <div class="lrow">
+            <span class="lrow-av">豆</span>
+            <div class="lrow-tx">
+              <div class="lrow-t1">豆豆酱</div>
+              <div class="lrow-t2">甜品雷达已启动</div>
+            </div>
+            <span class="lrow-btn">回关</span>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>关注 / 粉丝</b>
+        <p>双 tab 切换。粉丝 tab 带互关标记，回关按钮用品牌红实心，已关注用浅色（对应项目 <code style="font-family:ui-monospace;font-size:11px;background:var(--soft);padding:1px 4px;border-radius:3px">mutual</code> 字段）。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏13 关注的话题 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head sm"><h3>关注的话题</h3><p>共 4 个 · 有更新时会在消息里提醒你</p></div>
+          <div class="frow">
+            <span class="hash">#</span>
+            <div style="flex:1;min-width:0"><b>唐山美食</b><div class="lrow-t2" style="margin-top:3px">128 篇笔记 · 本周 +12</div></div>
+            <span class="lrow-btn ghost">取消</span>
+          </div>
+          <div class="frow">
+            <span class="hash">#</span>
+            <div style="flex:1;min-width:0"><b>遛娃好去处</b><div class="lrow-t2" style="margin-top:3px">86 篇笔记 · 本周 +5</div></div>
+            <span class="lrow-btn ghost">取消</span>
+          </div>
+          <div class="frow">
+            <span class="hash">#</span>
+            <div style="flex:1;min-width:0"><b>夜游打卡</b><div class="lrow-t2" style="margin-top:3px">42 篇笔记</div></div>
+            <span class="lrow-btn ghost">取消</span>
+          </div>
+          <div class="frow">
+            <span class="hash">#</span>
+            <div style="flex:1;min-width:0"><b>巷子咖啡</b><div class="lrow-t2" style="margin-top:3px">31 篇笔记</div></div>
+            <span class="lrow-btn ghost">取消</span>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>关注的话题</b>
+        <p># 号与话题名同级（不再大过标题）；每个话题显示笔记数与周更新量，右侧可直接取消关注。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏14 收藏夹管理 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head sm with-act" style="padding-bottom:var(--sp-3)">
+            <div>
+              <h3>收藏夹</h3>
+              <p>长按可重命名或删除 · 删除后笔记回到未分类</p>
+            </div>
+            <!-- 新建上移到页头：20 个夹子也不用滚到底 -->
+            <span class="head-act">
+              <svg viewBox="0 0 24 24"><path d="M12 6.5v11M6.5 12h11"/></svg>
+              新建
+            </span>
+          </div>
+          <div class="frow">
+            <span class="frow-ic"><svg viewBox="0 0 24 24"><path d="M6.5 3.5h11a1 1 0 011 1v16l-6.5-4-6.5 4v-16a1 1 0 011-1z"/></svg></span>
+            <b>全部收藏</b><i>128</i>
+          </div>
+          <div class="frow">
+            <span class="frow-ic"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v13H4z"/><path d="M4 10h16"/></svg></span>
+            <b>想去的店</b><i>42</i>
+          </div>
+          <div class="frow">
+            <span class="frow-ic"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20l4.5-8 3 4 2-3 3.5 7z"/></svg></span>
+            <b>周末遛娃</b><i>18</i>
+          </div>
+          <div class="frow">
+            <span class="frow-ic"><svg viewBox="0 0 24 24"><path d="M12 4h1.5a3 3 0 013 3v10a3 3 0 003 3H6a3 3 0 003-3V4z"/></svg></span>
+            <b>深夜食堂</b><i>7</i>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>收藏夹管理</b>
+        <p>删夹时笔记<b>回落到「未分类」而非一并删除</b>（对应后端 <code style="font-family:ui-monospace;font-size:11px;background:var(--soft);padding:1px 4px;border-radius:3px">folderId=0</code> 逻辑）。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏15 浏览记录 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head sm"><h3>浏览记录</h3><p>你最近看过的点评，按时间倒序</p></div>
+          <div class="tl-group" style="padding-top:var(--sp-2)">
+            <div class="tl-label">今天</div>
+            <div class="tl-item">
+              <div class="tl-thumb"><img src="https://picsum.photos/seed/dp2008a/200/200" alt=""></div>
+              <div class="tl-tx">
+                <div class="tl-t1">唐山南湖灯光秀，免费还出片</div>
+                <div class="tl-t2">南湖景区 · 2 小时前</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-thumb"><img src="https://picsum.photos/seed/dp2003a/200/200" alt=""></div>
+              <div class="tl-tx">
+                <div class="tl-t1">周末棋盘山遛娃全攻略，附路线图</div>
+                <div class="tl-t2">棋盘山景区 · 5 小时前</div>
+              </div>
+            </div>
+          </div>
+          <div class="tl-group">
+            <div class="tl-label">昨天</div>
+            <div class="tl-item">
+              <div class="tl-thumb"><img src="https://picsum.photos/seed/dp2001a/200/200" alt=""></div>
+              <div class="tl-tx">
+                <div class="tl-t1">唐山这家老味烧烤，本地人从小吃到大</div>
+                <div class="tl-t2">老王烧烤（建设南路店）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>浏览记录</b>
+        <p>按<b>今天 / 昨天 / 具体日期</b>分组的时间线；复用 <code style="font-family:ui-monospace;font-size:11px;background:var(--soft);padding:1px 4px;border-radius:3px">user_action</code> 的 VIEW 类型，覆盖式去重。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏16 草稿箱 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pub-tabs" style="padding-top:34px">
+            <span class="pg-tab on" style="padding-top:0">草稿箱</span>
+            <span class="s-cancel" style="margin-left:auto;padding-top:var(--sp-3)">清空</span>
+          </div>
+          <div style="padding:var(--sp-4) 0 0">
+            <div class="au-card" style="margin-top:0">
+              <h5>石家庄这几家烤肉我劝你全试一遍</h5>
+              <p>从棉一环的老王到裕华路南门，炭火声一直烧到凌晨两点…</p>
+              <div style="display:flex;align-items:center;gap:var(--sp-2)">
+                <span style="font-size:var(--fs-caption);padding:2px 8px;border-radius:var(--r-pill);background:var(--brand-wash);color:var(--brand-deep);font-weight:600">图文</span>
+                <span style="font-size:var(--fs-sm);color:var(--ink4)">2 小时前</span>
+                <span style="margin-left:auto;font-size:var(--fs-sm);color:var(--brand-deep);font-weight:600">继续编辑 ›</span>
+              </div>
+            </div>
+            <div class="au-card">
+              <h5>带娃逛唐山宴实拍 vlog</h5>
+              <p>一楼小吃二楼正餐，人均 50 能吃到走不动…</p>
+              <div style="display:flex;align-items:center;gap:var(--sp-2)">
+                <span style="font-size:var(--fs-caption);padding:2px 8px;border-radius:var(--r-pill);background:var(--soft);color:var(--ink2);font-weight:600">视频</span>
+                <span style="font-size:var(--fs-sm);color:var(--ink4)">昨天</span>
+                <span style="margin-left:auto;font-size:var(--fs-sm);color:var(--brand-deep);font-weight:600">继续编辑 ›</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>草稿箱</b>
+        <p>多草稿列表，<b>图文/视频用不同标签区分</b>；续编走 storage 标记 + switchTab（tabBar 页不能带参跳转）。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏17 设置 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head sm"><h3>设置</h3></div>
+          <div class="frow"><b style="font-weight:500;color:var(--ink2)">手机号</b><i>139****0001</i></div>
+          <div class="frow"><b style="font-weight:500;color:var(--ink2)">身份</b><i>认证点评人</i></div>
+          <div class="frow"><b style="font-weight:500;color:var(--ink2)">消息通知</b><i>已开启 ›</i></div>
+          <div class="frow"><b style="font-weight:500;color:var(--ink2)">深色模式</b><i>跟随系统 ›</i></div>
+          <div class="frow"><b style="font-weight:500;color:var(--ink2)">黑名单</b><i>2 ›</i></div>
+          <div class="frow"><b style="font-weight:500;color:var(--ink2)">关于真实点评</b><i>v0.1.0 ›</i></div>
+          <div style="margin:var(--sp-5) var(--sp-4) 0;padding:var(--sp-4);border-radius:var(--r-lg);background:var(--card);text-align:center;color:var(--brand-deep);font-size:var(--fs-base);font-weight:600">退出登录</div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>设置</b>
+        <p>键值行统一「左标签右值」，值弱化处理；危险操作（退出登录）单独成卡，避免误触。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏18 黑名单 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head sm"><h3>黑名单</h3><p>拉黑后彼此看不到对方的内容与评论</p></div>
+          <div class="lrow">
+            <span class="lrow-av" style="background:var(--ink3)">路</span>
+            <div class="lrow-tx">
+              <div class="lrow-t1">路过的小美</div>
+              <div class="lrow-t2">2026-09-28 拉黑</div>
+            </div>
+            <span class="lrow-btn ghost">解除</span>
+          </div>
+          <div class="lrow">
+            <span class="lrow-av" style="background:var(--ink3)">匿</span>
+            <div class="lrow-tx">
+              <div class="lrow-t1">匿名用户</div>
+              <div class="lrow-t2">2026-09-15 拉黑</div>
+            </div>
+            <span class="lrow-btn ghost">解除</span>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>黑名单</b>
+        <p>拉黑是<b>双向克制</b>：内容与评论双向过滤，通知也统一拦截（对应 <code style="font-family:ui-monospace;font-size:11px;background:var(--soft);padding:1px 4px;border-radius:3px">BlockService</code>）。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏19 如何成为点评人 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head" style="text-align:center;padding-top:56px">
+            <div style="width:64px;height:64px;border-radius:22px;background:var(--brand-wash);display:grid;place-items:center;margin:0 auto var(--sp-4)">
+              <svg viewBox="0 0 48 48" fill="none" style="width:38px;height:38px">
+                <circle cx="17" cy="19" r="3.2" fill="#d81228"/>
+                <circle cx="31" cy="19" r="3.2" fill="#d81228"/>
+                <path d="M15 29c3.2 4.2 6.8 6.2 9 6.2s5.8-2 9-6.2" stroke="#d81228" stroke-width="3.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 style="font-size:var(--fs-xl)">如何成为点评人</h3>
+            <p style="margin-top:var(--sp-2)">点评人是平台的认证创作者，内容会获得更多曝光</p>
+          </div>
+          <div class="gd-step">
+            <span class="gd-no">1</span>
+            <span class="gd-tx">联系管理员，说明你想点评的领域（美食 / 景区 / 遛娃 等）</span>
+          </div>
+          <div class="gd-step">
+            <span class="gd-no">2</span>
+            <span class="gd-tx">管理员确认后为你开通点评权限</span>
+          </div>
+          <div class="gd-step">
+            <span class="gd-no">3</span>
+            <span class="gd-tx">重新登录，开始发布你的第一条点评</span>
+          </div>
+          <div style="margin:0 var(--sp-4);padding:var(--sp-4);border-radius:var(--r-pill);background:var(--brand-deep);color:#fff;text-align:center;font-size:var(--fs-md);font-weight:700;box-shadow:var(--sh-fab)">复制管理员联系方式</div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>如何成为点评人</b>
+        <p>三步说明 + 单一 CTA。沿用好评脸母题做页头，保持品牌一致。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏20 管理台 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head sm" style="padding-top:48px"><h3>内容管理</h3><p>连续审核 · 处理完自动下一条</p></div>
+          <div class="au-stat">
+            <div class="au-cell hot"><b>12</b><span>待审</span></div>
+            <div class="au-cell"><b>38</b><span>今日通过</span></div>
+            <div class="au-cell"><b>4</b><span>今日驳回</span></div>
+            <div class="au-cell"><b>10%</b><span>驳回率</span></div>
+          </div>
+          <div class="pg-tabs">
+            <span class="pg-tab on">待审</span>
+            <span class="pg-tab">已通过</span>
+            <span class="pg-tab">已驳回</span>
+          </div>
+          <div class="au-card">
+            <h5>周末棋盘山遛娃全攻略，附路线图</h5>
+            <p>带娃党看过来！棋盘山现在设施完善了，上山走东线缓坡，推车也 OK…</p>
+            <!-- 审核时必须能看到完整内容再决定 -->
+            <div class="au-view">
+              <div class="th"><img src="https://picsum.photos/seed/dp2003a/200/200" alt=""></div>
+              <div>
+                <div class="nm">查看完整内容</div>
+                <div class="sb">2 图 · 286 字 · 棋盘山景区</div>
+              </div>
+              <span class="go">详情 ›</span>
+            </div>
+            <div class="au-ops">
+              <span class="au-op pass">通过</span>
+              <span class="au-op rej">驳回</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>管理台 · 内容管理</b>
+        <p>「待审」用<b>大字号 + 品牌红</b>拔高（一眼锁定该盯的数）；队列式连续审核，处理完自动下一条。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏21 用户管理 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head sm" style="padding-top:48px"><h3>用户管理</h3></div>
+          <div style="padding:0 var(--sp-4) var(--sp-4)">
+            <div class="s-box" style="box-shadow:var(--sh-card)">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+              <span>搜手机号 / 昵称</span>
+            </div>
+          </div>
+          <div class="lrow">
+            <span class="lrow-av">王</span>
+            <div class="lrow-tx">
+              <div class="lrow-t1">爱吃的老王 <span style="font-size:var(--fs-caption);color:var(--jade);font-weight:600">点评人</span></div>
+              <div class="lrow-t2">13901110001 · 128 篇</div>
+            </div>
+            <span class="lrow-btn ghost">封禁</span>
+          </div>
+          <div class="lrow">
+            <span class="lrow-av" style="background:var(--ink3)">美</span>
+            <div class="lrow-tx">
+              <div class="lrow-t1">路过的小美</div>
+              <div class="lrow-t2">13901110006 · 2 篇</div>
+            </div>
+            <span class="lrow-btn ghost" style="color:var(--brand-deep)">已封禁</span>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>用户管理 · 管理端</b>
+        <p>手机号搜索 + 用户卡；身份标签用青玉色，封禁状态用红色文字提示。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏22 发布公告 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div class="pg-head sm" style="padding-top:48px"><h3>发布平台公告</h3><p>公告会推送给全部用户</p></div>
+          <div class="an-input">例：【平台公告】唐山地区点评人招募中，欢迎推荐懂本地生活的朋友～</div>
+          <div class="an-count">0 / 200</div>
+          <div class="an-btn">发布公告</div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>发布公告 · 管理端</b>
+        <p>单输入区 + 字数计数；未输入时按钮禁用（对应项目 <code style="font-family:ui-monospace;font-size:11px;background:var(--soft);padding:1px 4px;border-radius:3px">disabled</code> 态）。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏23 话题合集 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div style="position:relative;overflow:hidden;padding:52px var(--sp-4) var(--sp-5);background:linear-gradient(150deg,#fff3f4,#ffe3e8)">
+            <div style="font-size:var(--fs-2xl);font-weight:800;letter-spacing:-.02em"># 唐山美食</div>
+            <div style="margin-top:var(--sp-2);font-size:var(--fs-sm);color:var(--ink2)">128 篇笔记 · 1.2k 赞 · 本周 +12</div>
+            <div style="display:inline-flex;align-items:center;gap:5px;margin-top:var(--sp-4);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-pill);background:var(--brand-deep);color:#fff;font-size:var(--fs-sm);font-weight:600;box-shadow:var(--sh-fab)">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.4"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+              已关注
+            </div>
+            <div style="position:absolute;right:-14px;bottom:-46px;font-size:132px;font-weight:800;color:rgba(255,255,255,.6);line-height:1">#</div>
+          </div>
+
+          <div style="padding:var(--sp-4)">
+            <div class="card" style="margin-bottom:var(--sp-4)">
+              <div class="cover" style="height:150px">
+                <img src="https://picsum.photos/seed/dp2001a/700/440" alt="">
+              </div>
+              <div class="body" style="padding:var(--sp-3) var(--sp-4)">
+                <h4 class="title" style="font-size:var(--fs-base);margin-bottom:var(--sp-2)">唐山这家老味烧烤，本地人从小吃到大</h4>
+                <div class="byline" style="padding-top:var(--sp-2)">
+                  <span class="avatar">王</span>
+                  <span class="by-nm">爱吃的老王</span>
+                  <div class="by-right"><span class="stat liked"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>128</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:var(--sp-4)">
+              <div class="cover" style="height:120px">
+                <img src="https://picsum.photos/seed/dp2006a/700/440" alt="">
+                <span class="cover-badge"><svg viewBox="0 0 24 24"><path d="M4 6.5h16v11H4z"/><path d="M10 10l4.5 2-4.5 2z"/></svg>视频</span>
+                <span class="cover-dur">00:38</span>
+              </div>
+              <div class="body" style="padding:var(--sp-3) var(--sp-4)">
+                <h4 class="title" style="font-size:var(--fs-base);margin-bottom:var(--sp-2)">这家羊汤馆开了三十年，冬天必冲</h4>
+                <div class="byline" style="padding-top:var(--sp-2)">
+                  <span class="avatar">通</span>
+                  <span class="by-nm">唐山本地通</span>
+                  <div class="by-right"><span class="stat liked"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>76</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>话题合集</b>
+        <p>话题头 + 一键关注；<b>合集里图文与视频混排</b>。巨型 # 水印做背景层次，不抢内容。</p>
+      </div>
+    </div>
+
+    <!-- ============ 屏24 他人主页 ============ -->
+    <div class="shot">
+      <div class="phone">
+        <div class="scr">
+          <div style="height:118px;background:linear-gradient(150deg,#ffd9de,#ffeef0)"></div>
+          <div style="padding:0 var(--sp-4);display:flex;align-items:flex-end;gap:var(--sp-3);margin-top:-30px;position:relative;z-index:2">
+            <!-- 关注改为头像上的 ➕ 角标：点一下即关注，不再占一整排 -->
+            <span class="av-follow">
+              <span style="width:66px;height:66px;border-radius:var(--r-pill);background:linear-gradient(140deg,#ff7a45,#d81228);border:3px solid var(--bg);display:grid;place-items:center;color:#fff;font-size:var(--fs-xl);font-weight:700">周</span>
+              <span class="plus" title="关注">
+                <svg viewBox="0 0 24 24"><path d="M12 6.5v11M6.5 12h11"/></svg>
+              </span>
+            </span>
+            <div style="padding-bottom:6px;flex:1;min-width:0">
+              <div style="font-size:var(--fs-lg);font-weight:700">小周探店</div>
+            </div>
+            <!-- 私信降级为右上角小图标 -->
+            <span class="icon-btn" style="margin-bottom:8px">
+              <svg viewBox="0 0 24 24"><path d="M20.5 12c0 4.1-3.8 7.5-8.5 7.5-1 0-2-.2-2.9-.5L4 20.5l1.6-4.4A7.2 7.2 0 013.5 12C3.5 7.9 7.3 4.5 12 4.5s8.5 3.4 8.5 7.5z"/></svg>
+            </span>
+          </div>
+          <div style="padding:var(--sp-3) var(--sp-4) 0;display:flex;align-items:center;gap:var(--sp-2)">
+            <span class="by-verify" style="font-size:var(--fs-sm)">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 3l2.6 1.9 3.2-.2 1 3 2.6 1.9-1.5 2.9 1.5 2.9-2.6 1.9-1 3-3.2-.2L12 21l-2.6-1.9-3.2.2-1-3L2.6 14.4 4.1 11.5 2.6 8.6l2.6-1.9 1-3 3.2.2z"/><path d="M8.8 12l2.2 2.2 4.2-4.4"/></svg>
+              认证点评人
+            </span>
+          </div>
+          <div style="padding:var(--sp-2) var(--sp-4) 0;font-size:var(--fs-sm);color:var(--ink2)">只写吃过三次以上的店 · 唐山</div>
+
+          <div style="display:flex;gap:var(--sp-6);padding:var(--sp-5) var(--sp-4);border-bottom:1px solid var(--line)">
+            <div><div style="font-size:var(--fs-xl);font-weight:700;line-height:1">86</div><div style="font-size:var(--fs-sm);color:var(--ink3);margin-top:5px">笔记</div></div>
+            <div><div style="font-size:var(--fs-xl);font-weight:700;line-height:1">340</div><div style="font-size:var(--fs-sm);color:var(--ink3);margin-top:5px">关注</div></div>
+            <div><div style="font-size:var(--fs-xl);font-weight:700;line-height:1">2.1k</div><div style="font-size:var(--fs-sm);color:var(--ink3);margin-top:5px">粉丝</div></div>
+          </div>
+
+          <div class="pg-tabs" style="padding:0 var(--sp-4)">
+            <span class="pg-tab on">笔记</span>
+            <span class="pg-tab">收藏</span>
+            <span class="pg-tab">赞过</span>
+          </div>
+
+          <div class="wf">
+            <div class="wf-col">
+              <div class="mcard">
+                <div class="mcover" style="height:150px"><img src="https://picsum.photos/seed/dp2004a/500/500" alt=""></div>
+                <div class="mbody">
+                  <h4 class="mtitle">新开的咖啡店值得二刷</h4>
+                  <div class="mfoot">
+                    <span class="mav">周</span>
+                    <span class="mnm">小周探店</span>
+                    <span class="mlike"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>21</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mcard">
+                <div class="mcover" style="height:120px"><img src="https://picsum.photos/seed/dp2007a/500/400" alt=""></div>
+                <div class="mbody">
+                  <h4 class="mtitle">秦皇小巷夜市初体验</h4>
+                  <div class="mfoot">
+                    <span class="mav">周</span>
+                    <span class="mnm">小周探店</span>
+                    <span class="mlike"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>64</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="wf-col">
+              <div class="mcard">
+                <div class="mcover" style="height:132px">
+                  <img src="https://picsum.photos/seed/dp2002a/500/400" alt="">
+                  <span class="cover-play"><svg viewBox="0 0 24 24"><path d="M8 5.3l11 6.7-11 6.7z"/></svg></span>
+                  <span class="cover-dur">00:52</span>
+                </div>
+                <div class="mbody">
+                  <h4 class="mtitle">人均 30 吃到扶墙出</h4>
+                  <div class="mfoot">
+                    <span class="mav">周</span>
+                    <span class="mnm">小周探店</span>
+                    <span class="mlike"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 14 3.5 8.9A4.9 4.9 0 0112 6a4.9 4.9 0 018.5 2.9c0 5.1-8.5 11.6-8.5 11.6z"/></svg>56</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="shot-cap">
+        <b>他人主页</b>
+        <p><b>关注改为头像上的 ➕ 角标</b>——点一下即关注，省掉整排大按钮；私信降级为右上小图标。笔记<b>固定双列</b>——主页是给别人看的，布局由主人决定、所有访客看到的一致，<b>不挂访客可切的视图开关</b>（避免「这开关改的是谁」的语义混乱）。</p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer style="padding:0 0 64px">
+    <p style="font-size:var(--fs-sm);color:var(--ink3);line-height:1.9;margin:0">
+      <b>图片</b>：picsum.photos（真实照片，与项目 demo 数据同源），非占位色块。<br>
+      <b>说明</b>：本原型仅用于确认视觉方向，尚未写入项目代码。
+    </p>
+  </footer>
+</div>
+
+</body>
+</html>
