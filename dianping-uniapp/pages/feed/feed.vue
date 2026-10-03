@@ -35,12 +35,13 @@
     <!-- 口碑榜常驻卡（首页信任感核心资产） -->
     <view class="rankbar" v-if="rank.length" @tap="goRank">
       <view class="rank-head">
-        <text class="rank-title">本周口碑榜</text>
+        <text class="rank-title">本地口碑榜</text>
+        <text class="rank-week">本周</text>
         <text class="rank-more">完整榜 ›</text>
       </view>
-      <view class="rank-row">
-        <view class="rank-item" v-for="(r, i) in rank" :key="r.shop">
-          <text class="rank-no">{{ i + 1 }}</text>
+      <view class="rank-item" v-for="(r, i) in rank" :key="r.shop">
+        <text class="rank-no" :class="{ top: i === 0 }">{{ i + 1 }}</text>
+        <view class="rank-mid">
           <text class="rank-name">{{ r.shop }}</text>
           <text class="rank-sub">{{ r.likeCount }} 赞 · {{ r.contentCount }} 篇</text>
         </view>
@@ -159,15 +160,19 @@
       </view>
     </view>
 
+    <!-- 引导式空状态：说清楚 + 给下一步（原则 09） -->
     <view v-if="!loading && !list.length" class="empty">
-      <text v-if="tab === 'follow'" class="muted">关注点评人后，这里展示 TA 们的最新笔记</text>
-      <text v-else-if="tab === 'city'" class="muted">「{{ cityText }}」还没有点评，换个城市看看</text>
-      <text v-else class="muted">这里还没有点评，等第一位点评人吧</text>
+      <view class="empty-ic">
+        <image class="empty-ic-img" :src="emptyInfo.icon" mode="aspectFit" />
+      </view>
+      <text class="empty-t">{{ emptyInfo.title }}</text>
+      <text class="empty-d">{{ emptyInfo.desc }}</text>
+      <view class="empty-btn" @tap="goEmptyAction">{{ emptyInfo.btn }}</view>
     </view>
     <view v-if="loading && list.length" class="load-more">
       <text class="load-more-text">加载中…</text>
     </view>
-    <view v-if="list.length && !hasMore" class="empty">
+    <view v-if="list.length && !hasMore" class="load-end">
       <text class="muted">— 到底啦 —</text>
     </view>
     <view style="height: 30rpx"></view>
@@ -210,6 +215,31 @@ export default {
     /** 搜索框前的城市名：来自本地选择或定位结果（storage 持久化） */
     cityText() {
       return this.cityLabel || regionName(this.cityCode)
+    },
+    /** 空状态文案：按 tab 给「说清楚 + 下一步」（原则 09 引导式空状态） */
+    emptyInfo() {
+      if (this.tab === 'follow') {
+        return {
+          icon: '/static/icons/star.png',
+          title: '这里还没有点评',
+          desc: '关注一些人，就能在这里看到他们的探店足迹',
+          btn: '去发现'
+        }
+      }
+      if (this.tab === 'city') {
+        return {
+          icon: '/static/icons/location.png',
+          title: `「${this.cityText}」还没有点评`,
+          desc: '换个城市，或成为这里的第一位点评人',
+          btn: '换个城市'
+        }
+      }
+      return {
+        icon: '/static/icons/topic.png',
+        title: '这里还没有点评',
+        desc: '成为第一位点评人，让更多人看到好店',
+        btn: '写第一条点评'
+      }
     }
   },
   onLoad() {
@@ -249,6 +279,17 @@ export default {
       if (this.tab === t) return
       this.tab = t
       this.refresh()
+    },
+    /** 空状态的引导动作：按当前 tab 给对应的下一步 */
+    goEmptyAction() {
+      if (this.tab === 'follow') {
+        this.switchTab('find')
+      } else if (this.tab === 'city') {
+        this.openCitySheet()
+      } else {
+        // 发布是 tabBar 页，必须用 switchTab
+        uni.switchTab({ url: '/pages/publish/publish' })
+      }
     },
     /** 打开城市选择弹层（点左上角位置区域，同城 tab 专属） */
     openCitySheet() {
@@ -375,7 +416,7 @@ export default {
   z-index: 10;
   background: var(--dp-card);
   padding-bottom: 10rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
+  box-shadow: var(--sh-card);
 }
 .seg {
   display: flex;
@@ -402,7 +443,7 @@ export default {
   width: 40rpx;
   height: 6rpx;
   border-radius: 3rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 /* 显性搜索框：城市定位 + 胶囊搜索框（点击整体跳搜索页） */
 .sbar {
@@ -513,7 +554,7 @@ export default {
   width: 40rpx;
   height: 6rpx;
   border-radius: 3rpx;
-  background: #ff2442;
+  background: var(--dp-brand-deep);
 }
 .waterfall {
   display: flex;
@@ -530,7 +571,7 @@ export default {
   border-radius: 16rpx;
   overflow: hidden;
   margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+  box-shadow: var(--sh-card);
 }
 .cover-wrap {
   position: relative;
@@ -592,7 +633,7 @@ export default {
   width: 36rpx;
   height: 36rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffb199, #ff2442);
+  background: linear-gradient(135deg, var(--dp-orange), var(--dp-brand-deep));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -635,7 +676,7 @@ export default {
   width: 36rpx;
   height: 36rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffb199, #ff2442);
+  background: linear-gradient(135deg, var(--dp-orange), var(--dp-brand-deep));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -668,70 +709,94 @@ export default {
   height: 300rpx;
   border-radius: 0;
 }
-/* 口碑榜卡 */
+/* 口碑榜卡：浅粉卡 + 衬线大数字（替代原饱和红底白字） */
 .rankbar {
-  margin: 14rpx 16rpx 4rpx;
-  border-radius: 18rpx;
-  background: linear-gradient(135deg, #ff5468, #ff2442 55%, #e01836);
-  padding: 18rpx 20rpx;
+  margin: var(--sp-2) var(--sp-3) 0;
+  border-radius: var(--r-xl);
+  background: linear-gradient(135deg, #fff5f5, #ffe9ec 55%, #ffdfe4);
+  padding: var(--sp-4);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--sh-card);
+}
+.theme-dark .rankbar {
+  background: linear-gradient(135deg, #2b1614, #3a1a1c 55%, #43201f);
 }
 .rankbar::after {
   content: "";
   position: absolute;
-  right: -20rpx;
-  top: -24rpx;
-  width: 120rpx;
-  height: 120rpx;
+  right: -60rpx;
+  top: -60rpx;
+  width: 240rpx;
+  height: 240rpx;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 36, 66, .07);
 }
 .rank-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  position: relative;
 }
 .rank-title {
-  color: #fff;
-  font-size: 26rpx;
+  font-size: var(--fs-md);
   font-weight: 700;
+  color: var(--dp-text);
+}
+.rank-week {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--dp-brand-deep);
+  background: rgba(255, 255, 255, .8);
+  padding: 2rpx 12rpx;
+  border-radius: var(--r-pill);
+}
+.theme-dark .rank-week {
+  background: rgba(255, 255, 255, .1);
 }
 .rank-more {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 20rpx;
-}
-.rank-row {
-  display: flex;
-  gap: 12rpx;
-  margin-top: 14rpx;
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  color: var(--dp-brand-deep);
+  font-weight: 500;
 }
 .rank-item {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.16);
-  border-radius: 12rpx;
-  padding: 12rpx 14rpx;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10rpx 0;
+  position: relative;
 }
 .rank-no {
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 30rpx;
-  color: #fff;
+  width: 52rpx;
+  flex-shrink: 0;
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--dp-text4);
+}
+.rank-no.top {
+  color: var(--dp-brand-deep);
+}
+.rank-mid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 .rank-name {
-  font-size: 22rpx;
-  color: #fff;
+  font-size: var(--fs-base);
   font-weight: 600;
-  margin-top: 4rpx;
+  color: var(--dp-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .rank-sub {
-  font-size: 18rpx;
-  color: rgba(255, 255, 255, 0.85);
-  margin-top: 2rpx;
+  font-size: var(--fs-caption);
+  color: var(--dp-text3);
+  margin-top: 4rpx;
 }
 /* 卡片右上认证标（作者为点评人/管理员时） */
 .trust-badge {
@@ -763,9 +828,54 @@ export default {
   margin: 14rpx 16rpx;
   border-radius: 6rpx;
 }
+/* 引导式空状态：图标 + 标题 + 说明 + 下一步按钮（原则 09） */
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx var(--sp-5) 80rpx;
+}
+.empty-ic {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--sp-4);
+}
+.empty-ic-img {
+  width: 56rpx;
+  height: 56rpx;
+  opacity: .45;
+}
+.empty-t {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--dp-text);
+}
+.empty-d {
+  font-size: var(--fs-sm);
+  color: var(--dp-text3);
+  line-height: 1.7;
   text-align: center;
-  padding: 100rpx 0;
+  margin-top: var(--sp-2);
+  max-width: 440rpx;
+}
+.empty-btn {
+  margin-top: var(--sp-5);
+  padding: 18rpx 56rpx;
+  border-radius: var(--r-pill);
+  background: var(--dp-brand-deep);
+  color: #ffffff;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  box-shadow: 0 8rpx 24rpx -6rpx rgba(216, 18, 40, .45);
+}
+.load-end {
+  text-align: center;
+  padding: 26rpx 0 46rpx;
 }
 .load-more {
   text-align: center;
