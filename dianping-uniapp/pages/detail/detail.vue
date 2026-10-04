@@ -42,9 +42,6 @@
           </view>
         </swiper-item>
       </swiper>
-      <view v-if="content.images && content.images.length > 1" class="page-badge">
-        <text class="page-badge-text">{{ currentImage + 1 }}/{{ content.images.length }}</text>
-      </view>
       <video
         v-else-if="content.videoUrl"
         class="banner"
@@ -53,8 +50,16 @@
         controls
         object-fit="contain"
       />
-      <view v-else class="banner banner-empty">
+      <!-- 只有「确实是视频笔记」（duration>0）且 URL 没出来时才提示加载失败。
+           原来这里是裸 v-else，导致单图/纯文字笔记也会显示「视频加载失败」 -->
+      <view v-else-if="content.duration > 0" class="banner banner-empty">
         <text class="banner-empty-text">视频加载失败，请检查网络后重试</text>
+      </view>
+      <!-- 页码角标：必须放在 swiper→video→空态 这条链**之外**。
+           它原先是夹在 swiper 和 video 中间的 v-if，会截断整条链，
+           于是 v-else-if/v-else 挂到了角标的条件上 → 图文笔记误显示视频错误 -->
+      <view v-if="content.images && content.images.length > 1" class="page-badge">
+        <text class="page-badge-text">{{ currentImage + 1 }}/{{ content.images.length }}</text>
       </view>
     </view>
 
