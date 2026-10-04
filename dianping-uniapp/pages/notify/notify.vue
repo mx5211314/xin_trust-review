@@ -134,7 +134,9 @@ import { askSubscribeOnce } from '@/utils/subscribe'
 export default {
   computed: {
     subLabel() {
-      const map = { like: '赞和收藏', follow: '新增关注', comment: '评论和@' }
+      // 与卡片上的文字保持一致：原来 follow 显示成「新增关注」，
+      // 但卡片写的是「私信与@」，同一个分类两个名字，看着像筛错了
+      const map = { like: '赞和收藏', follow: '私信与@', comment: '评论和@' }
       return map[this.interactSub] || ''
     }
   },
@@ -207,8 +209,12 @@ export default {
         this.tabUnread.chat = Number(d.unread || 0)
       } catch (e) { /* ignore */ }
     },
+    /**
+     * 分类筛选。语义是**开关**：再点一次已选中的分类 = 取消筛选。
+     * （比专门去点右上角「查看全部 ✕」顺手；传空串仍然表示"清除"）
+     */
     filterSub(sub) {
-      this.interactSub = sub
+      this.interactSub = (sub && sub === this.interactSub) ? '' : sub
       this.page = 1
       this.fetch()
     },
