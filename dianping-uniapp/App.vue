@@ -354,4 +354,51 @@ page {
 .theme-dark .glass-bar {
   background: rgba(20,17,14,.88);
 }
+
+/* ============================================================
+   宽屏（PC 浏览器）适配
+   ------------------------------------------------------------
+   uni-app H5 会把 rpx 编译成 rem，根字号 = min(视口宽, 960)：
+   一旦超过 960px 就回退到基准 375（根字号 16px）。
+   结果：在 1920px 的屏幕上，元素仍是「手机尺寸」，画布却铺满整屏 ——
+   卡片被拉宽、文字显得极小、底部 tabBar 横跨整个窗口。
+   解法：≥768px 时把整个应用收成手机宽度并居中，贴近真机比例。
+   ============================================================ */
+@media screen and (min-width: 768px) {
+  html,
+  body {
+    background: #eae5de;
+  }
+  html.dp-dark,
+  body.dp-dark {
+    background: #0b0908;
+  }
+  #app {
+    position: relative;
+    width: 480px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: #faf8f5;
+    box-shadow: 0 0 0 1px #ece7e0, 0 24px 70px rgba(28, 25, 23, .14);
+  }
+  html.dp-dark #app,
+  body.dp-dark #app {
+    background: #14110e;
+    box-shadow: 0 0 0 1px #2e2823, 0 24px 70px rgba(0, 0, 0, .6);
+  }
+  /* 固定定位元素（tabBar / 毛玻璃栏 / 遮罩 / 弹层）必须跟着收窄居中，
+     否则它们会横跨整个屏幕宽度 */
+  uni-tabbar,
+  .glass-bar,
+  .uni-mask,
+  uni-modal,
+  uni-toast,
+  uni-actionsheet {
+    max-width: 480px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 </style>

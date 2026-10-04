@@ -1,53 +1,53 @@
 {
-  "name" : "本地点评",
-  "appid" : "",
-  "description" : "达人精选制本地点评平台",
-  "versionName" : "0.1.0",
-  "versionCode" : "100",
-  "vueVersion" : "3",
-  "locale" : "zh-Hans",
-  "app-plus" : {
-    "usingComponents" : true,
-    "nvueStyleCompiler" : "uni-app",
-    "compilerVersion" : 3,
-    "splashscreen" : {
-      "alwaysShowBeforeRender" : true,
-      "waiting" : true,
-      "autoclose" : true,
-      "delay" : 0
+    "name" : "本地点评",
+    "appid" : "__UNI__DA5C710",
+    "description" : "达人精选制本地点评平台",
+    "versionName" : "0.1.0",
+    "versionCode" : "100",
+    "vueVersion" : "3",
+    "locale" : "zh-Hans",
+    "app-plus" : {
+        "usingComponents" : true,
+        "nvueStyleCompiler" : "uni-app",
+        "compilerVersion" : 3,
+        "splashscreen" : {
+            "alwaysShowBeforeRender" : true,
+            "waiting" : true,
+            "autoclose" : true,
+            "delay" : 0
+        },
+        "modules" : {},
+        "distribute" : {
+            "android" : {
+                "permissions" : [
+                    "<uses-permission android:name=\"android.permission.INTERNET\"/>",
+                    "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
+                    "<uses-permission android:name=\"android.permission.CAMERA\"/>",
+                    "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>"
+                ]
+            },
+            "ios" : {},
+            "sdkConfigs" : {}
+        }
     },
-    "modules" : { },
-    "distribute" : {
-      "android" : {
-        "permissions" : [
-          "<uses-permission android:name=\"android.permission.INTERNET\"/>",
-          "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
-          "<uses-permission android:name=\"android.permission.CAMERA\"/>",
-          "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
-          "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>"
-        ]
-      },
-      "ios" : { },
-      "sdkConfigs" : { }
+    "h5" : {
+        "title" : "本地点评",
+        "router" : {
+            "mode" : "hash"
+        }
+    },
+    "mp-weixin" : {
+        "appid" : "",
+        "setting" : {
+            "urlCheck" : false
+        },
+        "usingComponents" : true,
+        "permission" : {
+            "scope.userLocation" : {
+                "desc" : "用于推荐你所在城市的本地点评"
+            }
+        },
+        "requiredPrivateInfos" : [ "getLocation" ]
     }
-  },
-  "h5" : {
-    "title" : "本地点评",
-    "router" : {
-      "mode" : "hash"
-    }
-  },
-  "mp-weixin" : {
-    "appid" : "",
-    "setting" : {
-      "urlCheck" : false
-    },
-    "usingComponents" : true,
-    "permission" : {
-      "scope.userLocation" : {
-        "desc" : "用于推荐你所在城市的本地点评"
-      }
-    },
-    "requiredPrivateInfos" : [ "getLocation" ]
-  }
 }

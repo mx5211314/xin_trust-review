@@ -1,13 +1,13 @@
 <template>
   <view class="page" :class="{'theme-dark': isDark}">
-    <!-- 自定义导航：取消 | 发笔记 | 发布 -->
+    <!-- 自定义导航：取消 | 发笔记 | 发布（非点评人不显示发布/存草稿） -->
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <text class="nav-cancel" @tap="goBack">取消</text>
       <text class="nav-title">{{ editId ? '编辑笔记' : '发笔记' }}</text>
-      <view v-if="!editId" class="nav-draft" @tap="saveDraftToList">
+      <view v-if="canPublish && !editId" class="nav-draft" @tap="saveDraftToList">
         <text class="nav-draft-text">存草稿</text>
       </view>
-      <view class="nav-publish" :class="{ dim: submitting }" @tap="submit">
+      <view v-if="canPublish" class="nav-publish" :class="{ dim: submitting }" @tap="submit">
         <text class="nav-publish-text">{{ submitting ? '…' : '发布' }}</text>
       </view>
     </view>
@@ -228,7 +228,7 @@
 import { request } from '@/utils/request'
 import { uploadFile } from '@/utils/upload'
 import { REGIONS, regionName } from '@/utils/config'
-import { getUser } from '@/utils/auth'
+import { getUser, setUserInfo, isLogin } from '@/utils/auth'
 import { askSubscribeOnce } from '@/utils/subscribe'
 import { locateDetail, nearbyPois } from '@/utils/location'
 import CitySheet from '@/components/city-sheet/city-sheet.vue'
@@ -287,6 +287,9 @@ export default {
   onShow() {
     const u = getUser()
     this.role = u ? u.role : 'USER'
+    // 角色可能刚被后台改过（授予/取消点评人）→ 拉一次最新信息并回写登录态，
+    // 否则用户必须退出重登才能发布（原先就是这个问题）
+    this.refreshRole()
     if (!this.editId) {
       // 草稿箱「继续编辑」跳转（tab 页不能 navigateTo 带参 → storage 标记）
       let fromDraft = null
@@ -306,6 +309,10 @@ export default {
     }
   },
   computed: {
+    /** 只有点评人/管理员能发布；非点评人连顶部按钮都不该看到 */
+    canPublish() {
+      return this.role === 'REVIEWER' || this.role === 'ADMIN'
+    },
     /** 提交用地区码：精确定位(区县adcode) > 手动选市/省 */
     regionCode() {
       if (this.located) return this.located.code
@@ -498,6 +505,16 @@ export default {
     goBack() {
       uni.switchTab({ url: '/pages/feed/feed' })
     },
+    /** 拉最新用户信息：刷新角色 + 回写登录态
+     *  后台刚授予/取消点评人时，本地缓存的 role 是旧的 —— 不回写就必须退出重登 */
+    async refreshRole() {
+      if (!isLogin()) return
+      try {
+        const me = await request({ url: '/user/me' })
+        setUserInfo(Object.assign({}, getUser(), me))
+        if (me && me.role) this.role = me.role
+      } catch (e) { /* 静默：网络异常时沿用缓存角色 */ }
+    },
     validate() {
       if (!this.title.trim()) return '标题不能为空'
       if (!this.text.trim()) return '正文不能为空'
@@ -507,6 +524,10 @@ export default {
       return ''
     },
     async submit() {
+      // 非点评人：先给明确原因，别让 validate() 报「标题不能为空」误导用户
+      if (!this.canPublish) {
+        return uni.showToast({ title: '发布功能仅对点评人开放', icon: 'none' })
+      }
       const err = this.validate()
       if (err) return uni.showToast({ title: err, icon: 'none' })
       if (this.submitting) return
@@ -761,7 +782,9 @@ export default {
   font-size: 28rpx;
 }
 .mention-list {
-  max-height: 520rpx;
+  /* scroll-view 在 H5 里需要「确定高度」才能滚动；只给 max-height 会算不出高度，
+     表现为列表显示不全 / 滚不动。这里给死高度，外层 .sheet 的 overflow 兜底。 */
+  height: 520rpx;
 }
 .mention-item {
   display: flex;
@@ -1110,7 +1133,8 @@ export default {
   background: var(--dp-card);
   border-radius: 28rpx 28rpx 0 0;
   padding: 30rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
-  max-height: 60vh;
+  /* 72vh：@提及 面板要装下 头部+搜索框+520rpx 列表，60vh 在矮屏上会把列表挤掉 */
+  max-height: 72vh;
   overflow-y: auto;
 }
 .sheet-head {

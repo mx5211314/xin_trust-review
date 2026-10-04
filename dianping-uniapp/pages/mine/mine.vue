@@ -373,6 +373,9 @@ export default {
       try {
         const me = await request({ url: '/user/me' })
         this.user = Object.assign({}, getUser(), me)
+        // 回写登录态：角色可能被后台改过（如刚被授予点评人），
+        // 不回写的话 isReviewer() 读到的永远是"登录那一刻"的旧值，必须退出重登
+        setUserInfo(Object.assign({}, getUser(), me))
         const stats = await request({ url: '/user/stats' })
         this.stats = Object.assign(this.stats, stats)
         let data
