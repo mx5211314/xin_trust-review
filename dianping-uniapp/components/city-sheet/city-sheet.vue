@@ -110,18 +110,20 @@ export default {
 </script>
 
 <style scoped>
+/* 城市选择弹层：z-index 必须高于 H5 的 tabBar(998)，
+   本组件用在发布/首页等 tabBar 页上，低了会被底栏压住 */
 .mask {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 60;
+  z-index: 1000;
 }
 .sheet {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 61;
+  z-index: 1001;
   background: var(--dp-card);
   border-radius: 28rpx 28rpx 0 0;
   padding: 30rpx 28rpx 24rpx;

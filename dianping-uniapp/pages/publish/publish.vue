@@ -1124,19 +1124,21 @@ export default {
 .tchip-new-tx {
   color: var(--dp-text3);
 }
-/* 附近店铺弹层 */
+/* 附近店铺 / @提及 弹层
+   注意 z-index 必须高于 H5 的 tabBar(998)：本页是 tabBar 页，
+   底栏常驻，弹层若低于它，面板底部（含按钮）会被压住、看着"显示不全" */
 .mask {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 60;
+  z-index: 1000;
 }
 .sheet {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 61;
+  z-index: 1001;
   background: var(--dp-card);
   border-radius: 28rpx 28rpx 0 0;
   padding: 30rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));

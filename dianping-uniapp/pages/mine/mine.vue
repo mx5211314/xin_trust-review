@@ -4,7 +4,9 @@
     <view class="head">
       <view class="deco"></view>
       <view class="head-row">
-        <view class="avatar-wrap" @tap="changeAvatar">
+        <!-- 点头像 = 打开编辑资料（内含「更换头像」）。
+             原来直接跳图片选择器，而编辑资料藏在 设置 里，找起来费劲 -->
+        <view class="avatar-wrap" @tap="openEdit">
           <view class="avatar">
             <image v-if="user && user.avatar" class="avatar-img" :src="user.avatar" mode="aspectFill" />
             <text v-else class="avatar-text">{{ shortName }}</text>
@@ -185,6 +187,9 @@
           </view>
         </view>
         <scroll-view class="drawer-list" scroll-y="true">
+          <view class="drawer-item" @tap="drawerGo('goEditProfile')">
+            <text class="drawer-text">编辑资料</text><text class="drawer-arrow">›</text>
+          </view>
           <view class="drawer-item" v-if="user && user.role === 'USER'" @tap="drawerGo('goGuide')">
             <text class="drawer-text">如何成为点评人</text><text class="drawer-arrow">›</text>
           </view>
@@ -498,6 +503,11 @@ export default {
           } catch (e) { /* toast 已提示 */ }
         }
       })
+    },
+    /** 抽屉入口：收抽屉后打开编辑资料面板 */
+    goEditProfile() {
+      this.drawerShow = false
+      this.openEdit()
     },
     openEdit() {
       this.editNickname = this.user ? this.user.nickname : ''
@@ -907,7 +917,8 @@ export default {
   top: 0;
   bottom: 0;
   background: rgba(28, 25, 23, .4);
-  z-index: 200;
+  /* 同上：抽屉要盖住 tabBar(998)，否则抽屉底部一截被底栏压住 */
+  z-index: 1000;
 }
 .drawer {
   position: absolute;
@@ -1050,7 +1061,8 @@ export default {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  /* H5 的 tabBar 是 z-index:998，弹层必须高于它，否则底部按钮被压住 */
+  z-index: 1000;
   display: flex;
   align-items: flex-end;
 }
