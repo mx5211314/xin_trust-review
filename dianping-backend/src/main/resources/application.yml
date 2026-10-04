@@ -35,8 +35,9 @@ dianping:
     expire-days: 7
   audit:
     # true = 机审直接通过（本地开发用）；false = 停在 PENDING，等后台人工审
-    # 【上线改 false】否则等于没有审核
-    mock-auto-pass: true
+    # 置 false：前端文案承诺「审核通过后公开」，必须真的走审核
+    # （可在启动参数里用 --dianping.audit.mock-auto-pass=true 临时覆盖）
+    mock-auto-pass: false
   # 跨源白名单：开发期 "*"，生产收敛为前端域名（逗号分隔）
   cors:
     allowed-origins: ${CORS_ORIGINS:*}

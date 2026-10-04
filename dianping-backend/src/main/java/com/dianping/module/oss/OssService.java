@@ -206,9 +206,17 @@ public class OssService {
             ServletRequestAttributes attrs =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attrs != null) {
-                String host = attrs.getRequest().getHeader("Host");
+                jakarta.servlet.http.HttpServletRequest req = attrs.getRequest();
+                String host = req.getHeader("Host");
                 if (host != null && !host.isBlank()) {
-                    return "http://" + host;
+                    // 协议必须跟随实际请求：穿透/反代后页面是 https，
+                    // 若这里写死 http，浏览器会按「混合内容」拦掉上传和图片
+                    // （表现就是上传报「请检查网络」、图片不显示）
+                    String scheme = req.getHeader("X-Forwarded-Proto");
+                    if (scheme == null || scheme.isBlank()) {
+                        scheme = req.getScheme();
+                    }
+                    return scheme + "://" + host;
                 }
             }
         } catch (Exception ignored) {

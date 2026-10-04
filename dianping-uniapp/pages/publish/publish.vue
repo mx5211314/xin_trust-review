@@ -567,14 +567,21 @@ export default {
           tags: this.tags.length ? this.tags : undefined,
           poiName: this.poiName.trim() || undefined
         }
+        let res = null
         if (this.editId) {
-          await request({ url: `/content/${this.editId}`, method: 'PUT', data: payload })
+          res = await request({ url: `/content/${this.editId}`, method: 'PUT', data: payload })
         } else {
-          await request({ url: '/content', method: 'POST', data: payload })
+          res = await request({ url: '/content', method: 'POST', data: payload })
           // 发布成功 → 引导订阅"审核结果通知"（未配置模板时静默跳过；tap 手势内合法）
           askSubscribeOnce('audit')
         }
-        uni.showToast({ title: this.editId ? '已保存，审核通过后公开' : '已提交，审核通过后公开', icon: 'success' })
+        // 机审放行 → APPROVED；否则停 PENDING 等后台人工审。提示必须跟真实状态一致，
+        // 不能像之前那样无条件说「审核通过后公开」（实际是秒过，别人立刻就看到了）
+        const approved = res && res.status === 'APPROVED'
+        const tip = approved
+          ? (this.editId ? '已保存' : '已发布')
+          : '已提交，审核通过后公开'
+        uni.showToast({ title: tip, icon: 'success' })
         setTimeout(() => {
           this.reset()
           this.removeDraft()

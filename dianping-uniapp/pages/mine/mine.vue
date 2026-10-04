@@ -109,6 +109,12 @@
             <view v-else class="cover cover-empty">
               <text class="cover-empty-text">{{ item.coverError ? '图片加载失败' : '视频' }}</text>
             </view>
+            <!-- 审核状态角标：非上架内容只有作者本人拿得到（后端按归属下发） -->
+            <text
+              v-if="item.status && item.status !== 'APPROVED'"
+              class="wstate"
+              :class="{ reject: item.status === 'REJECTED' }"
+            >{{ item.status === 'PENDING' ? '审核中' : '未通过' }}</text>
           </view>
           <text class="wtitle">{{ item.title }}</text>
           <view class="wfoot">
@@ -138,6 +144,12 @@
             <view v-else class="cover cover-empty">
               <text class="cover-empty-text">{{ item.coverError ? '图片加载失败' : '视频' }}</text>
             </view>
+            <!-- 审核状态角标：非上架内容只有作者本人拿得到（后端按归属下发） -->
+            <text
+              v-if="item.status && item.status !== 'APPROVED'"
+              class="wstate"
+              :class="{ reject: item.status === 'REJECTED' }"
+            >{{ item.status === 'PENDING' ? '审核中' : '未通过' }}</text>
           </view>
           <text class="wtitle">{{ item.title }}</text>
           <view class="wfoot">
@@ -825,6 +837,8 @@ export default {
 .cover-wrap {
   width: 100%;
   height: 240rpx;
+  /* 给绝对定位的 .wstate 审核角标做定位参照 */
+  position: relative;
 }
 .cover {
   width: 100%;
@@ -869,6 +883,21 @@ export default {
   font-size: var(--fs-caption);
   color: var(--dp-brand-deep);
   margin-left: auto;
+}
+/* 审核状态角标：压在封面上，只有作者本人能看到自己的待审/驳回内容 */
+.wstate {
+  position: absolute;
+  left: 12rpx;
+  top: 12rpx;
+  padding: 4rpx 14rpx;
+  border-radius: var(--r-pill);
+  background: rgba(28, 25, 23, .72);
+  color: #ffffff;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+}
+.wstate.reject {
+  background: rgba(163, 45, 45, .9);
 }
 /* 侧边栏抽屉（抖音/小红书式：功能入口不占主屏） */
 .drawer-mask {

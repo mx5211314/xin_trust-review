@@ -140,11 +140,18 @@ public class ContentService {
 
     /** 用户主页：TA 发布的、仅 APPROVED 的内容 */
     public Map<String, Object> userContents(Long me, Long targetUserId, int page, int pageSize) {
-        Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize),
-                new LambdaQueryWrapper<Content>()
-                        .eq(Content::getUserId, targetUserId)
-                        .eq(Content::getStatus, "APPROVED")
-                        .orderByDesc(Content::getCreateTime));
+        // 看自己的主页：要包含 PENDING / REJECTED，否则刚发布的笔记会"消失"，
+        // 作者以为发丢了（审核生效后必须补这条）
+        boolean isSelf = me != null && me.equals(targetUserId);
+        LambdaQueryWrapper<Content> qw = new LambdaQueryWrapper<Content>()
+                .eq(Content::getUserId, targetUserId)
+                .orderByDesc(Content::getCreateTime);
+        if (isSelf) {
+            qw.in(Content::getStatus, "APPROVED", "PENDING", "REJECTED");
+        } else {
+            qw.eq(Content::getStatus, "APPROVED");
+        }
+        Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize), qw);
         return pageResult(me, p);
     }
 
@@ -154,8 +161,10 @@ public class ContentService {
         if (c == null) {
             throw new BizException(ResultCode.NOT_FOUND);
         }
+        // 已上架人人可见；作者本人额外可见自己的 REJECTED（附原因）与 PENDING（审核中）
+        boolean mine = c.getUserId() != null && c.getUserId().equals(me);
         boolean visible = "APPROVED".equals(c.getStatus())
-                || ("REJECTED".equals(c.getStatus()) && c.getUserId().equals(me));
+                || (mine && ("REJECTED".equals(c.getStatus()) || "PENDING".equals(c.getStatus())));
         if (!visible) {
             throw new BizException(ResultCode.NOT_FOUND);
         }
