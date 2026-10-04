@@ -308,8 +308,9 @@ export default {
 }
 .video-badge {
   position: absolute;
-  right: 12rpx;
-  bottom: 12rpx;
+  /* 与 feed 卡片统一：媒体角标一律左上，避开右上角的「认证」标 */
+  left: 12rpx;
+  top: 12rpx;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
   font-size: 20rpx;
@@ -318,7 +319,8 @@ export default {
 }
 .img-badge {
   position: absolute;
-  right: 12rpx;
+  /* 与 .video-badge 统一到左上（两者互斥，不会同时出现） */
+  left: 12rpx;
   top: 12rpx;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;

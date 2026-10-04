@@ -894,7 +894,8 @@ export default {
 }
 .img-badge {
   position: absolute;
-  right: 12rpx;
+  /* 放左上，与 .video-badge 一致；放右上会和「认证」标叠在一起 */
+  left: 12rpx;
   top: 12rpx;
   background: rgba(0, 0, 0, 0.55);
   border-radius: 8rpx;
