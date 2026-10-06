@@ -17,6 +17,8 @@ dianping:
     # 这样不用真实短信也能完成完整登录流程；
     # 同时后端日志里也会打印一份（LogSmsSender）。
     echo-code: ${SMS_ECHO_CODE:true}
+    # 本机反复登录/联调很容易撞上小时级上限，dev 放宽（生产仍走 application.yml 的 5）
+    hourly-send-limit: ${SMS_HOURLY_LIMIT:100}
 
 logging:
   level:

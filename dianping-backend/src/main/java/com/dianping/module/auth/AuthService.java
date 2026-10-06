@@ -23,6 +23,10 @@ public class AuthService {
     private final com.dianping.common.RateLimitService rateLimitService;
     private final SmsCodeService smsCodeService;
 
+    /** 同一手机号每小时最多下发几次验证码（防持续骚扰与短信费用攻击） */
+    @org.springframework.beans.factory.annotation.Value("${dianping.sms.hourly-send-limit:5}")
+    private int sendHourlyLimit;
+
     /**
      * 手机号 + 验证码登录；首次登录自动注册（昵称默认"用户+手机尾号"）。
      *
@@ -66,9 +70,10 @@ public class AuthService {
      *         生产环境返回空 map（真正的码只走短信通道）
      */
     public Map<String, Object> sendLoginCode(String phone) {
-        // 这里再叠一层按手机号的发送限流（SmsCodeService 内部已有间隔限制，
-        // 这层用于挡住"换 IP 换号"之外的短时高频）
-        rateLimitService.check("sms-send", phone, 5, 3600);
+        // 小时级上限：SmsCodeService 内部已有 60 秒间隔限制（防连点），
+        // 这层用来挡"每隔一分钟发一次"的持续骚扰与短信费用攻击。
+        // 阈值走配置，别写死在代码里 —— 调试/压测时都要临时调整。
+        rateLimitService.check("sms-send", phone, sendHourlyLimit, 3600);
         String devCode = smsCodeService.send(phone);
         Map<String, Object> data = new HashMap<>();
         if (devCode != null) {

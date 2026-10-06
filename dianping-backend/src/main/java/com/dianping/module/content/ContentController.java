@@ -116,12 +116,16 @@ public class ContentController {
         return R.ok(contentService.rankShops(limit));
     }
 
-    /** GET /content/related?poiName=&exclude=&limit= —— 同店铺其他点评（详情页横滑推荐） */
+    /** GET /content/related?poiId=&exclude=&limit= —— 同门店其他点评（详情页横滑推荐） */
     @GetMapping("/related")
-    public R<List<ContentVO>> related(@RequestParam String poiName,
+    public R<List<ContentVO>> related(@RequestParam(required = false) Long poiId,
                                       @RequestParam(required = false) Long exclude,
                                       @RequestParam(defaultValue = "6") int limit) {
-        return R.ok(contentService.relatedByPoi(poiName, exclude, limit));
+        // 从 poiName 字符串匹配改为 poi_id：字符串匹配会把同店不同写法算成两家、
+        // 把同名不同店算成一家（门店体系批 2）。
+        // poiId 允许为空：没有关联门店的笔记（逛公园这类）本来就不该有同店推荐，
+        // 返回空数组即可；不设 required 会让 `?poiId=` 直接 5000。
+        return R.ok(contentService.relatedByPoi(poiId, exclude, limit));
     }
 
     /** POST /content/{id}/view —— 浏览计数上报 */

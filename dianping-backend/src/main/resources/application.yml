@@ -54,6 +54,8 @@ dianping:
     max-verify-attempts: 5
     # 同一手机号两次发送的最小间隔（秒）
     send-interval-seconds: 60
+    # 同一手机号每小时最多下发几次（防持续骚扰与短信费用攻击）
+    hourly-send-limit: ${SMS_HOURLY_LIMIT:5}
   audit:
     # true = 机审直接通过（本地开发用）；false = 停在 PENDING，等后台人工审
     # 置 false：前端文案承诺「审核通过后公开」，必须真的走审核

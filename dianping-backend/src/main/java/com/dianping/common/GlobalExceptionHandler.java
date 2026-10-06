@@ -31,6 +31,20 @@ public class GlobalExceptionHandler {
         return R.fail(ResultCode.PARAM_ERROR, msg);
     }
 
+    /**
+     * 路径/查询参数**类型转换失败**：如 `?poiId=abc` 或 `?poiId=`（空串转 Long）。
+     *
+     * 这类问题原来是掉进兜底的 5000「系统繁忙」，把调用方传错参数说成服务端故障 ——
+     * 排查时会被带偏（看到 5000 先去查服务端，实际是自己拼错了参数）。
+     * 统一按参数错误返回，并说明是哪个参数。
+     */
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public R<Void> handleTypeMismatch(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException e) {
+        log.warn("参数类型不匹配: name={}, value={}", e.getName(), e.getValue());
+        return R.fail(ResultCode.PARAM_ERROR, "参数 " + e.getName() + " 格式不对");
+    }
+
     /** 静态资源/路径不存在：返回 404 语义（不再是 5000，也不记 error 日志） */
     @ExceptionHandler(NoResourceFoundException.class)
     public R<Void> handleNoResource(NoResourceFoundException e) {

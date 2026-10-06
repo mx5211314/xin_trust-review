@@ -321,6 +321,32 @@ public class PoiService {
         }
     }
 
+    /**
+     * 批量取门店（按 id），返回 id → Poi（缺失的 id 不在结果里）。
+     *
+     * 榜单/聚合页要展示门店名，必须批量查 —— 在循环里 selectById 就是 N+1。
+     * 若某个 id 指向的是**已被合并**的门店，会解析到正主
+     * （所以两个不同的旧 id 可能返回同一条，调用方如果要按正主聚合需要注意）。
+     */
+    public Map<Long, Poi> findByIds(java.util.Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, Poi> out = new HashMap<>();
+        for (Poi p : poiMapper.selectBatchIds(ids)) {
+            out.put(p.getId(), p);
+        }
+        // 只对 MERGED 的做二次解析：正常数据里这种很少，
+        // 所以不必为它把整条链也批量预取（resolve 内部有环保护）
+        for (Long id : ids) {
+            Poi p = out.get(id);
+            if (p != null && Poi.STATUS_MERGED.equals(p.getStatus())) {
+                out.put(id, resolve(id));
+            }
+        }
+        return out;
+    }
+
     /** 转成前端用的扁平结构（与项目其它模块一致，不额外建 VO 类） */
     public Map<String, Object> toVo(Poi p, Long me) {        Map<String, Object> m = new HashMap<>();
         m.put("poiId", String.valueOf(p.getId()));

@@ -27,6 +27,11 @@ import java.util.Map;
 public class PoiController {
 
     private final PoiService poiService;
+    /**
+     * 门店页要列出该店的点评，而点评 VO 的组装逻辑在内容模块。
+     * Controller 依赖 Service 不构成循环（ContentService 依赖的是 PoiService，不是本类）。
+     */
+    private final com.dianping.module.content.ContentService contentService;
 
     /** GET /poi/search?kw=&cityCode=&limit= —— 门店联想（含自己创建的待审门店） */
     @GetMapping("/search")
@@ -56,6 +61,21 @@ public class PoiController {
     public R<Map<String, Object>> detail(@PathVariable Long id) {
         Long me = UserContext.userId();
         return R.ok(poiService.toVo(poiService.get(me, id), me));
+    }
+
+    /**
+     * GET /poi/{id}/contents?page=&pageSize= —— 门店页：该店的点评列表 + 门店信息。
+     * 走 contentService 而不是 poiService：点评列表的组装（VO/拉黑过滤/可见性）
+     * 都在内容模块，门店模块不该重复实现一遍。
+     */
+    @GetMapping("/{id}/contents")
+    public R<Map<String, Object>> contents(@PathVariable Long id,
+                                           @RequestParam(defaultValue = "1") int page,
+                                           @RequestParam(defaultValue = "10") int pageSize) {
+        Long me = UserContext.userId();
+        return R.ok(contentService.poiContents(me, id,
+                com.dianping.common.PageParam.page(page),
+                com.dianping.common.PageParam.size(pageSize)));
     }
 
     // ---------- 管理端：门店审核 ----------

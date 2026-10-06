@@ -270,24 +270,34 @@ public class ContentService {
 
     /** 热门店铺：统计最近已上架内容的 poiName 词频（TopN） */
     public List<Map<String, Object>> hotShops(int limit) {
+        // 按 **poi_id** 聚合，不再按 poi_name 字符串。
+        // 字符串聚合的后果：同一家店写法不同就算两家（热度摊薄）、
+        // 同名不同店算一家（热度串台）—— 榜单排名直接不可信。
         List<Content> recents = contentMapper.selectList(
                 new LambdaQueryWrapper<Content>()
                         .eq(Content::getStatus, "APPROVED")
-                        .isNotNull(Content::getPoiName)
-                        .ne(Content::getPoiName, "")
+                        .isNotNull(Content::getPoiId)
                         .orderByDesc(Content::getCreateTime)
                         .last("LIMIT 300"));
-        java.util.Map<String, Integer> cnt = new java.util.HashMap<>();
+        Map<Long, Integer> cnt = new java.util.HashMap<>();
         for (Content c : recents) {
-            String p = c.getPoiName();
-            if (p != null && !p.isBlank()) cnt.merge(p, 1, Integer::sum);
+            if (c.getPoiId() != null) {
+                cnt.merge(c.getPoiId(), 1, Integer::sum);
+            }
         }
+        if (cnt.isEmpty()) {
+            return java.util.List.of();
+        }
+        // 门店名批量取一次（门店被合并过也能拿到正主的名字）
+        Map<Long, com.dianping.module.poi.Poi> pois = poiService.findByIds(cnt.keySet());
         return cnt.entrySet().stream()
                 .sorted((a, b) -> b.getValue() - a.getValue())
                 .limit(limit)
                 .map(e -> {
-                    java.util.Map<String, Object> m = new java.util.HashMap<>();
-                    m.put("shop", e.getKey());
+                    com.dianping.module.poi.Poi p = pois.get(e.getKey());
+                    Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("poiId", String.valueOf(e.getKey()));
+                    m.put("shop", p == null ? "" : p.getName());
                     m.put("count", e.getValue());
                     return m;
                 }).collect(java.util.stream.Collectors.toList());
@@ -428,14 +438,25 @@ public class ContentService {
         return data;
     }
 
-    /** 同店铺其他点评：按 poiName 匹配（排除当前篇），按点赞数倒序（原型：单篇→店铺入口） */
-    public List<ContentVO> relatedByPoi(String poiName, Long excludeId, int limit) {
-        if (poiName == null || poiName.isBlank()) {
+    /**
+     * 同门店其他点评（详情页横滑推荐 / 门店页用）：按 **poi_id** 匹配，按点赞数倒序。
+     *
+     * 原先按 poi_name 字符串匹配：同一家店不同写法就推荐不到一起，
+     * 同名不同店反而会互相推荐 —— 现在统一走 id。
+     */
+    public List<ContentVO> relatedByPoi(Long poiId, Long excludeId, int limit) {
+        if (poiId == null) {
             return java.util.List.of();
         }
+        // 门店可能已被合并：跟随到正主，否则会漏掉挂在正主上的点评
+        com.dianping.module.poi.Poi p = poiService.resolve(poiId);
+        if (p == null) {
+            return java.util.List.of();
+        }
+        Long realId = p.getId();
         List<Content> list = contentMapper.selectList(new LambdaQueryWrapper<Content>()
                 .eq(Content::getStatus, "APPROVED")
-                .eq(Content::getPoiName, poiName)
+                .eq(Content::getPoiId, realId)
                 .ne(excludeId != null, Content::getId, excludeId)
                 .orderByDesc(Content::getLikeCount)
                 .last("LIMIT " + Math.max(1, Math.min(limit, 20))));
@@ -448,22 +469,39 @@ public class ContentService {
                 .toList();
     }
 
-    /** 口碑榜：已上架内容按 poiName 聚合（篇数 + 总赞数），按总赞数倒序 */
+    /** 门店页：该店的点评列表（只出已上架，按时间倒序）；同时带上门店本身的信息 */
+    public Map<String, Object> poiContents(Long me, Long poiId, int page, int pageSize) {
+        com.dianping.module.poi.Poi p = poiService.get(me, poiId);
+        Page<Content> cp = contentMapper.selectPage(new Page<>(page, pageSize),
+                new LambdaQueryWrapper<Content>()
+                        .eq(Content::getStatus, "APPROVED")
+                        .eq(Content::getPoiId, p.getId())
+                        .orderByDesc(Content::getCreateTime));
+        Map<String, Object> data = new java.util.HashMap<>(pageResult(me, cp));
+        data.put("poi", poiService.toVo(p, me));
+        return data;
+    }
+
+    /** 口碑榜：已上架内容按 **poi_id** 聚合（篇数 + 总赞数），按总赞数倒序 */
     public List<java.util.Map<String, Object>> rankShops(int limit) {
         List<Content> recents = contentMapper.selectList(new LambdaQueryWrapper<Content>()
                 .eq(Content::getStatus, "APPROVED")
-                .isNotNull(Content::getPoiName)
-                .ne(Content::getPoiName, "")
+                .isNotNull(Content::getPoiId)
                 .orderByDesc(Content::getCreateTime)
                 .last("LIMIT 1000"));
-        java.util.Map<String, long[]> agg = new java.util.HashMap<>();
+        java.util.Map<Long, long[]> agg = new java.util.HashMap<>();
         for (Content c : recents) {
-            String p = c.getPoiName();
-            if (p == null || p.isBlank()) continue;
-            long[] a = agg.computeIfAbsent(p, k -> new long[2]); // [篇数, 总赞数]
+            if (c.getPoiId() == null) {
+                continue;
+            }
+            long[] a = agg.computeIfAbsent(c.getPoiId(), k -> new long[2]); // [篇数, 总赞数]
             a[0] += 1;
             a[1] += (c.getLikeCount() == null ? 0 : c.getLikeCount());
         }
+        if (agg.isEmpty()) {
+            return java.util.List.of();
+        }
+        java.util.Map<Long, com.dianping.module.poi.Poi> pois = poiService.findByIds(agg.keySet());
         return agg.entrySet().stream()
                 .sorted((x, y) -> {
                     int cmp = Long.compare(y.getValue()[1], x.getValue()[1]);
@@ -472,8 +510,10 @@ public class ContentService {
                 })
                 .limit(Math.max(1, Math.min(limit, 50)))
                 .map(e -> {
+                    com.dianping.module.poi.Poi p = pois.get(e.getKey());
                     java.util.Map<String, Object> m = new java.util.HashMap<>();
-                    m.put("shop", e.getKey());
+                    m.put("poiId", String.valueOf(e.getKey()));
+                    m.put("shop", p == null ? "" : p.getName());
                     m.put("contentCount", e.getValue()[0]);
                     m.put("likeCount", e.getValue()[1]);
                     return m;
