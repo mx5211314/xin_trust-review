@@ -29,6 +29,13 @@ public record ContentCreateReq(
         @NotNull(message = "地区不能为空")
         String regionCode,
 
+        /**
+         * 关联门店 id。选填 —— 逛公园/在家做饭这类内容本来就没有门店，
+         * 强制关联只会逼用户随便选一个，比不关联更脏。
+         * 传了会校验门店可用（见 PoiService.requireLinkable）；不传/传 null = 不关联。
+         */
+        Long poiId,
+
         String poiName,
 
         @Size(max = 5, message = "话题最多 5 个")

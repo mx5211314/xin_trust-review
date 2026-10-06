@@ -17,6 +17,8 @@ public record ContentVO(
         List<String> tags,
         String videoUrl,
         Integer duration,
+        /** 关联门店 id；为空表示这篇笔记没有关联门店（前端据此决定店名是否可点击） */
+        String poiId,
         String poiName,
         String regionCode,
         Integer likeCount,

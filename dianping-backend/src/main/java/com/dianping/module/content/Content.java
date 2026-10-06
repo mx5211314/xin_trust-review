@@ -28,6 +28,9 @@ public class Content {
     private String coverKey;
     private Integer duration;
     private String regionCode;
+    /** 关联门店 id；null = 未关联（逛公园/在家做饭这类本就没门店，不强制） */
+    private Long poiId;
+    /** 发布时填写的店名快照：门店改名后这里仍显示当时的名字，也是历史数据的兜底 */
     private String poiName;
     /** PENDING / APPROVED / REJECTED / TAKEN_DOWN */
     private String status;

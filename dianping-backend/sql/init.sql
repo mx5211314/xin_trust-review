@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS `content` (
     `cover_key`     VARCHAR(500)  NOT NULL DEFAULT '' COMMENT '视频封面key',
     `duration`      INT           NOT NULL DEFAULT 0 COMMENT '视频秒数',
     `region_code`   VARCHAR(20)   NOT NULL DEFAULT '' COMMENT '地区码',
-    `poi_name`      VARCHAR(100)  NOT NULL DEFAULT '' COMMENT '店铺/地点名',
+    `poi_id`        BIGINT        NULL COMMENT '关联门店id；NULL=未关联（逛公园/在家做饭这类本就没门店）',
+    `poi_name`      VARCHAR(100)  NOT NULL DEFAULT '' COMMENT '发布时填写的店名快照（门店改名后仍显示当时的名字）',
     `status`        VARCHAR(20)   NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/APPROVED/REJECTED/TAKEN_DOWN',
     `reject_reason` VARCHAR(200)  NOT NULL DEFAULT '' COMMENT '驳回原因',
     `like_count`    INT           NOT NULL DEFAULT 0 COMMENT '点赞数（定时按 user_action 重算）',
@@ -48,8 +49,39 @@ CREATE TABLE IF NOT EXISTS `content` (
     PRIMARY KEY (`id`),
     KEY `idx_status_region_time` (`status`, `region_code`, `create_time`),
     KEY `idx_user` (`user_id`),
-    KEY `idx_status_time` (`status`, `create_time`)
+    KEY `idx_status_time` (`status`, `create_time`),
+    KEY `idx_poi` (`poi_id`)
 ) COMMENT '内容';
+
+-- ---------- 门店（POI）----------
+-- 为什么要有独立门店表：原来只有 content.poi_name 一个字符串，
+-- 认店靠"字符串相等"，于是同一家店因写法不同被拆成多家（评分摊薄）、
+-- 不同店面因同名被合成一家（评分混在一起）、店改名后历史匹配不上。
+-- 根因是拿"会变会重名的描述"当"标识" —— 与用昵称当用户主键是同一个错误。
+CREATE TABLE IF NOT EXISTS `poi` (
+    `id`            BIGINT        NOT NULL COMMENT '雪花ID',
+    `name`          VARCHAR(100)  NOT NULL COMMENT '门店名',
+    `address`       VARCHAR(200)  NOT NULL DEFAULT '' COMMENT '详细地址',
+    `lng`           DECIMAL(10,6) NULL COMMENT '经度（未接地图前可为空）',
+    `lat`           DECIMAL(10,6) NULL COMMENT '纬度',
+    `category`      VARCHAR(30)   NOT NULL DEFAULT '' COMMENT '分类：餐饮/咖啡/景区/亲子…',
+    `region_code`   VARCHAR(20)   NOT NULL DEFAULT '' COMMENT '创建时选的行政区划码',
+    `city_code`     VARCHAR(6)    NOT NULL DEFAULT '' COMMENT '规范化城市码（省xx/市xxxx/区县原样），按城市聚合用',
+    `phone`         VARCHAR(30)   NOT NULL DEFAULT '' COMMENT '联系电话',
+    `open_hours`    VARCHAR(100)  NOT NULL DEFAULT '' COMMENT '营业时间，如 10:00-22:00',
+    `status`        VARCHAR(20)   NOT NULL DEFAULT 'NORMAL' COMMENT 'NORMAL/PENDING/REJECTED/MERGED/CLOSED',
+    `merged_to`     BIGINT        NULL COMMENT '被合并时指向"正主"门店id（保留记录，可回滚、可追溯）',
+    `created_by`    BIGINT        NOT NULL DEFAULT 0 COMMENT '创建人；0=管理员预置',
+    `content_count` INT           NOT NULL DEFAULT 0 COMMENT '关联笔记数（冗余，榜单排序用）',
+    `score`         DECIMAL(3,1)  NULL COMMENT '综合评分（预留，打分功能未做）',
+    `create_time`   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time`   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted`       TINYINT       NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    KEY `idx_city` (`city_code`, `status`),
+    KEY `idx_name` (`name`),
+    KEY `idx_creator` (`created_by`)
+) COMMENT '门店';
 
 -- ---------- 用户行为（点赞/收藏关系，唯一索引天然幂等）----------
 CREATE TABLE IF NOT EXISTS `user_action` (
@@ -235,7 +267,26 @@ SET @e10 := (SELECT COUNT(*) FROM information_schema.COLUMNS
 SET @d10 := IF(@e10=0, 'ALTER TABLE `message` ADD COLUMN image_key VARCHAR(255) NULL COMMENT ''图片对象键，空=纯文本'' AFTER text', 'SELECT 1');
 PREPARE s10 FROM @d10; EXECUTE s10; DEALLOCATE PREPARE s10;
 
--- ---------- 初始管理员（dev 环境验证码固定 8888）----------
+-- ---------- 门店体系迁移：poi 表 + content.poi_id ----------
+-- 老库升级用；新库在上面建表时已包含，这里靠 information_schema 判断，可重复执行。
+SET @e11 := (SELECT COUNT(*) FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='poi');
+SET @d11 := IF(@e11=0, 'CREATE TABLE poi (id BIGINT NOT NULL, name VARCHAR(100) NOT NULL, address VARCHAR(200) NOT NULL DEFAULT '''', lng DECIMAL(10,6) NULL, lat DECIMAL(10,6) NULL, category VARCHAR(30) NOT NULL DEFAULT '''', region_code VARCHAR(20) NOT NULL DEFAULT '''', city_code VARCHAR(6) NOT NULL DEFAULT '''', phone VARCHAR(30) NOT NULL DEFAULT '''', open_hours VARCHAR(100) NOT NULL DEFAULT '''', status VARCHAR(20) NOT NULL DEFAULT ''NORMAL'', merged_to BIGINT NULL, created_by BIGINT NOT NULL DEFAULT 0, content_count INT NOT NULL DEFAULT 0, score DECIMAL(3,1) NULL, create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, deleted TINYINT NOT NULL DEFAULT 0, PRIMARY KEY (id), KEY idx_city (city_code, status), KEY idx_name (name), KEY idx_creator (created_by)) COMMENT=''门店''', 'SELECT 1');
+PREPARE s11 FROM @d11; EXECUTE s11; DEALLOCATE PREPARE s11;
+
+SET @e12 := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='content' AND COLUMN_NAME='poi_id');
+SET @d12 := IF(@e12=0, 'ALTER TABLE `content` ADD COLUMN poi_id BIGINT NULL COMMENT ''关联门店id'' AFTER region_code', 'SELECT 1');
+PREPARE s12 FROM @d12; EXECUTE s12; DEALLOCATE PREPARE s12;
+
+SET @e13 := (SELECT COUNT(*) FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA='dianping' AND TABLE_NAME='content' AND INDEX_NAME='idx_poi');
+SET @d13 := IF(@e13=0, 'ALTER TABLE `content` ADD INDEX idx_poi (poi_id)', 'SELECT 1');
+PREPARE s13 FROM @d13; EXECUTE s13; DEALLOCATE PREPARE s13;
+
+-- ---------- 初始管理员 ----------
+-- 登录验证码已改为随机 6 位（见 SmsCodeService）：开发/演示模式由后端回显，
+-- 生产需接入真实短信通道。这里只预置管理员账号本身。
 INSERT INTO `user` (`id`, `phone`, `nickname`, `role`)
 VALUES (1, '13800000000', '管理员', 'ADMIN')
 ON DUPLICATE KEY UPDATE `role` = 'ADMIN';

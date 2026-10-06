@@ -55,6 +55,8 @@ public class ContentService {
     private final com.dianping.module.comment.CommentMapper commentMapper;
     /** 内容可见性的唯一判定入口（详情/评论/互动共用，见 ContentAccess 注释） */
     private final ContentAccess contentAccess;
+    /** 门店：关联校验 + 冗余计数维护（见 PoiService 注释） */
+    private final com.dianping.module.poi.PoiService poiService;
 
     /** 发布点评（契约：仅 REVIEWER/ADMIN，权限已由拦截器注解保证） */
     public Map<String, Object> create(Long userId, ContentCreateReq req) {
@@ -83,12 +85,21 @@ public class ContentService {
         c.setCoverKey(isVideo ? nullToEmpty(req.coverKey()) : "");
         c.setDuration(isVideo && req.duration() != null ? req.duration() : 0);
         c.setRegionCode(req.regionCode());
+        // 门店关联：可选。传了要校验可用（不存在/已驳回/已合并/已停业都不许挂），
+        // 并且**以校验后返回的 id 为准** —— 门店可能已被合并，要挂到"正主"上
+        Long poiId = req.poiId() == null ? null : poiService.requireLinkable(userId, req.poiId());
+        c.setPoiId(poiId);
         c.setPoiName(nullToEmpty(req.poiName()));
         c.setStatus("PENDING");
         c.setRejectReason("");
         c.setLikeCount(0);
         c.setViewCount(0);
         contentMapper.insert(c);
+
+        // 维护门店的冗余计数（榜单要按热度排序，不能每次 COUNT(*)）
+        if (poiId != null) {
+            poiService.adjustContentCount(poiId, 1);
+        }
 
         // @提及：解析正文里的 @昵称，给被提及的用户发站内通知（零额外字段，复用 notify 表）
         Set<String> nicks = parseMentions(req.text());
@@ -133,7 +144,8 @@ public class ContentService {
         // 归一化成聚合前缀：传市级码要能召回该市各区县发布的笔记。
         // 原先直接用 6 位码做 likeRight，'130200' 匹配不到 '130202'（路南区），
         // 于是"定位到区县"发的笔记在所属城市的信息流里凭空消失。
-        String prefix = regionPrefix(regionCode);
+        // 规则已抽到 RegionUtil.filterPrefix 与门店模块共用（注意别和 cityCode 混用）
+        String prefix = com.dianping.common.RegionUtil.filterPrefix(regionCode);
         LambdaQueryWrapper<Content> w = new LambdaQueryWrapper<Content>()
                 .eq(Content::getStatus, "APPROVED")
                 .likeRight(prefix != null && !prefix.isBlank(), Content::getRegionCode, prefix)
@@ -144,31 +156,13 @@ public class ContentService {
     }
 
     /**
-     * 把 6 位行政区划码归一化成「聚合前缀」。
+     * 把 6 位行政区划码归一化成「筛选前缀」。
      *
-     * 编码规则：省 = xx0000 · 市 = xxxx00 · 区县 = xxxxxx。
-     * 所以按层级取前缀才能召回下级：
-     *   130000（河北省） → "13"   召回全省
-     *   130200（唐山市） → "1302" 召回唐山下所有区县，包括 130202 路南区
-     *   130202（路南区） → "130202" 精确到区县
-     *
-     * 非 6 位（前端历史上可能传 "13" 这类省码短写）原样返回，保持向后兼容。
+     * 实现已移到 {@link com.dianping.common.RegionUtil#filterPrefix} ——
+     * 门店模块也要按层级聚合，两边各留一份必然漂移（本项目吃过这个亏）。
      */
     private static String regionPrefix(String code) {
-        if (code == null || code.isBlank()) {
-            return null;
-        }
-        String c = code.trim();
-        if (c.length() != 6) {
-            return c;
-        }
-        if (c.endsWith("0000")) {
-            return c.substring(0, 2);
-        }
-        if (c.endsWith("00")) {
-            return c.substring(0, 4);
-        }
-        return c;
+        return com.dianping.common.RegionUtil.filterPrefix(code);
     }
 
     /** 用户主页：TA 发布的、仅 APPROVED 的内容 */
@@ -311,6 +305,22 @@ public class ContentService {
         c.setTitle(req.title().trim());
         c.setText(req.text().trim());
         c.setRegionCode(req.regionCode());
+        // 门店关联：**传了才动**（沿用本方法"局部更新"的约定）。
+        // 因为"不传"和"要解除关联"必须能区分开：前者保持原值，后者显式传 0。
+        Long oldPoiId = c.getPoiId();
+        if (req.poiId() != null) {
+            Long newPoiId = req.poiId() == 0L ? null : poiService.requireLinkable(me, req.poiId());
+            c.setPoiId(newPoiId);
+            // 换门店要把两边的计数都挪对，否则旧店一直虚高、新店进不了榜
+            if (!java.util.Objects.equals(oldPoiId, newPoiId)) {
+                if (oldPoiId != null) {
+                    poiService.adjustContentCount(oldPoiId, -1);
+                }
+                if (newPoiId != null) {
+                    poiService.adjustContentCount(newPoiId, 1);
+                }
+            }
+        }
         c.setPoiName(nullToEmpty(req.poiName()));
         c.setTags(toJson(req.tags() == null ? List.of() : req.tags()));
         // 图片可整组替换（传了才更新）
@@ -339,6 +349,11 @@ public class ContentService {
             throw new BizException(ResultCode.FORBIDDEN, "只能删除自己的笔记");
         }
         contentMapper.deleteById(id);
+
+        // 维护门店冗余计数：不减的话旧店会一直虚高，榜单排名失真
+        if (c.getPoiId() != null) {
+            poiService.adjustContentCount(c.getPoiId(), -1);
+        }
 
         // 删除联动：清理评论、点赞/收藏行为、Redis 点赞计数
         commentService.deleteByContent(id);
@@ -683,6 +698,8 @@ public class ContentService {
                 fromJson(c.getTags()),
                 c.getVideoKey() == null || c.getVideoKey().isBlank() ? "" : ossService.publicUrl(c.getVideoKey()),
                 c.getDuration(),
+                // 门店 id：id 为空表示这篇没关联门店（店名也不可点）
+                c.getPoiId() == null ? "" : String.valueOf(c.getPoiId()),
                 c.getPoiName(),
                 c.getRegionCode(),
                 c.getLikeCount(),
