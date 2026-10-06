@@ -37,7 +37,7 @@ public class ChatController {
     public R<Map<String, Object>> messages(@RequestParam Long userId,
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(chatService.messages(UserContext.userId(), userId, page, pageSize));
+        return R.ok(chatService.messages(UserContext.userId(), userId, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /chat/conversations —— 会话列表 */

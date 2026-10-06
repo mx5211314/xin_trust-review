@@ -46,7 +46,7 @@ public class AdminController {
     public R<Object> contentList(@RequestParam(required = false) String status,
                                  @RequestParam(defaultValue = "1") int page,
                                  @RequestParam(defaultValue = "10") int pageSize) {
-        return R.ok(contentService.adminVoPage(status, page, pageSize));
+        return R.ok(contentService.adminVoPage(status, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /admin/stats —— 后台统计头（待审/今日通过/今日驳回/驳回率） */
@@ -93,7 +93,7 @@ public class AdminController {
     public R<Object> userList(@RequestParam(required = false) String keyword,
                               @RequestParam(defaultValue = "1") int page,
                               @RequestParam(defaultValue = "10") int pageSize) {
-        return R.ok(adminService.userList(keyword, page, pageSize));
+        return R.ok(adminService.userList(keyword, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** POST /admin/user/{id}/ban */

@@ -39,7 +39,7 @@ public class ReportController {
     public R<Map<String, Object>> adminList(@RequestParam(required = false) String status,
                                             @RequestParam(defaultValue = "1") int page,
                                             @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(reportService.list(page, pageSize, status));
+        return R.ok(reportService.list(com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize), status));
     }
 
     /** POST /report/admin/{id}/handle?status=HANDLED —— 后台标记处理（仅管理员） */

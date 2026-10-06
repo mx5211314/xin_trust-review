@@ -48,7 +48,7 @@ public class UserController {
         Map<String, Object> data = new HashMap<>();
         data.put("userId", String.valueOf(u.getId()));
         data.put("nickname", u.getNickname());
-        data.put("avatar", u.getAvatar());
+        data.put("avatar", avatarUrl(u.getAvatar()));
         return R.ok(data);
     }
 
@@ -64,7 +64,7 @@ public class UserController {
             Map<String, Object> m = new HashMap<>();
             m.put("userId", String.valueOf(u.getId()));
             m.put("nickname", u.getNickname());
-            m.put("avatar", u.getAvatar());
+            m.put("avatar", avatarUrl(u.getAvatar()));
             return m;
         }).collect(Collectors.toList());
         return R.ok(list);
@@ -81,10 +81,28 @@ public class UserController {
         Map<String, Object> data = new HashMap<>();
         data.put("userId", String.valueOf(u.getId()));
         data.put("nickname", u.getNickname());
-        data.put("avatar", u.getAvatar());
+        data.put("avatar", avatarUrl(u.getAvatar()));
         data.put("role", u.getRole());
         data.put("phone", u.getPhone());
+        // bio 必须下发：前端编辑资料用它回填。原来漏了这个字段，
+        // 编辑框回填成空、一保存就把用户真实的简介覆盖成空串（静默丢数据）
+        data.put("bio", u.getBio());
         return R.ok(data);
+    }
+
+    /**
+     * 头像对外地址：库里存的是**存储 key**，下发时统一转成可访问 URL。
+     *
+     * 为什么要这么绕：URL 里带 Host（local 模式跟随请求 Host、OSS 模式带 Bucket 域名），
+     * 存进库换域名就失效 —— 本地隧道域名每次重启都会变，头像会集体变白。
+     * 和内容图片保持一致：**存 key、读时转 URL**。
+     * 历史数据里已经存了完整 URL 的，publicUrl 会原样放行，所以兼容。
+     */
+    private String avatarUrl(String key) {
+        if (key == null || key.isBlank()) {
+            return key;
+        }
+        return ossService.publicUrl(key);
     }
 
     /** 手机号脱敏：138****0000 */
@@ -113,14 +131,14 @@ public class UserController {
     @GetMapping("/following")
     public R<Map<String, Object>> following(@RequestParam(defaultValue = "1") int page,
                                             @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(followService.followingList(currentUserId(), page, pageSize));
+        return R.ok(followService.followingList(currentUserId(), com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /user/fans?page= —— 关注我的粉丝列表（含互关标记） */
     @GetMapping("/fans")
     public R<Map<String, Object>> fans(@RequestParam(defaultValue = "1") int page,
                                        @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(followService.fansList(currentUserId(), page, pageSize));
+        return R.ok(followService.fansList(currentUserId(), com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /user/notify —— 消息列表 */
@@ -129,7 +147,7 @@ public class UserController {
                                          @RequestParam(required = false) String subType,
                                          @RequestParam(defaultValue = "1") int page,
                                          @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(notifyService.list(currentUserId(), category, subType, page, pageSize));
+        return R.ok(notifyService.list(currentUserId(), category, subType, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /user/notify/summary —— 分类未读汇总（赞和收藏/新增关注/评论和@） */
@@ -144,10 +162,13 @@ public class UserController {
         return R.ok(java.util.Collections.singletonMap("unread", notifyService.unreadCount(currentUserId())));
     }
 
-    /** POST /user/notify/read-all?category= —— 全部已读（可按 interact/announce 分类） */
+    /** POST /user/notify/read-all?category=&subType= —— 全部已读（category 可分 interact/announce，subType 再细分互动子类） */
     @PostMapping("/notify/read-all")
-    public R<Void> notifyReadAll(@RequestParam(required = false) String category) {
-        notifyService.readAll(currentUserId(), category);
+    public R<Void> notifyReadAll(@RequestParam(required = false) String category,
+                                 @RequestParam(required = false) String subType) {
+        // subType 之前前端传了但后端收不到也不处理，导致"在当前筛选下点全部已读"
+        // 会把其它子类的未读一起清掉
+        notifyService.readAll(currentUserId(), category, subType);
         return R.ok();
     }
 
@@ -166,11 +187,18 @@ public class UserController {
         if (u == null) {
             throw new BizException(ResultCode.UNAUTHORIZED);
         }
-        u.setNickname(req.nickname().trim());
-        if (req.avatar() != null && !req.avatar().isBlank()) {
-            // 相对 key 转完整 URL（local 模式跟随当前 Host）；已是 http 直接过
-            u.setAvatar(ossService.publicUrl(req.avatar()));
+        // 局部更新：只改请求里出现的字段。
+        // 原来"非空就覆盖"，导致只想换头像时也得把简介一起传全量，
+        // 前端某处漏传就会把用户简介冲掉 —— 静默丢数据比报错更糟。
+        if (req.nickname() != null && !req.nickname().isBlank()) {
+            u.setNickname(req.nickname().trim());
         }
+        // 头像存 key，不存完整 URL：URL 里带当前 Host/OSS 域名，
+        // 存下来换域名就失效（见 avatarUrl 注释）
+        if (req.avatar() != null && !req.avatar().isBlank()) {
+            u.setAvatar(req.avatar().trim());
+        }
+        // 传空串 = 明确清空（undefined/null = 未修改，两者语义必须区分开）
         if (req.bio() != null) {
             u.setBio(req.bio().trim());
         }
@@ -193,7 +221,7 @@ public class UserController {
     public R<Map<String, Object>> liked(@RequestParam(defaultValue = "1") int page,
                                         @RequestParam(defaultValue = "10") int pageSize) {
         Long me = currentUserId();
-        return R.ok(contentService.likedContents(me, page, pageSize));
+        return R.ok(contentService.likedContents(me, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /user/favorites?page=&pageSize=&folderId= —— 我的收藏（可按收藏夹筛选） */
@@ -202,7 +230,7 @@ public class UserController {
                                             @RequestParam(defaultValue = "10") int pageSize,
                                             @RequestParam(defaultValue = "0") long folderId) {
         Long me = currentUserId();
-        return R.ok(favoriteService.favoriteContents(me, folderId, page, pageSize));
+        return R.ok(favoriteService.favoriteContents(me, folderId, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /favorite/folders —— 我的收藏夹列表（含各夹收藏数 + 未分类） */
@@ -239,7 +267,7 @@ public class UserController {
     public R<Map<String, Object>> browse(@RequestParam(defaultValue = "1") int page,
                                          @RequestParam(defaultValue = "20") int pageSize) {
         Long me = currentUserId();
-        return R.ok(contentService.browseList(me, page, pageSize));
+        return R.ok(contentService.browseList(me, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** POST /user/{id}/block —— 拉黑 */
@@ -310,7 +338,7 @@ public class UserController {
         Map<String, Object> profile = new HashMap<>();
         profile.put("userId", String.valueOf(u.getId()));
         profile.put("nickname", u.getNickname());
-        profile.put("avatar", u.getAvatar());
+        profile.put("avatar", avatarUrl(u.getAvatar()));
         profile.put("role", u.getRole());
         profile.put("status", u.getStatus());
         profile.put("phoneMasked", maskPhone(u.getPhone()));
@@ -322,7 +350,7 @@ public class UserController {
         Long meId = me != null ? me : 0L;
         return R.ok(Map.of(
                 "profile", profile,
-                "contents", contentService.userContents(meId, userId, page, pageSize)));
+                "contents", contentService.userContents(meId, userId, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize))));
     }
 
     private Long currentUserId() {
