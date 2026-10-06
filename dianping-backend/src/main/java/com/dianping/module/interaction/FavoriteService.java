@@ -24,6 +24,8 @@ public class FavoriteService {
     private final ContentMapper contentMapper;
     private final ContentService contentService;
     private final FavoriteFolderMapper folderMapper;
+    /** 内容可见性统一判定（收藏也要拦下架/待审笔记） */
+    private final com.dianping.module.content.ContentAccess contentAccess;
 
     /** 收藏数 */
     public long favoriteCount(Long contentId) {
@@ -45,9 +47,8 @@ public class FavoriteService {
 
     /** 收藏（幂等：已在收藏夹则视为"移动到该夹"）；folderId 指定收藏夹，0=未分类 */
     public void addFavorite(Long contentId, Long me, long folderId) {
-        if (contentMapper.selectById(contentId) == null) {
-            throw new BizException(ResultCode.NOT_FOUND);
-        }
+        // 可见性校验（原来只判"存在"，能收藏下架/待审笔记）
+        contentAccess.require(me, contentId);
         // 校验收藏夹归属（folderId=0 为未分类，无需校验）——移动/新增两条路径都要过
         if (folderId != 0) {
             FavoriteFolder f = folderMapper.selectById(folderId);

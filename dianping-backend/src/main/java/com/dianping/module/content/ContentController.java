@@ -46,7 +46,7 @@ public class ContentController {
                                        @RequestParam(required = false) String regionCode) {
         Long me = com.dianping.common.UserContext.userId();
         Long meId = me != null ? me : 0L;
-        return R.ok(contentService.feed(meId, page, pageSize, regionCode));
+        return R.ok(contentService.feed(meId, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize), regionCode));
     }
 
     /** GET /content/{id} */
@@ -62,7 +62,7 @@ public class ContentController {
     public R<Map<String, Object>> followFeed(@RequestParam(defaultValue = "1") int page,
                                              @RequestParam(defaultValue = "10") int pageSize) {
         Long me = com.dianping.common.UserContext.userId();
-        return R.ok(followService.followFeed(me, page, pageSize));
+        return R.ok(followService.followFeed(me, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /content/recommend —— 推荐 tab：兴趣标签加权推荐流（冷启动退化为时间流） */
@@ -71,7 +71,7 @@ public class ContentController {
                                             @RequestParam(defaultValue = "10") int pageSize) {
         Long me = com.dianping.common.UserContext.userId();
         Long meId = me != null ? me : 0L;
-        return R.ok(contentService.recommend(meId, page, pageSize));
+        return R.ok(contentService.recommend(meId, com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** POST /comments/{commentId}/like —— 评论点赞（幂等：重复返回 2003） */
@@ -95,7 +95,7 @@ public class ContentController {
                                          @RequestParam(defaultValue = "10") int pageSize) {
         Long me = com.dianping.common.UserContext.userId();
         Long meId = me != null ? me : 0L;
-        return R.ok(contentService.search(meId, keyword.trim(), page, pageSize));
+        return R.ok(contentService.search(meId, keyword.trim(), com.dianping.common.PageParam.page(page), com.dianping.common.PageParam.size(pageSize)));
     }
 
     /** GET /content/hot-tags?limit= —— 热门话题词云 */
@@ -138,13 +138,20 @@ public class ContentController {
                                            @RequestParam(defaultValue = "10") int pageSize) {
         Long me = com.dianping.common.UserContext.userId();
         Long meId = me != null ? me : 0L;
-        return R.ok(commentService.commentsOf(id, meId, page, pageSize));
+        // 管理员放行可见性：审核页要能看到下架/待审笔记的评论（见 ContentAccess.require）
+        boolean isAdmin = "ADMIN".equals(com.dianping.common.UserContext.role());
+        return R.ok(commentService.commentsOf(id, meId,
+                com.dianping.common.PageParam.page(page),
+                com.dianping.common.PageParam.size(pageSize), isAdmin));
     }
 
     /** POST /content/{id}/comments  body: {"text":"..."} —— 发布评论 */
     @PostMapping("/{id}/comments")
     public R<Map<String, Object>> comment(@PathVariable Long id,
+                                          @jakarta.validation.Valid
                                           @RequestBody com.dianping.module.comment.CommentReq req) {
+        // @Valid 必需：CommentReq 上的 @NotBlank/@Size(max=500) 只有加了它才会生效，
+        // 否则空评论、超长评论会一路进到 Service（原先就是这个状态）
         return R.ok(commentService.addComment(id, com.dianping.common.UserContext.userId(), req.text(), req.parentId()));
     }
 

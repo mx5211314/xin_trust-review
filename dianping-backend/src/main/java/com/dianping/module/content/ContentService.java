@@ -53,6 +53,8 @@ public class ContentService {
     private final NotifyService notifyService;
     private final com.dianping.module.interaction.BlockService blockService;
     private final com.dianping.module.comment.CommentMapper commentMapper;
+    /** 内容可见性的唯一判定入口（详情/评论/互动共用，见 ContentAccess 注释） */
+    private final ContentAccess contentAccess;
 
     /** 发布点评（契约：仅 REVIEWER/ADMIN，权限已由拦截器注解保证） */
     public Map<String, Object> create(Long userId, ContentCreateReq req) {
@@ -128,14 +130,45 @@ public class ContentService {
 
     /** 信息流：仅 APPROVED，按地区可选过滤，时间倒序（屏蔽双向拉黑用户） */
     public Map<String, Object> feed(Long me, int page, int pageSize, String regionCode) {
+        // 归一化成聚合前缀：传市级码要能召回该市各区县发布的笔记。
+        // 原先直接用 6 位码做 likeRight，'130200' 匹配不到 '130202'（路南区），
+        // 于是"定位到区县"发的笔记在所属城市的信息流里凭空消失。
+        String prefix = regionPrefix(regionCode);
         LambdaQueryWrapper<Content> w = new LambdaQueryWrapper<Content>()
                 .eq(Content::getStatus, "APPROVED")
-                // 前缀匹配：传省级码('13')召回全省，传市级码('130200')召回该市（含区县级 adcode 发布的笔记）
-                .likeRight(regionCode != null && !regionCode.isBlank(), Content::getRegionCode, regionCode)
+                .likeRight(prefix != null && !prefix.isBlank(), Content::getRegionCode, prefix)
                 .orderByDesc(Content::getCreateTime);
         excludeHidden(me, w);
         Page<Content> p = contentMapper.selectPage(new Page<>(page, pageSize), w);
         return pageResult(me, p);
+    }
+
+    /**
+     * 把 6 位行政区划码归一化成「聚合前缀」。
+     *
+     * 编码规则：省 = xx0000 · 市 = xxxx00 · 区县 = xxxxxx。
+     * 所以按层级取前缀才能召回下级：
+     *   130000（河北省） → "13"   召回全省
+     *   130200（唐山市） → "1302" 召回唐山下所有区县，包括 130202 路南区
+     *   130202（路南区） → "130202" 精确到区县
+     *
+     * 非 6 位（前端历史上可能传 "13" 这类省码短写）原样返回，保持向后兼容。
+     */
+    private static String regionPrefix(String code) {
+        if (code == null || code.isBlank()) {
+            return null;
+        }
+        String c = code.trim();
+        if (c.length() != 6) {
+            return c;
+        }
+        if (c.endsWith("0000")) {
+            return c.substring(0, 2);
+        }
+        if (c.endsWith("00")) {
+            return c.substring(0, 4);
+        }
+        return c;
     }
 
     /** 用户主页：TA 发布的、仅 APPROVED 的内容 */
@@ -155,20 +188,9 @@ public class ContentService {
         return pageResult(me, p);
     }
 
-    /** 详情：作者本人可见自己的 REJECTED（附原因），其他人只可见 APPROVED */
+    /** 详情：可见性统一走 ContentAccess（APPROVED 人人可见；PENDING/REJECTED 仅作者可见） */
     public ContentVO detail(Long me, Long id) {
-        Content c = contentMapper.selectById(id);
-        if (c == null) {
-            throw new BizException(ResultCode.NOT_FOUND);
-        }
-        // 已上架人人可见；作者本人额外可见自己的 REJECTED（附原因）与 PENDING（审核中）
-        boolean mine = c.getUserId() != null && c.getUserId().equals(me);
-        boolean visible = "APPROVED".equals(c.getStatus())
-                || (mine && ("REJECTED".equals(c.getStatus()) || "PENDING".equals(c.getStatus())));
-        if (!visible) {
-            throw new BizException(ResultCode.NOT_FOUND);
-        }
-        return toVoDetail(c, me);
+        return toVoDetail(contentAccess.require(me, id), me);
     }
 
     
@@ -321,7 +343,16 @@ public class ContentService {
         // 删除联动：清理评论、点赞/收藏行为、Redis 点赞计数
         commentService.deleteByContent(id);
         userActionMapper.delete(new LambdaQueryWrapper<UserAction>().eq(UserAction::getContentId, id));
-        redis.opsForSet().remove(com.dianping.common.DianpingConst.REDIS_LIKE_DIRTY, String.valueOf(id));
+        // Redis 只是点赞计数的缓存，不可用时**不该拖垮删除**。
+        // 原先这行没有兜底：Redis 一挂就抛异常，而上面三步已经执行成功，
+        // 结果是"数据其实删掉了，接口却返回 5000"，用户重试还会看到"内容不存在"
+        // —— 失败信息在骗人，比单纯报错更难排查。
+        // 写法参照 RateLimitService：业务异常照抛，基础设施异常降级放行。
+        try {
+            redis.opsForSet().remove(com.dianping.common.DianpingConst.REDIS_LIKE_DIRTY, String.valueOf(id));
+        } catch (Exception ignored) {
+            // 缓存清理失败无妨：LikeSyncTask 的对账逻辑会按 user_action 重建
+        }
     }
 
     
@@ -569,10 +600,15 @@ public class ContentService {
         ordered.sort((a, b) -> Double.compare(scores.get(b.getId()), scores.get(a.getId())));
 
         // 4. 内存分页
+        //    这里手算偏移量，pageSize 为负会让 to<from → subList 直接抛异常。
+        //    入口（Controller）已经归一化过，这里再兜一次：本方法可能被
+        //    内部调用或将来被别的入口复用，不能假设调用方一定传了合法值。
+        int safePage = com.dianping.common.PageParam.page(page);
+        int safeSize = com.dianping.common.PageParam.size(pageSize);
         int total = ordered.size();
-        int from = Math.min(Math.max(page - 1, 0) * pageSize, total);
-        int to = Math.min(from + pageSize, total);
-        Page<Content> fake = new Page<>(page, pageSize, total);
+        int from = Math.min((safePage - 1) * safeSize, total);
+        int to = Math.min(from + safeSize, total);
+        Page<Content> fake = new Page<>(safePage, safeSize, total);
         fake.setRecords(ordered.subList(from, to));
         return pageResult(me, fake);
     }

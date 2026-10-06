@@ -37,6 +37,8 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final CommentLikeMapper commentLikeMapper;
     private final ContentMapper contentMapper;
+    /** 内容可见性统一判定：评论的读写都要先过这一关，否则下架笔记的评论仍可读写 */
+    private final com.dianping.module.content.ContentAccess contentAccess;
     private final UserMapper userMapper;
     private final NotifyService notifyService;
     private final RateLimitService rateLimitService;
@@ -58,8 +60,13 @@ public class CommentService {
      * 评论列表（小红书式）：顶级评论按时间正序分页，子回复挂在父评论的 replies 里。
      * total = 全部评论数（含回复）。
      */
-    public Map<String, Object> commentsOf(Long contentId, Long me, int page, int pageSize) {
-        // 0. 拉黑隔离：屏蔽双向拉黑用户的评论（SQL 级过滤，保证分页计数正确）
+    public Map<String, Object> commentsOf(Long contentId, Long me, int page, int pageSize, boolean isAdmin) {
+        // 0. 可见性前置校验：笔记不可见（下架/待审/被驳回且非作者）时，
+        //    评论也不该能读 —— 否则详情说"内容不存在"、评论接口却把内容透出去了。
+        //    isAdmin 放行：审核页要能看到下架笔记的评论。
+        contentAccess.require(me, contentId, isAdmin);
+
+        // 拉黑隔离：屏蔽双向拉黑用户的评论（SQL 级过滤，保证分页计数正确）
         Set<Long> hidden = me == null ? Set.of() : blockService.hiddenAuthorIds(me);
         boolean hasHidden = !hidden.isEmpty();
         // 1. 顶级评论（正序：早的在前，新评论追加在底部，符合对话习惯）
@@ -124,10 +131,11 @@ public class CommentService {
     }
 
 /** 发布评论（支持回复：传 parentId 时自动带上被回复人） */
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public Map<String, Object> addComment(Long contentId, Long me, String text, Long parentId) {
-        if (contentMapper.selectById(contentId) == null) {
-            throw new BizException(ResultCode.NOT_FOUND);
-        }
+        // 可见性校验（原来只判"存在"，导致能给下架/待审笔记刷评论）
+        // 顺带拿到笔记实体，后面发通知要用作者 id，避免重复查库
+        Content content = contentAccess.require(me, contentId);
         // 限流：60 秒内最多 10 条评论
         rateLimitService.check("comment", String.valueOf(me), 10, 60);
         Comment c = new Comment();
@@ -151,10 +159,14 @@ public class CommentService {
             c.setReplyToUserId(0L);
         }
         commentMapper.insert(c);
-        // 通知：作者收到评论；回复时被回复人也收到一条
-        notifyService.send(contentMapper.selectById(contentId).getUserId(),
-                NotifyService.T_COMMENT, me, contentId, c.getId(), text);
-        if (replyToUser > 0 && !replyToUser.equals(contentMapper.selectById(contentId).getUserId())) {
+        // 通知：作者收到评论；回复时被回复人也收到一条。
+        // 正文由 NotifyService 内部按字段长度截断（notify.text 只有 VARCHAR(200)，
+        // 评论却允许 500 字，不截断会在严格 SQL 模式下插入失败）。
+        // 整个方法加了事务：一旦通知真的写不进去，评论一起回滚，
+        // 避免"评论已入库但接口报错 → 用户重试 → 重复评论"。
+        Long authorId = content.getUserId();
+        notifyService.send(authorId, NotifyService.T_COMMENT, me, contentId, c.getId(), text);
+        if (replyToUser > 0 && !replyToUser.equals(authorId)) {
             notifyService.send(replyToUser, NotifyService.T_REPLY, me, contentId, c.getId(), text);
         }
         return Map.of("commentId", String.valueOf(c.getId()));

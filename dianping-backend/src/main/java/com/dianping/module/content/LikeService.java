@@ -26,12 +26,12 @@ public class LikeService {
     private final UserActionMapper userActionMapper;
     private final StringRedisTemplate redis;
     private final NotifyService notifyService;
+    /** 内容可见性统一判定（点赞也要拦下架/待审笔记） */
+    private final ContentAccess contentAccess;
 
     public void like(Long userId, Long contentId) {
-        Content c = contentMapper.selectById(contentId);
-        if (c == null) {
-            throw new BizException(ResultCode.NOT_FOUND);
-        }
+        // 可见性校验（原来只判"存在"，能给下架/待审笔记点赞）
+        Content c = contentAccess.require(userId, contentId);
         boolean exists = userActionMapper.selectCount(new LambdaQueryWrapper<UserAction>()
                 .eq(UserAction::getUserId, userId)
                 .eq(UserAction::getContentId, contentId)
