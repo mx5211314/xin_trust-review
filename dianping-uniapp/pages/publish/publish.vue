@@ -160,19 +160,39 @@
         @close="citySheetShow = false"
       />
 
-      <!-- 附近店铺弹层：定位后按距离列出真实 POI，点选自动填店铺名 -->
+      <!-- 门店选择弹层：搜索已有门店并**关联 poiId**（不再是只填个名字字符串） -->
       <view v-if="poiSheetShow" class="mask" @tap="poiSheetShow = false">
         <view class="sheet" @tap.stop>
           <view class="sheet-head">
-            <text class="sheet-title">附近的店铺</text>
+            <text class="sheet-title">选择门店</text>
             <text class="sheet-close" @tap="poiSheetShow = false">×</text>
           </view>
-          <view v-for="p in nearPois" :key="p.title" class="poi-item" @tap="pickPoi(p)">
-            <text class="poi-item-title">{{ p.title }}</text>
-            <text class="poi-item-addr">{{ p.address }}</text>
+          <input
+            v-model="poiKw"
+            class="poi-search"
+            placeholder="搜索门店名"
+            placeholder-class="ph"
+            confirm-type="search"
+            @confirm="searchPoi"
+          />
+          <!-- 有搜索词时给"新建"入口：只在搜不到时才鼓励新建，避免重复建店 -->
+          <view v-if="poiKw.trim()" class="poi-item poi-item-new" @tap="createPoi">
+            <text class="poi-item-title">+ 新建「{{ poiKw.trim() }}」</text>
+            <text class="poi-item-addr">新建后需管理员审核，未通过前仅你可见</text>
           </view>
-          <view v-if="!nearPois.length" class="poi-empty">
-            <text class="muted">附近没搜到店铺，请手动填写</text>
+          <view v-for="p in poiResults" :key="p.poiId" class="poi-item" @tap="pickPoiItem(p)">
+            <view class="poi-item-row">
+              <text class="poi-item-title">{{ p.name }}</text>
+              <text v-if="p.pending" class="poi-badge">待审核</text>
+            </view>
+            <text class="poi-item-addr">{{ p.address || (p.contentCount + ' 篇点评') }}</text>
+          </view>
+          <view v-if="!poiResults.length && !poiKw.trim()" class="poi-empty">
+            <text class="muted">输入店名搜索，或直接新建</text>
+          </view>
+          <!-- 解除关联：只在已关联时有意义 -->
+          <view v-if="poiId" class="poi-item" @tap="clearPoi">
+            <text class="poi-item-title muted">不关联门店</text>
           </view>
         </view>
       </view>
@@ -207,16 +227,19 @@
       </view>
       <view class="poi-row-wrap">
         <image class="ficon-img" src="/static/icons/shop.png" />
-        <input
-          v-model="poiName"
-          class="input poi-input"
-          :class="{ filled: poiName }"
-          placeholder="店铺名（选填，可点右侧定位选店）"
-          placeholder-class="ph"
-        />
-        <view class="poi-locate" @tap="openNearPois">
-          <image class="poi-locate-ic" src="/static/icons/location.png" mode="aspectFit" />
-          <text class="poi-locate-tx">附近</text>
+        <!--
+          只读展示，点击打开门店选择器。
+          以前这里是自由输入框 —— 用户直接打字就完事，poi_id 永远为空，
+          "同名不同店/同店不同名"的问题一点没解决。改成必须从选择器里选：
+          搜不到就"新建门店"（把打的名字带过去），不想关联就选"不关联门店"。
+        -->
+        <view class="input poi-input poi-picker" :class="{ filled: poiName }" @tap="openPoiSheet">
+          <text v-if="poiName" class="poi-picker-text">{{ poiName }}</text>
+          <text v-else class="poi-picker-ph">门店（选填）</text>
+        </view>
+        <view class="poi-locate" @tap="openPoiSheet">
+          <image class="poi-locate-ic" src="/static/icons/shop.png" mode="aspectFit" />
+          <text class="poi-locate-tx">选择</text>
         </view>
       </view>
       <view style="height: 60rpx"></view>
@@ -230,7 +253,7 @@ import { uploadFile } from '@/utils/upload'
 import { REGIONS, regionName } from '@/utils/config'
 import { getUser, setUserInfo, isLogin } from '@/utils/auth'
 import { askSubscribeOnce } from '@/utils/subscribe'
-import { locateDetail, nearbyPois } from '@/utils/location'
+import { locateDetail } from '@/utils/location'
 import CitySheet from '@/components/city-sheet/city-sheet.vue'
 
 export default {
@@ -254,11 +277,14 @@ export default {
       citySheetShow: false,
       located: null, // 精确定位结果 { code(区县adcode), label, lat, lng }，设置后优先于手动选
       poiSheetShow: false,
-      nearPois: [],
       regionNames: REGIONS.map(r => r.name),
       allTags: ['唐山美食', '探店', '咖啡', '遛娃', '拍照', '老店'],
       tags: [],
       topicOpen: false,
+      // 门店：poiId 非空才叫"关联"；poiName 只是显示快照（门店改名后仍显示发布当时的名字）
+      poiId: '',
+      poiKw: '',
+      poiResults: [],
       poiName: '',
       submitting: false,
       editId: '',
@@ -437,6 +463,10 @@ export default {
         this.text = c.text || ''
         this.tags = Array.isArray(c.tags) ? c.tags : []
         if (c.poiName) this.poiName = c.poiName
+        // 回填门店关联：id 为空说明这篇本来就没关联（店名只是快照，不可点）
+        this.poiId = c.poiId || ''
+        this.poiKw = ''
+        this.poiResults = []
         // 记录原媒体（只有 URL，见 data 里的说明），并判定笔记类型。
         // 视频判定同时看 videoUrl 和 duration：videoUrl 是后端拼的公开地址，
         // OSS 配置缺失时会是空串，只凭它会漏判。
@@ -491,31 +521,63 @@ export default {
       this.located = { code: loc.adcode || '', label: label, lat: loc.lat, lng: loc.lng }
       this.regionIndex = -1
       uni.showToast({ title: '已定位 ' + label, icon: 'none', duration: 1000 })
-      this.openNearPois()
+      // 定位完顺手打开门店选择器（不依赖地图 API —— 原来的"搜索附近店铺"
+      // 走腾讯 place API，没配 key 时必然失败，而且即便搜出来也只是把名字填进输入框）
+      this.openPoiSheet()
     },
-    /** 附近店铺：定位坐标 → 腾讯 place API 按距离搜"美食"类 POI → 弹层点选 */
-    openNearPois() {
-      if (!this.located || !this.located.lat) {
-        uni.showToast({ title: '请先定位，再选择附近店铺', icon: 'none' })
-        return
-      }
-      uni.showLoading({ title: '搜索附近店铺…' })
-      nearbyPois(this.located.lat, this.located.lng, 1000, '美食')
-        .then((pois) => {
-          uni.hideLoading()
-          this.nearPois = pois
-          this.poiSheetShow = true
-        })
-        .catch((e) => {
-          uni.hideLoading()
-          uni.showToast({ title: e.message || '附近店铺搜索失败', icon: 'none', duration: 2000 })
-        })
+    // ---------- 门店：搜索 / 新建 / 关联 ----------
+
+    /** 打开门店选择器：带上当前店名做初搜，减少一次输入 */
+    openPoiSheet() {
+      this.poiKw = this.poiName || ''
+      this.poiResults = []
+      this.poiSheetShow = true
+      this.searchPoi()
     },
-    pickPoi(p) {
-      this.poiName = p.title
+    /** 搜索已有门店。后端会一并返回"我自己创建的待审门店" */
+    async searchPoi() {
+      try {
+        const kw = (this.poiKw || '').trim()
+        const list = await request({
+          url: '/poi/search?limit=20&kw=' + encodeURIComponent(kw)
+        })
+        this.poiResults = Array.isArray(list) ? list : []
+      } catch (e) { /* request 已统一 toast */ }
+    },
+    /** 选中门店铺 —— 这里才真正产生关联（写 poiId） */
+    pickPoiItem(p) {
+      this.poiId = p.poiId
+      this.poiName = p.name
       this.poiSheetShow = false
-      // POI 的 adcode 比定位点更精确，顺手校准地区码
-      if (p.adcode && this.located) this.located.code = p.adcode
+      this.poiKw = ''
+    },
+    /** 新建门店：名字用搜索框里输入的；点评人建的要等管理员审核 */
+    async createPoi() {
+      const name = (this.poiKw || '').trim()
+      if (!name) return
+      try {
+        const p = await request({
+          url: '/poi',
+          method: 'POST',
+          data: { name, regionCode: this.located ? this.located.code : '' }
+        })
+        this.poiId = p.poiId
+        this.poiName = p.name
+        this.poiSheetShow = false
+        this.poiKw = ''
+        uni.showToast({
+          title: p.pending ? '已新建，待管理员审核' : '已新建门店',
+          icon: 'none',
+          duration: 2500
+        })
+      } catch (e) { /* request 已统一 toast */ }
+    },
+    /** 解除关联：笔记可以没有门店（逛公园/在家做饭） */
+    clearPoi() {
+      this.poiId = ''
+      this.poiName = ''
+      this.poiSheetShow = false
+      this.poiKw = ''
     },
     onCityPick(city) {
       this.citySheetShow = false
@@ -610,6 +672,12 @@ export default {
           duration: duration || undefined,
           regionCode: this.regionCode,
           tags: this.tags.length ? this.tags : undefined,
+          // 门店关联。语义必须区分清楚（后端据此决定是否改动）：
+          //   新建：不选就不传（undefined）= 不关联
+          //   编辑：不传 = 保持原关联；传 0 = 显式解除关联
+          poiId: this.poiId
+            ? Number(this.poiId)
+            : (this.editId ? 0 : undefined),
           poiName: this.poiName.trim() || undefined
         }
         let res = null
@@ -748,7 +816,9 @@ export default {
       this.regionIndex = -1
       this.located = null
       this.poiName = ''
-      this.nearPois = []
+      this.poiId = ''
+      this.poiKw = ''
+      this.poiResults = []
       // 编辑态 + 原媒体记录
       this.editId = ''
       this.origImages = []
@@ -1248,6 +1318,45 @@ export default {
 .poi-empty {
   padding: 50rpx 0;
   text-align: center;
+}
+/* 门店选择：只读展示代替自由输入，点它打开选择器 */
+.poi-picker {
+  display: flex;
+  align-items: center;
+  min-height: 60rpx;
+}
+.poi-picker-text {
+  font-size: 28rpx;
+  color: var(--dp-text1);
+}
+.poi-picker-ph {
+  font-size: 28rpx;
+  color: var(--dp-text4);
+}
+.poi-search {
+  height: 72rpx;
+  padding: 0 24rpx;
+  margin-bottom: 12rpx;
+  font-size: 28rpx;
+  border-radius: 36rpx;
+  background: var(--dp-soft);
+  color: var(--dp-text1);
+}
+.poi-item-row {
+  display: flex;
+  align-items: center;
+}
+/* 待审门店要标出来，避免用户以为它已经正式可用 */
+.poi-badge {
+  margin-left: 12rpx;
+  padding: 2rpx 12rpx;
+  font-size: 20rpx;
+  border-radius: 16rpx;
+  color: var(--dp-brand);
+  background: var(--dp-brand-soft);
+}
+.poi-item-new .poi-item-title {
+  color: var(--dp-brand);
 }
 .topic-chips {
   display: flex;
