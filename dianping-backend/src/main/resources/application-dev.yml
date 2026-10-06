@@ -13,7 +13,10 @@ dianping:
   jwt:
     secret: ${JWT_SECRET:dianping-dev-secret-key-change-me-in-prod-0123456789}
   sms:
-    mock-enabled: ${SMS_MOCK:true}
+    # 开发模式把验证码回显给前端（登录页会直接显示出来），
+    # 这样不用真实短信也能完成完整登录流程；
+    # 同时后端日志里也会打印一份（LogSmsSender）。
+    echo-code: ${SMS_ECHO_CODE:true}
 
 logging:
   level:

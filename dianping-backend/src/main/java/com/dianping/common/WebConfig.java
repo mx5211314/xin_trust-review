@@ -33,7 +33,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/auth/login", "/error", "/upload/**",
+                .excludePathPatterns("/auth/login", "/auth/sms/send", "/error", "/upload/**",
                         // H5 版前端静态资源（与后端同源部署，供外网访问）
                         "/", "/index.html", "/favicon.ico",
                         "/assets/**", "/static/**");

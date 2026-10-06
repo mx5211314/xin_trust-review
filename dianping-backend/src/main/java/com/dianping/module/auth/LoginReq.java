@@ -4,7 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 /**
- * 登录请求。dev 环境验证码固定 8888，见 AuthService。
+ * 登录请求。
+ *
+ * 验证码需先调 `POST /auth/sms/send` 获取（6 位随机码，5 分钟有效、一次性）。
+ * 开发/演示模式下该接口会把验证码回显在 data.devCode 里，前端可直接展示。
  */
 public record LoginReq(
         @NotBlank(message = "手机号不能为空")

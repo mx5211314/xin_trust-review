@@ -39,10 +39,21 @@ dianping:
     secret: ${JWT_SECRET:}
     expire-days: 7
   sms:
-    # 固定验证码开关：true 时「8888」可登录**任意手机号**（含管理员），仅供本机开发/演示。
-    # 生产必须为 false（默认即 false）；本地开发由 dev profile 打开。
-    # 默认取 false 而不是 true —— 默认值一旦不安全，就一定会有人忘了关。
-    mock-enabled: ${SMS_MOCK:false}
+    # 验证码的**机制**已完整实现：随机码 + 存 Redis + TTL 过期 + 一次性消费
+    # + 错误次数限制 + 发送频率限制（见 SmsCodeService）。
+    # 唯一缺的是**发送渠道**：SmsSender 目前只有 LogSmsSender（把码打进日志），
+    # 拿到短信资质后新增一个实现类即可，机制层不用改。
+    #
+    # echo-code=true 会把验证码直接回显给前端（data.devCode）——**仅供本机开发/演示**，
+    # 相当于把验证码告诉所有人，生产必须 false。
+    # 默认取 false：默认值一旦不安全，就一定会有人忘了关。
+    echo-code: ${SMS_ECHO_CODE:false}
+    # 验证码有效期（秒）
+    code-ttl-seconds: 300
+    # 同一验证码最多允许输错几次，超出直接作废（防 6 位码暴力枚举）
+    max-verify-attempts: 5
+    # 同一手机号两次发送的最小间隔（秒）
+    send-interval-seconds: 60
   audit:
     # true = 机审直接通过（本地开发用）；false = 停在 PENDING，等后台人工审
     # 置 false：前端文案承诺「审核通过后公开」，必须真的走审核
