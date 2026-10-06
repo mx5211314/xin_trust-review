@@ -103,16 +103,31 @@ public class CommentService {
         Map<Long, List<Comment>> replyGroup = replies.stream()
                 .collect(Collectors.groupingBy(Comment::getParentId));
 
+        // 4.5 当前用户点赞过的评论：一次 in 查出来。
+        //     原来 `liked` 恒为 false，用户点过赞的评论一刷新就变回未点赞。
+        java.util.Set<Long> likedIds;
+        if (me == null || me <= 0) {
+            likedIds = java.util.Set.of();
+        } else {
+            List<Long> allIds = java.util.stream.Stream.concat(roots.stream(), replies.stream())
+                    .map(Comment::getId).toList();
+            likedIds = allIds.isEmpty() ? java.util.Set.of()
+                    : commentLikeMapper.selectList(new LambdaQueryWrapper<CommentLike>()
+                            .eq(CommentLike::getUserId, me)
+                            .in(CommentLike::getCommentId, allIds))
+                    .stream().map(CommentLike::getCommentId).collect(Collectors.toSet());
+        }
+
         // 5. 组装：父 + replies
         List<Map<String, Object>> list = new java.util.ArrayList<>();
         for (Comment r : roots) {
-            list.add(commentVo(r, null, users));
+            list.add(commentVo(r, null, users, likedIds));
             List<Comment> rs = replyGroup.getOrDefault(r.getId(), java.util.List.of());
             List<Map<String, Object>> rlist = new java.util.ArrayList<>();
             for (Comment c : rs) {
                 User replyTo = c.getReplyToUserId() != null && c.getReplyToUserId() > 0
                         ? users.get(c.getReplyToUserId()) : null;
-                Map<String, Object> cm = commentVo(c, replyTo, users);
+                Map<String, Object> cm = commentVo(c, replyTo, users, likedIds);
                 cm.put("replyToNickname", replyTo == null ? "" : replyTo.getNickname());
                 rlist.add(cm);
             }
@@ -209,6 +224,7 @@ public class CommentService {
     }
 
 /** 删除自己的评论（管理员可删任意）：逻辑删除 */
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public void deleteComment(Long commentId, Long me, boolean isAdmin) {
         Comment c = commentMapper.selectById(commentId);
         if (c == null) {
@@ -218,10 +234,19 @@ public class CommentService {
             throw new BizException(ResultCode.FORBIDDEN, "只能删除自己的评论");
         }
         commentMapper.deleteById(commentId);
+        // 删根评论时连带删掉它的子回复。
+        // 不处理的话子回复会变成孤儿：评论列表只按 parentId=0 取根评论、
+        // 再把子回复挂上去 —— 根没了，子回复就永远不显示，
+        // 但数据仍在库里，用户看不到也删不掉。
+        if (c.getParentId() == null || c.getParentId() == 0) {
+            commentMapper.delete(new LambdaQueryWrapper<Comment>()
+                    .eq(Comment::getParentId, commentId));
+        }
     }
 
 /** 评论 VO 组装（扁平 map）；replyTo 传入时带"回复 @"关系，否则为顶级评论 */
-    private Map<String, Object> commentVo(Comment c, User replyTo, Map<Long, User> users) {
+    private Map<String, Object> commentVo(Comment c, User replyTo, Map<Long, User> users,
+                                          java.util.Set<Long> likedIds) {
         User u = users.get(c.getUserId());
         Map<String, Object> m = new java.util.HashMap<>();
         m.put("commentId", String.valueOf(c.getId()));
@@ -229,7 +254,9 @@ public class CommentService {
         m.put("createTime", c.getCreateTime() == null ? "" : c.getCreateTime().format(FMT));
         m.put("parentId", String.valueOf(c.getParentId() == null ? 0 : c.getParentId()));
         m.put("likeCount", c.getLikeCount() == null ? 0 : c.getLikeCount());
-        m.put("liked", false);
+        // 当前用户是否点过赞。原来写死 false，导致刷新后点赞状态丢失
+        // （点赞数会变、心形却回到空心，用户会以为点赞没成功）
+        m.put("liked", likedIds.contains(c.getId()));
         m.put("user", u == null ? null : Map.of(
                 "userId", String.valueOf(u.getId()),
                 "nickname", u.getNickname(),

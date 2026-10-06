@@ -494,8 +494,27 @@ public class ContentService {
         Map<Long, User> users = userIds.isEmpty() ? Map.of()
                 : userMapper.selectBatchIds(userIds).stream()
                         .collect(Collectors.toMap(User::getId, Function.identity()));
+        // 查当前用户对这些内容的**真实**互动状态。
+        // 原来 liked 写死 true、favorited 写死 false：
+        //   · "赞过"tab 恰好蒙对，但收藏列表/浏览记录里也显示"已点赞"（错的）
+        //   · 收藏列表里反而显示"未收藏"，和列表标题自相矛盾
+        java.util.Set<Long> likedIds = java.util.Set.of();
+        java.util.Set<Long> favIds = java.util.Set.of();
+        if (me != null && !ordered.isEmpty()) {
+            List<Long> cids = ordered.stream().map(Content::getId).toList();
+            List<UserAction> acts = userActionMapper.selectList(new LambdaQueryWrapper<UserAction>()
+                    .eq(UserAction::getUserId, me)
+                    .in(UserAction::getContentId, cids));
+            likedIds = acts.stream().filter(a -> a.getType() != null && a.getType() == UserAction.TYPE_LIKE)
+                    .map(UserAction::getContentId).collect(Collectors.toSet());
+            favIds = acts.stream().filter(a -> a.getType() != null && a.getType() == UserAction.TYPE_FAV)
+                    .map(UserAction::getContentId).collect(Collectors.toSet());
+        }
+        final java.util.Set<Long> fl = likedIds;
+        final java.util.Set<Long> ff = favIds;
         return ordered.stream()
-                .map(c -> toVo(c, users.get(c.getUserId()), true, false, false, 0, 0,
+                .map(c -> toVo(c, users.get(c.getUserId()), fl.contains(c.getId()), false,
+                        ff.contains(c.getId()), 0, 0,
                         viewTimes.getOrDefault(c.getId(), ""), null))
                 .toList();
     }
@@ -606,7 +625,10 @@ public class ContentService {
         int safePage = com.dianping.common.PageParam.page(page);
         int safeSize = com.dianping.common.PageParam.size(pageSize);
         int total = ordered.size();
-        int from = Math.min((safePage - 1) * safeSize, total);
+        // 用 long 算偏移量：safePage 允许很大，(page-1)*size 在 int 下会溢出成负数，
+        // 又绕回 subList 越界 —— 修分页时只夹了参数范围，没管这里的乘法。
+        // 超出总量时 from 收敛到 total，subList(total, total) 正好是空列表。
+        int from = (int) Math.min((long) (safePage - 1) * safeSize, total);
         int to = Math.min(from + safeSize, total);
         Page<Content> fake = new Page<>(safePage, safeSize, total);
         fake.setRecords(ordered.subList(from, to));
