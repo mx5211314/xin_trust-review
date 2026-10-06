@@ -285,6 +285,8 @@ export default {
   data() {
     return {
       id: '',
+      // 审核视角：从审核页带 ?from=admin 进来，走管理员详情接口且不做社交类加载
+      fromAdmin: false,
       content: null,
       statusBarHeight: 20,
       comments: [],
@@ -355,6 +357,10 @@ export default {
   },
   onLoad(query) {
     this.id = query.id
+    // 从审核页进来的：走管理员详情接口。
+    // 普通详情接口对下架/待审内容返回 1004，管理员点进去只会看到"内容不存在"，
+    // 等于没法审核自己该审的东西。
+    this.fromAdmin = query.from === 'admin'
     try {
       this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 20
     } catch (e) { /* 默认值兜底 */ }
@@ -366,10 +372,19 @@ export default {
     regionName,
     async fetch() {
       try {
-        this.content = await request({ url: `/content/${this.id}` })
+        // 审核场景走管理员接口（任意状态可见），其余走普通接口（受可见性约束）
+        this.content = await request({
+          url: this.fromAdmin ? `/admin/content/${this.id}` : `/content/${this.id}`
+        })
         if (this.content) {
           this.favorited = !!this.content.favorited
           this.favoriteCount = this.content.favoriteCount || 0
+          if (this.fromAdmin) {
+            // 审核视角：不报播放量、不加载关注/拉黑状态。
+            // 下架内容的评论仍可读（后端对管理员放行了可见性），便于判断违规程度。
+            this.loadComments()
+            return
+          }
           if (this.content.status === 'APPROVED') {
             // 浏览计数上报（静默，失败不影响展示）
             request({ url: `/content/${this.id}/view`, method: 'POST', silent: true }).catch(() => {})

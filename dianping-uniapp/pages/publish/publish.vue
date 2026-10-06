@@ -243,6 +243,13 @@ export default {
       text: '',
       localImages: [],
       localVideo: null,
+      // ---- 编辑模式下的「原媒体」----
+      // 注意：详情接口只下发 URL、不下发存储 key（后端有意不暴露）。
+      // 所以这里存的是 URL，仅用于判断笔记类型和给用户提示；
+      // 提交时不重选媒体就不传对应字段，后端 updateContent 会保留原值。
+      origImages: [],
+      origVideoUrl: '',
+      origDuration: 0,
       regionIndex: -1,
       citySheetShow: false,
       located: null, // 精确定位结果 { code(区县adcode), label, lat, lng }，设置后优先于手动选
@@ -290,6 +297,18 @@ export default {
     // 角色可能刚被后台改过（授予/取消点评人）→ 拉一次最新信息并回写登录态，
     // 否则用户必须退出重登才能发布（原先就是这个问题）
     this.refreshRole()
+    // 「我的」长按编辑跳转：发布页是 tabBar 页，不能 navigateTo 带参
+    //（会静默失败、停在原页面），所以改用 storage 标记传递
+    let editTarget = null
+    try {
+      editTarget = uni.getStorageSync('dp_edit_content')
+      if (editTarget) uni.removeStorageSync('dp_edit_content')
+    } catch (e) { /* ignore */ }
+    if (editTarget && String(editTarget) !== String(this.editId)) {
+      this.editId = editTarget
+      this.loadForEdit()
+      return
+    }
     if (!this.editId) {
       // 草稿箱「继续编辑」跳转（tab 页不能 navigateTo 带参 → storage 标记）
       let fromDraft = null
@@ -407,7 +426,13 @@ export default {
         this.text = c.text || ''
         this.tags = Array.isArray(c.tags) ? c.tags : []
         if (c.poiName) this.poiName = c.poiName
-        if (c.videoUrl) this.type = 'video'
+        // 记录原媒体（只有 URL，见 data 里的说明），并判定笔记类型。
+        // 视频判定同时看 videoUrl 和 duration：videoUrl 是后端拼的公开地址，
+        // OSS 配置缺失时会是空串，只凭它会漏判。
+        this.origImages = Array.isArray(c.images) ? c.images.slice() : []
+        this.origVideoUrl = c.videoUrl || ''
+        this.origDuration = c.duration || 0
+        if (this.origVideoUrl || this.origDuration > 0) this.type = 'video'
         if (c.regionCode) {
           // 市级码直接匹配手动选择；区县级 adcode（定位发布）回显为 located
           const idx = REGIONS.findIndex(r => r.code === c.regionCode)
@@ -544,7 +569,12 @@ export default {
         let videoKey = ''
         let coverKey = ''
         let duration = 0
-        if (this.type === 'video') {
+        // 只有「新选了视频」才上传。
+        // 编辑既有笔记时 localVideo 为 null，原来这里是 if (this.type === 'video')，
+        // 直接访问 this.localVideo.uploading 会抛 TypeError（点发布没反应）。
+        // 不传 videoKey/coverKey/duration 时后端会保留原值
+        // （ContentService.updateContent 不覆盖这三个字段）。
+        if (this.type === 'video' && this.localVideo && this.localVideo.path) {
           this.localVideo.uploading = true
           const up2 = await uploadFile(this.localVideo.path, 'video')
           videoKey = up2.key

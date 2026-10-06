@@ -218,14 +218,22 @@ export default {
       try {
         uni.setStorageSync('dp_hide_following', this.hideFollowing)
       } catch (err) { /* ignore */ }
-      uni.showToast({ title: this.hideFollowing ? '已隐藏关注列表' : '已公开关注列表', icon: 'none' })
+      // 提示必须诚实：这两个开关目前只写本机 storage，服务端没有对应约束。
+      // 原来只说「已隐藏关注列表」，用户会以为别人真的看不到了。
+      uni.showToast({
+        title: this.hideFollowing ? '已隐藏关注列表（仅本机生效）' : '已公开关注列表',
+        icon: 'none'
+      })
     },
     toggleAllowComment(e) {
       this.allowComment = e.detail.value
       try {
         uni.setStorageSync('dp_allow_comment', this.allowComment)
       } catch (err) { /* ignore */ }
-      uni.showToast({ title: this.allowComment ? '已允许评论' : '已关闭评论', icon: 'none' })
+      uni.showToast({
+        title: this.allowComment ? '已允许评论' : '已关闭评论（仅本机生效）',
+        icon: 'none'
+      })
     },
     showHelp() {
       uni.showModal({

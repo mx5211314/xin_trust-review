@@ -267,7 +267,9 @@ export default {
       })
     },
     goDetail(item) {
-      uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
+      // 带 from=admin：审核页要能看下架/待审内容，
+      // 普通详情接口对这类内容返回 1004，管理员点进去只会看到"内容不存在"
+      uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId + '&from=admin' })
     }
   }
 }
