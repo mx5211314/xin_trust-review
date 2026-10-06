@@ -43,6 +43,8 @@
         </button>
         <text class="tip">新用户验证通过后自动注册</text>
         <text class="tip">普通用户可浏览 · 点评人可发布</text>
+        <!-- 开发/演示模式：后端把验证码回显了，明确告知用户这是演示行为，别误以为是真实短信 -->
+        <text v-if="devCode" class="tip dev-tip">演示模式 · 本次验证码 {{ devCode }}（正式环境需真实短信）</text>
       </view>
     </view>
   </view>
@@ -59,7 +61,10 @@ export default {
       code: '',
       smsText: '获取验证码',
       counting: false,
-      submitting: false
+      submitting: false,
+      // 开发/演示模式下后端回显的验证码；生产环境恒为空
+      devCode: '',
+      timer: null
     }
   },
   computed: {
@@ -67,27 +72,55 @@ export default {
       return /^1\d{10}$/.test(this.phone) && this.code.length >= 4
     }
   },
+  onUnload() {
+    // 主动清掉倒计时，避免离开页面后定时器还在跑
+    if (this.timer) {
+      clearInterval(this.timer)
+      this.timer = null
+    }
+  },
   methods: {
-    getSms() {
+    async getSms() {
       if (this.counting) return
       if (!/^1\d{10}$/.test(this.phone)) {
         return uni.showToast({ title: '手机号格式不对', icon: 'none' })
       }
-      // TODO 接后端短信接口后，验证码写入 Redis 并校验
+      try {
+        // 真实调后端下发验证码：随机 6 位、5 分钟有效、一次性消费、有发送频率限制
+        const data = await request({
+          url: '/auth/sms/send',
+          method: 'POST',
+          data: { phone: this.phone }
+        })
+        if (data && data.devCode) {
+          // 开发/演示模式：后端把验证码带回来了，直接替用户填上，省一次手输。
+          // 生产环境（echo-code=false）不会返回 devCode，用户需查收短信。
+          this.devCode = String(data.devCode)
+          this.code = this.devCode
+          uni.showToast({ title: '演示模式：验证码 ' + this.devCode, icon: 'none', duration: 4000 })
+        } else {
+          uni.showToast({ title: '验证码已发送', icon: 'none' })
+        }
+        this.startCountdown()
+      } catch (e) {
+        // request 已统一 toast（含"验证码已发送，请 N 秒后再试"）
+      }
+    },
+    startCountdown() {
       this.counting = true
       let left = 60
       this.smsText = left + 's'
-      const timer = setInterval(() => {
+      this.timer = setInterval(() => {
         left--
         if (left <= 0) {
-          clearInterval(timer)
+          clearInterval(this.timer)
+          this.timer = null
           this.counting = false
           this.smsText = '获取验证码'
         } else {
           this.smsText = left + 's'
         }
       }, 1000)
-      uni.showToast({ title: '开发环境验证码：8888', icon: 'none' })
     },
     async doLogin() {
       if (!this.canSubmit || this.submitting) return
@@ -245,5 +278,13 @@ export default {
 }
 .tip + .tip {
   margin-top: 8rpx;
+}
+/* 演示模式提示：用品牌红强调，避免用户以为这是真实短信。
+   选择器必须写成 .tip.dev-tip —— 上面 .tip + .tip（0,2,0）会盖掉单类的
+   .dev-tip（0,1,0），margin-top 不生效。 */
+.tip.dev-tip {
+  margin-top: 20rpx;
+  color: var(--dp-brand);
+  font-weight: 500;
 }
 </style>
