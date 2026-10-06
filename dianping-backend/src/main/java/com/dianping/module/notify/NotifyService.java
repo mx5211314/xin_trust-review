@@ -42,6 +42,18 @@ public class NotifyService {
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("MM-dd HH:mm");
 
+    /**
+     * notify.text 的字段长度（见 sql/init.sql 的 VARCHAR(200)）。
+     *
+     * 在**入口统一截断**，而不是让每个调用方自己注意：
+     * 调用方会传评论正文、驳回原因等**长度不可控**的文本，
+     * 一旦超过字段长度，严格 SQL 模式下插入直接失败 ——
+     * 而调用方往往已经把主数据写完了（比如评论已入库），
+     * 结果就是"数据写成功、接口报失败"，用户重试还会产生重复数据。
+     * 通知只是摘要，截断没有信息损失，所以在这里兜住最省事也最安全。
+     */
+    private static final int TEXT_MAX = 200;
+
     private final NotifyMapper notifyMapper;
     private final UserMapper userMapper;
     private final com.dianping.module.interaction.BlockService blockService;
@@ -63,7 +75,7 @@ public class NotifyService {
         n.setActorId(actorId == null ? 0L : actorId);
         n.setContentId(contentId == null ? 0L : contentId);
         n.setCommentId(commentId == null ? 0L : commentId);
-        n.setText(text == null ? "" : text);
+        n.setText(summarize(text));
         n.setIsRead(0);
         notifyMapper.insert(n);
 
@@ -105,11 +117,50 @@ public class NotifyService {
         return s.length() > max ? s.substring(0, max) + "…" : s;
     }
 
+    /**
+     * 落库前的正文截断。与 abbreviate 的区别：
+     * - 空值仍返回空串（通知正文允许为空，不该塞占位文案）
+     * - 截断后长度**严格不超过 TEXT_MAX**（abbreviate 会变成 max+1，照样超字段）
+     */
+    private static String summarize(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.length() <= TEXT_MAX ? s : s.substring(0, TEXT_MAX - 1) + "…";
+    }
+
     /** 未读数 */
+    /**
+     * 未读通知总数（消息入口红点用）。
+     *
+     * **排除 MESSAGE 类型**：私信未读的唯一来源是 message 表
+     * （ChatService.unreadTotal），而发私信时同时写了一条 MESSAGE 通知。
+     * 若这里把它也算进来，前端「通知未读 + 聊天未读」就会把同一条私信算两次
+     * （实测：通知未读 1 + 聊天未读 1，其实只有一条私信，红点却显示 2）。
+     * 消息列表的 interact 分类本来也排除了 MESSAGE，口径保持一致。
+     */
     public long unreadCount(Long me) {
         return notifyMapper.selectCount(new LambdaQueryWrapper<Notify>()
                 .eq(Notify::getUserId, me)
-                .eq(Notify::getIsRead, 0));
+                .eq(Notify::getIsRead, 0)
+                .ne(Notify::getType, T_MESSAGE));
+    }
+
+    /**
+     * 把「某人发给我的私信通知」置为已读。
+     *
+     * 同一条私信有两个落点：message 表（真正的内容）和 notify 表（红点/列表用）。
+     * 读聊天时原来只更新 message 表，notify 里那条会永远是未读，
+     * 数据长期不一致。虽然前端已把 MESSAGE 从计数里排除、看不到影响，
+     * 但将来一旦改成展示 MESSAGE 就会立刻暴露，所以同步标掉。
+     */
+    public void markMessageRead(Long me, Long fromUserId) {
+        notifyMapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Notify>()
+                .eq(Notify::getUserId, me)
+                .eq(Notify::getType, T_MESSAGE)
+                .eq(Notify::getActorId, fromUserId)
+                .eq(Notify::getIsRead, 0)
+                .set(Notify::getIsRead, 1));
     }
 
     /**
@@ -228,7 +279,7 @@ public class NotifyService {
     }
 
     /** 按分类全部已读（category 为空则全部） */
-    public void readAll(Long me, String category) {
+    public void readAll(Long me, String category, String subType) {
         var w = new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Notify>()
                 .eq(Notify::getUserId, me)
                 .eq(Notify::getIsRead, 0)
@@ -236,9 +287,31 @@ public class NotifyService {
         if ("announce".equals(category)) {
             w.eq(Notify::getType, T_ANNOUNCE);
         } else if ("interact".equals(category)) {
-            w.notIn(Notify::getType, T_ANNOUNCE, T_MESSAGE);
+            // 带 subType 时只清这一子类。
+            // 原先只看 category，用户在「赞和收藏」筛选下点"全部已读"，
+            // 会把关注、评论的未读也一并清掉 —— 界面还停在筛选态，看着像没生效。
+            java.util.List<String> types = interactTypes(subType);
+            if (types != null) {
+                w.in(Notify::getType, types);
+            } else {
+                w.notIn(Notify::getType, T_ANNOUNCE, T_MESSAGE);
+            }
         }
         notifyMapper.update(null, w);
+    }
+
+    /** 互动子分类 → 对应的通知类型；null/未知 表示"整个互动分类" */
+    private static java.util.List<String> interactTypes(String subType) {
+        switch (subType == null ? "" : subType) {
+            case "like":
+                return java.util.List.of(T_LIKE, T_FAV);
+            case "follow":
+                return java.util.List.of(T_FOLLOW);
+            case "comment":
+                return java.util.List.of(T_COMMENT, T_REPLY, T_MENTION);
+            default:
+                return null;
+        }
     }
 
     /** 全部已读 */

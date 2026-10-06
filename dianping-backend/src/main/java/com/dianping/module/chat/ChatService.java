@@ -91,6 +91,9 @@ public class ChatService {
                 .eq(Message::getToUserId, me)
                 .eq(Message::getIsRead, 0)
                 .set(Message::getIsRead, 1));
+        // 同一条私信在 notify 表也有一行（MESSAGE 类型），一起标掉，
+        // 否则那边会永远是未读，两边数据长期不一致
+        notifyService.markMessageRead(me, peerId);
         // 查双方消息（倒序分页后反转成正序）
         Page<Message> p = messageMapper.selectPage(new Page<>(page, pageSize),
                 new LambdaQueryWrapper<Message>()
