@@ -37,3 +37,6 @@ upload/
 # ---- 系统垃圾 ----
 Thumbs.db
 desktop.ini
+
+# ---- 外部工具的工作目录（本地权限配置，不进仓库）----
+.claude/
