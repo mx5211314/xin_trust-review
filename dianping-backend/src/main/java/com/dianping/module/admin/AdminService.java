@@ -94,28 +94,36 @@ public class AdminService {
         }
     }
 
+    // 下面四个方法都会改写缓存的 status|role，必须同步失效缓存。
+    // 否则 AuthInterceptor 最长 60 秒内还按旧状态放行 ——
+    // 封禁了还能继续操作、撤销点评人后还能继续发布。
+
     public void ban(Long userId) {
         User u = mustGetUser(userId);
         u.setStatus("BANNED");
         userMapper.updateById(u);
+        evictUserCache(userId);
     }
 
     public void unban(Long userId) {
         User u = mustGetUser(userId);
         u.setStatus("NORMAL");
         userMapper.updateById(u);
+        evictUserCache(userId);
     }
 
     public void grantReviewer(Long userId) {
         User u = mustGetUser(userId);
         u.setRole("REVIEWER");
         userMapper.updateById(u);
+        evictUserCache(userId);
     }
 
     public void revokeReviewer(Long userId) {
         User u = mustGetUser(userId);
         u.setRole("USER");
         userMapper.updateById(u);
+        evictUserCache(userId);
     }
 
     // ---------- 内部 ----------

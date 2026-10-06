@@ -120,11 +120,16 @@ public class WechatPushService {
         return "audit".equals(key) ? templateAudit : templateInteract;
     }
 
-    /** access_token：Redis 缓存 3500s，过期重新拉 */
+    /** access_token：Redis 缓存 3500s，过期重新拉；Redis 不可用时退化为每次直连 */
     private String accessToken() throws Exception {
-        String cached = redis.opsForValue().get(TOKEN_KEY);
-        if (cached != null && !cached.isBlank()) {
-            return cached;
+        // Redis 只是省一次网络往返的缓存，不可用不该让推送整体失败
+        try {
+            String cached = redis.opsForValue().get(TOKEN_KEY);
+            if (cached != null && !cached.isBlank()) {
+                return cached;
+            }
+        } catch (Exception ignored) {
+            // 读缓存失败：继续往下重新获取
         }
         java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
         String url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="
@@ -137,7 +142,11 @@ public class WechatPushService {
         if (token == null) {
             throw new IllegalStateException("获取 access_token 失败: " + body);
         }
-        redis.opsForValue().set(TOKEN_KEY, String.valueOf(token), Duration.ofSeconds(3500));
+        try {
+            redis.opsForValue().set(TOKEN_KEY, String.valueOf(token), Duration.ofSeconds(3500));
+        } catch (Exception ignored) {
+            // 写缓存失败：不影响本次使用，下次调用再拉
+        }
         return String.valueOf(token);
     }
 
