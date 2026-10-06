@@ -1,0 +1,20 @@
+# ============================================================
+# 本地开发专用配置
+# 激活方式：--spring.profiles.active=dev
+#
+# 这里的默认值**只用于本机开发**，绝不可用于线上部署：
+#   - JWT 密钥写在这里等于公开（仓库可见），仅供本机自测
+#   - 固定验证码会让「8888」登录任意手机号（含管理员）
+#
+# 线上部署请**不要**带 dev profile，并通过环境变量提供：
+#   JWT_SECRET / DB_PASSWORD / CORS_ORIGINS / OSS_* 等（见 application.yml）
+# ============================================================
+dianping:
+  jwt:
+    secret: ${JWT_SECRET:dianping-dev-secret-key-change-me-in-prod-0123456789}
+  sms:
+    mock-enabled: ${SMS_MOCK:true}
+
+logging:
+  level:
+    com.dianping: debug

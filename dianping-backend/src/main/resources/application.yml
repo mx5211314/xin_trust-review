@@ -30,9 +30,19 @@ mybatis-plus:
 
 dianping:
   jwt:
-    # HS256 要求至少 32 字节；线上务必通过环境变量 JWT_SECRET 覆盖
-    secret: ${JWT_SECRET:dianping-dev-secret-key-change-me-in-prod-0123456789}
+    # HS256 要求至少 32 字节。
+    # 【生产必须由环境变量 JWT_SECRET 提供】——这里**故意不留公开回退值**：
+    # 仓库是公开的，任何写进配置的默认密钥都等于公开密钥，谁都能拿它
+    # 签发任意用户（含管理员）的令牌，直接绕过登录。
+    # 未配置时启动即失败（见 JwtUtil），宁可起不来也不能默认不安全。
+    # 本地开发：用 --spring.profiles.active=dev 启动，application-dev.yml 里有开发密钥。
+    secret: ${JWT_SECRET:}
     expire-days: 7
+  sms:
+    # 固定验证码开关：true 时「8888」可登录**任意手机号**（含管理员），仅供本机开发/演示。
+    # 生产必须为 false（默认即 false）；本地开发由 dev profile 打开。
+    # 默认取 false 而不是 true —— 默认值一旦不安全，就一定会有人忘了关。
+    mock-enabled: ${SMS_MOCK:false}
   audit:
     # true = 机审直接通过（本地开发用）；false = 停在 PENDING，等后台人工审
     # 置 false：前端文案承诺「审核通过后公开」，必须真的走审核
