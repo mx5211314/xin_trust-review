@@ -367,12 +367,14 @@ export default {
               url: '/user/profile',
               method: 'PUT',
               data: {
-                nickname: (this.user && this.user.nickname) || '',
-                avatar: up.key,
-                bio: (this.user && this.user.bio) || ''
+                // 只发头像：后端是局部更新，没传的字段保持原值。
+                // 原来这里把 nickname/bio 一起带上，而 this.user.bio 根本不存在
+                //（/user/me 当时没返回 bio），于是发了个空串把用户简介清掉了。
+                // avatar 必须传 key 而不是 url —— 库里存 key，URL 换域名会失效。
+                avatar: up.key
               }
             })
-            // 同步本地登录态，下次进入头像不丢
+            // 同步本地登录态（这里存 url 只为本地展示，不会再被回传后端）
             const u = getUser() || {}
             setUserInfo(Object.assign({}, u, { avatar: up.url || u.avatar }))
             uni.hideLoading()
@@ -487,7 +489,12 @@ export default {
       uni.navigateTo({ url: '/pages/detail/detail?id=' + item.contentId })
     },
     editNote(item) {
-      uni.navigateTo({ url: '/pages/publish/publish?id=' + item.contentId })
+      // 发布页是 tabBar 页：navigateTo 跳不过去（会静默失败、停在"我的"）。
+      // 沿用草稿箱那套 —— storage 标记 + switchTab，由 publish 的 onShow 读取并回填。
+      try {
+        uni.setStorageSync('dp_edit_content', String(item.contentId))
+      } catch (e) { /* ignore */ }
+      uni.switchTab({ url: '/pages/publish/publish' })
     },
     delNote(item) {
       uni.showModal({
@@ -540,8 +547,12 @@ export default {
           method: 'PUT',
           data: {
             nickname: nick,
-            avatar: this.editAvatar || undefined,
-            bio: this.editBio.trim() || undefined
+            // 不发 avatar：头像是独立流程（点头像 → 上传 → 只更新 avatar）。
+            // 这里若把读到的 avatar 回传，会把"读取时转成的 URL"又写回库里，
+            // 破坏"库里只存 key"的约定。
+            // bio 必须**无条件**发送（含空串）：空串 = 明确清空，
+            // 用 `|| undefined` 会让用户永远删不掉自己的简介。
+            bio: this.editBio.trim()
           }
         })
         uni.showToast({ title: '已保存', icon: 'success' })
@@ -550,7 +561,8 @@ export default {
       } catch (e) { /* toast 已提示 */ }
     },
     goNotify() {
-      uni.navigateTo({ url: '/pages/notify/notify' })
+      // 消息页也是 tabBar 页，必须 switchTab（navigateTo 会跳不过去）
+      uni.switchTab({ url: '/pages/notify/notify' })
     },
     goSettings() {
       uni.navigateTo({ url: '/pages/settings/settings' })
