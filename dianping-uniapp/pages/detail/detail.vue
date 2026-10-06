@@ -86,7 +86,7 @@
       </view>
       <!-- 地点：提到正文之前，点进来第一时间知道「在哪」（不用划到底） -->
       <view class="poi-row" v-if="content.poiName">
-        <view class="poi tap" @tap="goPoi(content.poiName)">
+        <view class="poi tap" @tap="goPoi">
           <image class="poi-ico" src="/static/icons/location.png" />
           <text class="poi-text">{{ content.poiName }}</text>
         </view>
@@ -118,7 +118,7 @@
       <view class="rel" v-if="related.length">
         <view class="rel-head">
           <text class="rel-title">同店铺其他点评</text>
-          <text class="rel-more" @tap="goPoi(content.poiName)">{{ related.length }} 篇 ›</text>
+          <text class="rel-more" @tap="goPoi">{{ related.length }} 篇 ›</text>
         </view>
         <scroll-view class="rel-scroll" scroll-x="true" :show-scrollbar="false">
           <view
@@ -446,9 +446,19 @@ export default {
     goTopic(tag) {
       uni.navigateTo({ url: '/pages/collection/collection?mode=topic&q=' + encodeURIComponent(tag) })
     },
-    goPoi(name) {
-      if (!name) return
-      uni.navigateTo({ url: '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(name) })
+    /**
+     * 打开门店页。
+     * 有关联门店（poiId）时走门店实体：`mode=poi&id=xxx` —— 按 id 聚合，不会认错店。
+     * 没有关联的（历史数据/逛公园这类）退回按店名文本聚合的旧路径。
+     */
+    goPoi() {
+      const c = this.content
+      if (!c) return
+      if (c.poiId) {
+        uni.navigateTo({ url: '/pages/collection/collection?mode=poi&id=' + c.poiId })
+      } else if (c.poiName) {
+        uni.navigateTo({ url: '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(c.poiName) })
+      }
     },
     async goUser(nick) {
       if (!nick) return
@@ -767,15 +777,19 @@ export default {
         })
       }
     },
-    /** 同店铺推荐：按 poiName 拉其他篇（排除当前） */
+    /**
+     * 同门店推荐：按 **poiId** 拉其他篇（排除当前）。
+     * 没有关联门店的不再按店名文本匹配 —— 那样会把同店不同写法算成两家、
+     * 同名不同店算成一家（门店体系批 2 起统一走 id）。
+     */
     async loadRelated() {
-      if (!this.content || !this.content.poiName) {
+      if (!this.content || !this.content.poiId) {
         this.related = []
         return
       }
       try {
         this.related = await request({
-          url: `/content/related?poiName=${encodeURIComponent(this.content.poiName)}&exclude=${this.id}&limit=8`,
+          url: `/content/related?poiId=${this.content.poiId}&exclude=${this.id}&limit=8`,
           silent: true
         }) || []
       } catch (e) {

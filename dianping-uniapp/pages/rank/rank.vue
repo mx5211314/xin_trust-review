@@ -11,7 +11,7 @@
         v-for="(r, i) in list"
         :key="r.shop"
         hover-class="row-hover"
-        @tap="goShop(r.shop)"
+        @tap="goShop(r)"
       >
         <view class="no" :class="'no' + ((i < 3) ? (i + 1) : 0)">
           <text class="no-text">{{ i + 1 }}</text>
@@ -69,10 +69,15 @@ export default {
       if (!this.maxLike) return 0
       return Math.max(6, Math.round((n / this.maxLike) * 100))
     },
-    goShop(shop) {
-      uni.navigateTo({
-        url: '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(shop)
-      })
+    /**
+     * 打开门店页。榜单现在按 poi_id 聚合，条目带 poiId —— 优先按实体跳，
+     * 这样同店不同写法也会汇到同一个页面；没有 poiId 的旧数据退回按名字聚合。
+     */
+    goShop(item) {
+      const url = item.poiId
+        ? '/pages/collection/collection?mode=poi&id=' + item.poiId
+        : '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(item.shop)
+      uni.navigateTo({ url })
     },
     /** 空状态引导：去发布页写点评（发布是 tabBar 页，须用 switchTab） */
     goWrite() {

@@ -176,7 +176,7 @@
       <view class="cloud-sec">
         <text class="cloud-title">热门店铺</text>
         <view class="hot-wrap">
-          <view v-for="(s, i) in hotShops" :key="i" class="hot-item shop" @tap="tapShop(s.shop)">
+          <view v-for="(s, i) in hotShops" :key="i" class="hot-item shop" @tap="tapShop(s)">
             <text class="hot-text">{{ s.shop }}</text>
             <text class="hot-sub">{{ s.count }} 篇</text>
           </view>
@@ -343,8 +343,12 @@ export default {
     tapTag(tag) {
       uni.navigateTo({ url: '/pages/collection/collection?mode=topic&q=' + encodeURIComponent(tag) })
     },
-    tapShop(shop) {
-      uni.navigateTo({ url: '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(shop) })
+    /** 打开门店页：优先按 poiId 走实体，没有则退回按店名聚合（旧数据） */
+    tapShop(item) {
+      const url = item.poiId
+        ? '/pages/collection/collection?mode=poi&id=' + item.poiId
+        : '/pages/collection/collection?mode=shop&q=' + encodeURIComponent(item.shop)
+      uni.navigateTo({ url })
     }
   }
 }

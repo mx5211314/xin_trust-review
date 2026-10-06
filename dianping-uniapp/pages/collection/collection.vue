@@ -1,11 +1,18 @@
 <template>
   <view class="hub" :class="{'theme-dark': isDark}">
     <view class="hub-head">
-      <text class="hub-title">{{ mode === 'topic' ? '#' + q : q }}</text>
-      <text class="hub-sub">{{ total }} 篇内容</text>
+      <text class="hub-title">{{ headTitle }}</text>
+      <text class="hub-sub">{{ mode === 'poi' && poi ? poi.contentCount + ' 篇点评' : total + ' 篇内容' }}</text>
       <view v-if="mode === 'topic'" class="follow-btn" :class="{ on: isFollowingTopic }" @tap="toggleFollowTopic">
         <text class="follow-btn-text">{{ isFollowingTopic ? '已关注' : '关注话题' }}</text>
       </view>
+      <!-- 门店信息：门店页才显示。有则展示，没有就不占位（历史门店常缺这几项） -->
+      <view v-if="mode === 'poi' && poi && (poi.address || poi.openHours || poi.phone)" class="poi-info">
+        <text v-if="poi.address" class="poi-info-tx">{{ poi.address }}</text>
+        <text v-if="poi.openHours" class="poi-info-tx">营业时间 {{ poi.openHours }}</text>
+        <text v-if="poi.phone" class="poi-info-tx">电话 {{ poi.phone }}</text>
+      </view>
+      <text v-if="mode === 'poi' && poi && poi.pending" class="poi-info-pending">该门店待审核，仅你可见</text>
     </view>
 
     <view v-if="loading && !list.length" class="waterfall">
@@ -115,7 +122,11 @@ import { getUser } from '@/utils/auth'
 export default {
   data() {
     return {
-      mode: 'topic', // topic | shop
+      mode: 'topic', // topic | shop | poi
+      /** poi 模式下的门店 id（走实体关联，不靠名字匹配） */
+      poiId: '',
+      /** poi 模式下的门店信息：地址/电话/营业时间/待审标记 */
+      poi: null,
       q: '',
       list: [],
       leftList: [],
@@ -129,10 +140,26 @@ export default {
       isFollowingTopic: false
     }
   },
+  computed: {
+    /**
+     * 标题：话题加 #；门店优先用「门店实体」的名字（改名后仍是最新的），
+     * 门店信息还没拉回来时先退回发布时填的店名快照 q，避免标题空着。
+     */
+    headTitle() {
+      if (this.mode === 'topic') return '#' + this.q
+      if (this.mode === 'poi') return (this.poi && this.poi.name) || this.q
+      return this.q
+    }
+  },
   onLoad(query) {
-    this.mode = query.mode === 'shop' ? 'shop' : 'topic'
+    // 三种模式共用这个页面：话题 / 店铺名文本聚合 / **门店实体（poi）**
+    // poi 模式走 poi_id，不再靠名字匹配 —— 见《门店体系改造方案_v0.1.md》
+    this.mode = query.mode === 'shop' ? 'shop' : (query.mode === 'poi' ? 'poi' : 'topic')
+    this.poiId = query.id || ''
     this.q = decodeURIComponent(query.q || '')
-    uni.setNavigationBarTitle({ title: this.mode === 'topic' ? '话题' : '店铺' })
+    uni.setNavigationBarTitle({
+      title: this.mode === 'topic' ? '话题' : (this.mode === 'poi' ? '门店' : '店铺')
+    })
     if (this.mode === 'topic' && getUser()) this.loadFollowState()
     this.load(true)
   },
@@ -154,10 +181,20 @@ export default {
       }
       this.loading = true
       try {
-        const data = await request({
-          url: `/content/search?keyword=${encodeURIComponent(this.q)}&page=${this.page}&pageSize=${this.pageSize}`,
-          silent: true
-        })
+        let data
+        if (this.mode === 'poi') {
+          // 门店实体：按 poi_id 取该店点评，同时带上门店信息（地址/电话/营业时间）
+          data = await request({
+            url: `/poi/${this.poiId}/contents?page=${this.page}&pageSize=${this.pageSize}`,
+            silent: true
+          })
+          if (data.poi) this.poi = data.poi
+        } else {
+          data = await request({
+            url: `/content/search?keyword=${encodeURIComponent(this.q)}&page=${this.page}&pageSize=${this.pageSize}`,
+            silent: true
+          })
+        }
         const items = (data.list || []).map(it => ({ ...it, coverError: false }))
         items.forEach(it => {
           if (this.colIndex % 2 === 0) this.leftList.push(it)
@@ -246,6 +283,31 @@ export default {
   margin-top: 10rpx;
   font-size: 24rpx;
   color: rgba(255, 255, 255, 0.82);
+  position: relative;
+  z-index: 1;
+}
+/* 门店信息：与头部同底色（深色渐变），所以用白字 */
+.poi-info {
+  display: flex;
+  flex-direction: column;
+  margin-top: 14rpx;
+  position: relative;
+  z-index: 1;
+}
+.poi-info-tx {
+  font-size: 22rpx;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.72);
+}
+/* 待审门店要明确标出来，避免作者以为它已经对所有人可见 */
+.poi-info-pending {
+  display: inline-block;
+  margin-top: 14rpx;
+  padding: 4rpx 16rpx;
+  font-size: 20rpx;
+  border-radius: 16rpx;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.22);
   position: relative;
   z-index: 1;
 }
