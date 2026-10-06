@@ -420,6 +420,17 @@ export default {
      * 注意：onLoad 调用了此方法但此前从未定义——编辑功能一直处于损坏状态，本次补齐。
      */
     async loadForEdit() {
+      // 先清空上一次的编辑残留再加载。
+      // 发布页是 tabBar 页、状态会保留：之前"先写新笔记并选好图 → 再去编辑另一篇"时，
+      // localImages 里的残留图会被 submit 一起提交到**被编辑的那篇笔记**上，
+      // 造成内容被污染（而且用户看不出来）。
+      this.localImages = []
+      this.localVideo = null
+      this.type = 'image'
+      this.tags = []
+      this.origImages = []
+      this.origVideoUrl = ''
+      this.origDuration = 0
       try {
         const c = await request({ url: `/content/${this.editId}` })
         this.title = c.title || ''
@@ -528,6 +539,10 @@ export default {
       })
     },
     goBack() {
+      // 编辑态下"取消"要**显式退出编辑**：否则回到发布页时 editId 还在，
+      // 再点发布就会把刚取消的那篇旧笔记又改一遍。
+      // 新建态不清 —— 交给 onHide 自动存草稿，现在清了会把草稿一起丢掉。
+      if (this.editId) this.reset()
       uni.switchTab({ url: '/pages/feed/feed' })
     },
     /** 拉最新用户信息：刷新角色 + 回写登录态
@@ -716,13 +731,34 @@ export default {
       const d = new Date()
       return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
     },
+    /**
+     * 回到"全新发布"状态。
+     *
+     * **必须把编辑态一起清掉**：发布页是 tabBar 页、页面状态会一直留着，
+     * 只清内容不清 editId 的话，下次点"发布"仍会带着 editId 走 PUT，
+     * 把上一次编辑的旧笔记又改一遍 —— 这是会**误改用户数据**的问题，不只是显示不对。
+     */
     reset() {
       this.title = ''
       this.text = ''
+      this.tags = []
+      this.type = 'image'
       this.localImages = []
       this.localVideo = null
       this.regionIndex = -1
+      this.located = null
       this.poiName = ''
+      this.nearPois = []
+      // 编辑态 + 原媒体记录
+      this.editId = ''
+      this.origImages = []
+      this.origVideoUrl = ''
+      this.origDuration = 0
+      // 开一个新的草稿会话
+      this.draftId = Date.now()
+      try {
+        this.draftCount = (uni.getStorageSync('dp_drafts') || []).length
+      } catch (e) { this.draftCount = 0 }
     }
   }
 }

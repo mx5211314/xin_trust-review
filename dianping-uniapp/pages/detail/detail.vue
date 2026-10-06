@@ -557,9 +557,14 @@ export default {
     },
     /** 回复：root=顶级评论对象；sub=子回复对象（回复楼中楼里某条时传） */
     tapReply(root, sub) {
+      // 楼中楼回复：要提交的是**被回复那条评论的 id**（子评论优先），不是根评论。
+      // 后端会拿 parentId 自己推导：根评论（挂载位置）和被回复人（parent 的作者）。
+      // 原来固定传 root.commentId，于是"界面显示回复甲、通知却发给乙"（根评论作者）。
+      const target = sub || root
       this.replyTarget = {
-        commentId: root.commentId,
-        nickname: sub && sub.user ? sub.user.nickname : (root.user ? root.user.nickname : '匿名')
+        commentId: target.commentId,
+        rootId: root.commentId,
+        nickname: target.user ? target.user.nickname : '匿名'
       }
       // 聚焦输入框（先复位再置位，保证重复点击也能唤起键盘）
       this.inputFocus = false

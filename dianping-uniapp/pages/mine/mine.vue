@@ -267,6 +267,11 @@ export default {
       drawerShow: false,
       editNickname: '',
       editAvatar: '',
+      // 弹层内「更换头像」新选的**存储 key**，点保存时才提交。
+      // 必须和 editAvatar 分开：editAvatar 存 URL 只用于预览，
+      // 把 URL 回传后端会破坏"库里只存 key"的约定（换域名即失效）。
+      // 空串 = 本次没换头像 → 提交时不带该字段，后端保持原值。
+      editAvatarKey: '',
       editBio: ''
     }
   },
@@ -520,8 +525,11 @@ export default {
       this.editNickname = this.user ? this.user.nickname : ''
       this.editAvatar = this.user ? this.user.avatar : ''
       this.editBio = this.user && this.user.bio ? this.user.bio : ''
+      // 每次打开都清掉"本次是否换过头像"的标记，避免上一次的选择带到这一次
+      this.editAvatarKey = ''
       this.editShow = true
     },
+    /** 编辑弹层内「更换头像」：只上传 + 预览，点「保存」才真正提交 */
     chooseAvatar() {
       uni.chooseImage({
         count: 1,
@@ -530,7 +538,9 @@ export default {
           try {
             uni.showLoading({ title: '上传中' })
             const up = await uploadFile(res.tempFilePaths[0], 'image')
+            // 预览用 URL，提交用 key —— 两者都要，别混
             this.editAvatar = up.url
+            this.editAvatarKey = up.key
             uni.hideLoading()
           } catch (e) {
             uni.hideLoading()
@@ -547,9 +557,11 @@ export default {
           method: 'PUT',
           data: {
             nickname: nick,
-            // 不发 avatar：头像是独立流程（点头像 → 上传 → 只更新 avatar）。
-            // 这里若把读到的 avatar 回传，会把"读取时转成的 URL"又写回库里，
-            // 破坏"库里只存 key"的约定。
+            // 只有"本次在弹层里换了头像"才提交 avatar，且提交的是 **key**。
+            // 原来是直接把读到的 avatar（URL）回传，会把 URL 写进库里，
+            // 破坏"库里只存 key"的约定（换域名即失效）。
+            // 完全不传 = 后端保持原头像。
+            avatar: this.editAvatarKey || undefined,
             // bio 必须**无条件**发送（含空串）：空串 = 明确清空，
             // 用 `|| undefined` 会让用户永远删不掉自己的简介。
             bio: this.editBio.trim()
@@ -557,6 +569,8 @@ export default {
         })
         uni.showToast({ title: '已保存', icon: 'success' })
         this.editShow = false
+        // 清掉换头像标记，避免影响下一次编辑
+        this.editAvatarKey = ''
         this.fetch()
       } catch (e) { /* toast 已提示 */ }
     },
